@@ -56,7 +56,7 @@ case class End()
 case class Word(val docID:Int, val wordID:Int, val count:Int) 
 
 
-object KBAReader {
+object WordReader {
 
   def main(args:Array[String]): Unit = {
     val system = ActorSystem("mySystem")
