@@ -4,7 +4,7 @@ version := "0.01"
 
 scalaVersion := "2.10.3"
 
-scalacOptions ++= Seq("-unchecked", "-deprecation")
+scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 
 resolvers += "Sonatype snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
 
@@ -19,3 +19,5 @@ libraryDependencies += "com.typesafe.akka" % "akka-remote_2.10" % "2.2.3"
 libraryDependencies += "org.tukaani" % "xz" % "1.2"
 
 libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.5"
+
+libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.0.0" % "runtime"
