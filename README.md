@@ -15,8 +15,9 @@ of queries, keeping the clusters about the same size.
   - Pushes documents to a classifier actor
 
 2) ClassifierActor
+  - Vectorizes the documents
+    - Extracts entity chains and contexts
   - Accepts documents
-  - vectorizes docs
   - discards bad documents
     - If new doc is farther than the difference of the individual cluster centers
   - pushes docs to the CorefActor
@@ -30,6 +31,9 @@ of queries, keeping the clusters about the same size.
     - Sends a signal to the MergeActor
 
 4) CanopyActor
+  - Store local data structures
+    - Pairwise similarity
+    - term-document frequencies (ambiquity)
   - Accepts vectorized documents
   - Represents a cluster
   - Keeps track of its containing entity nodes
@@ -38,6 +42,7 @@ of queries, keeping the clusters about the same size.
     - Perform a SCRUB step 
     - If SCRUB doesnt help
       - Complain to CorefActor
+  + Possibly have several duplicate canopies doing random coreference and perform periodic merges for consensus
 
 5) MergeActor
   - Performs MERGE on Canopy Actors
@@ -45,7 +50,8 @@ of queries, keeping the clusters about the same size.
   
 
 
-Technical Merit:
+## Technical Merit
+
   1) SCRUB/UNLOAD to the doubling algorithm
     - SCRUB --- Get rid of non-query items, or "weird" items
     - UNLOAD --- Create a summary of for ER use.
@@ -59,7 +65,8 @@ Technical Merit:
     - Heirchical merge proposals (wick12hierarchical.pdf)
 
 
-Experiments:
+## Experiments
+
   1) Successful merges/second for increased number of query nodes
     - This should increase with more query nodes
     - If not query-driven is pointless
@@ -75,5 +82,10 @@ Experiments:
     - Im not sure 
 
      
-Data Sets
+## Data Sets
   - Use bibtex http://www.iesl.cs.umass.edu/data/bibtex
+  - 
+
+
+## Visualization
+  - Large Scale Real-time visualization using Superconductor [http://superconductor.github.io/superconductor/]
