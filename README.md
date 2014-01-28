@@ -56,9 +56,12 @@ of queries, keeping the clusters about the same size.
     - SCRUB --- Get rid of non-query items, or "weird" items
     - UNLOAD --- Create a summary of for ER use.
   - Self-managing Canopies
+    - We can also have clone canopies, these canopies communicate to make merge decisions.
+      - (1) Clone canopies only keep mentions that appear in at least one of the query nodes. 
+    - (2) Canopies also throw our any instances of duplicate informaiton. Obviouse duplicates (redundant information) is not needed to make decisions.
   - Query-distribution, The number of query nodes vs the number of clusters/canopies
-    -) If cannopies become large, create more sub-entities
-    -) Swaps at the sub-entity level
+    - If cannopies become large, create more sub-entities
+    - Swaps at the sub-entity level
   - Coreference models
     - Query-Driven within a canopy
     - Lifted Inference (Percy Liang)
