@@ -19,6 +19,9 @@ import org.apache.thrift.transport.TStandardFile
 import org.apache.thrift.protocol.TCompactProtocol
 
 import scala.io.Source
+import scala.sys.process.stringToProcess
+import scala.sys.process.ProcessLogger
+import scala.sys.process._
 
 import streamcorpus.StreamItem
 
@@ -61,19 +64,30 @@ class KBAFolders /*extends MyLogging*/ {
   lazy val streamItems:Iterator[streamcorpus.StreamItem] = {
     
     gpgFiles.map { gpgFile =>
+
+      // Decrypt the file and put it in a the baos
+      val baos = new java.io.ByteArrayOutputStream(100 * 1024 * 1024)
       val xzGPG = Files.readAllBytes(gpgFile.toPath) 
-      val is = new ByteArrayInputStream(xzGPG) // FIXME file is not in XZ format need to decrypt
+      ( gpgFile #> 
+        "gpg --no-permission-warning --trust-model always --output - --decrypt -" #>
+        baos) ! ProcessLogger(line => ())
+ 
+      // Uncompress the decrypted stream
+      val is = new ByteArrayInputStream(baos.toByteArray)
       val bais = new XZCompressorInputStream(is)
 
+      // Open the transport so we can read the thrift objects
       val transport = new TIOStreamTransport(bais)
       transport.open
       val protocol = new TBinaryProtocol(transport)
 
+      // Iterate over the stream item objects  
       Iterator.continually(mkStreamItem(protocol))
         .takeWhile(_ match { case None => transport.close; is.reset; false; case _ => true })
         .map { _.get }
-
-    }.flatten.toIterator
+    }
+    .flatten // Combine all the iterators
+    .toIterator
   }
 
   /** Iterate through the gpg files in a folder. */
