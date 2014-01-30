@@ -21,3 +21,10 @@ libraryDependencies += "org.tukaani" % "xz" % "1.2"
 libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.5"
 
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.0.0" % "runtime"
+
+libraryDependencies += "org.apache.thrift" % "libthrift" % "0.9.1"
+
+libraryDependencies += "org.apache.commons" % "commons-compress" % "1.7"
+
+
+
