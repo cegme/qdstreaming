@@ -8,6 +8,7 @@ import java.nio.file.Files
 import java.util.Date
 
 import edu.ufl.cise.dsr.MyLogging
+import edu.ufl.cise.dsr.point.KBAEntityChain
 import edu.ufl.cise.dsr.util.Util
 
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream
@@ -28,8 +29,14 @@ import streamcorpus.StreamItem
 
 /**
   * This KBAIngestor is really an iterator that grabs data from disk.
+  * You may use this as an Iterator to retrieve all the streamItems.
+  * 
+  * e.g.
   *
-  * The start date is not yet implemented.
+  *   for (si in new KBAIngestor()) process(si)
+  *
+  *
+  * TODO: startDate needs to be integrated to fast forward the iterator
   *
   */
 class KBAIngestor(startDate:Date = null ) extends Ingestor[streamcorpus.StreamItem] with MyLogging {
@@ -43,8 +50,13 @@ class KBAIngestor(startDate:Date = null ) extends Ingestor[streamcorpus.StreamIt
   lazy val streamIterator = new KBAFolders
 
   def hasNext = streamIterator.streamItems.hasNext
-  def next =  streamIterator.streamItems.next
+  def next:streamcorpus.StreamItem =  streamIterator.streamItems.next
 
+  def vectorize(si: streamcorpus.StreamItem): KBAEntityChain = {
+    // TODO Extract the mentions from the StreamItem
+    // NOTE: Each streamitem may have multiple entities 
+    null
+  }
 }
 
 
