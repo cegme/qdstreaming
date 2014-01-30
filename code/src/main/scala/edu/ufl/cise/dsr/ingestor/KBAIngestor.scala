@@ -3,6 +3,7 @@ package edu.ufl.cise.dsr.ingestor
 
 import java.io.ByteArrayInputStream
 import java.io.File
+import java.lang.ClassLoader
 import java.nio.file.Files
 import java.util.Date
 
@@ -28,17 +29,17 @@ import streamcorpus.StreamItem
   * The start date is not yet implemented.
   *
   */
-class KBAIngestor(startDate:Date = null ) extends Ingestor[streamcorpus.StreamItem] {
+class KBAIngestor(startDate:Date = null ) extends Ingestor[streamcorpus.StreamItem] with MyLogging {
   
-  lazy val streamIterator = new KBAFolders
 
   /** TODO Implement a fast forwarding startdate */
   def withStartDate(startDate:Date): KBAIngestor = {
     new KBAIngestor(startDate)
   }
 
-  def hasNext = streamIterator.streamItems.hasNext
+  lazy val streamIterator = new KBAFolders
 
+  def hasNext = streamIterator.streamItems.hasNext
   def next =  streamIterator.streamItems.next
 
 }
@@ -48,15 +49,20 @@ class KBAIngestor(startDate:Date = null ) extends Ingestor[streamcorpus.StreamIt
   * A class to access the StreamItem data. Assumes the GPG key has been loaded
   * and it assumes a file structure as seen in the variable gpgFilePathTemplate.
   */
-class KBAFolders extends MyLogging {
+class KBAFolders /*extends MyLogging*/ {
   val gpgFilePathTemplate = "/data/%s/kba2013/aws-publicdatasets/trec/kba/kba-streamcorpus-2013-v0_2_0-english-and-unknown-language/%s/"
+
+  // FIXME My temp fix until logging is fixed
+  def logInfo(msg:String) { println(msg) }
+  def logDebug(msg:String) { println(msg) }
+  def logError(msg:String) { println(msg) }
 
   /** An iterator for streamitems */
   lazy val streamItems:Iterator[streamcorpus.StreamItem] = {
     
     gpgFiles.map { gpgFile =>
-      val xzGPG = Files.readAllBytes(gpgFile.toPath)
-      val is = new ByteArrayInputStream(xzGPG)
+      val xzGPG = Files.readAllBytes(gpgFile.toPath) 
+      val is = new ByteArrayInputStream(xzGPG) // FIXME file is not in XZ format need to decrypt
       val bais = new XZCompressorInputStream(is)
 
       val transport = new TIOStreamTransport(bais)
@@ -66,15 +72,17 @@ class KBAFolders extends MyLogging {
       Iterator.continually(mkStreamItem(protocol))
         .takeWhile(_ match { case None => transport.close; is.reset; false; case _ => true })
         .map { _.get }
+
     }.flatten.toIterator
   }
 
   /** Iterate through the gpg files in a folder. */
   lazy val gpgFiles:Iterator[File] = {
-    dateFolders.map {
-      dateString =>
+    dateFolders.map { dateString =>
+      logInfo("dateString: %s".format(dateString))
       val (folder, datehour) = dateString
       val gpgFolderPath = gpgFilePathTemplate.format(folder,datehour)
+      logInfo("gpgFolderPath: %s".format(gpgFolderPath))
       new File(gpgFolderPath).listFiles
     }.flatten.toIterator
   }
@@ -83,14 +91,14 @@ class KBAFolders extends MyLogging {
     * Returns [(folder, hour), ... ].
     */
   lazy val dateFolders:Iterator[(String,String)] = {
-    (Iterator.continually("d01") zip Source.fromFile("kba2013/d01").getLines) ++
-      (Iterator.continually("d02") zip Source.fromFile("kba2013/d02").getLines) ++
-      (Iterator.continually("d03") zip Source.fromFile("kba2013/d03").getLines) ++
-      (Iterator.continually("d04") zip Source.fromFile("kba2013/d04").getLines) ++
-      (Iterator.continually("d05") zip Source.fromFile("kba2013/d05").getLines) ++
-      (Iterator.continually("d06") zip Source.fromFile("kba2013/d06").getLines) ++
-      (Iterator.continually("d07") zip Source.fromFile("kba2013/d07").getLines) ++
-      (Iterator.continually("d08") zip Source.fromFile("kba2013/d08").getLines)
+    (Iterator.continually("d01") zip Source.fromURL(this.getClass.getResource("/kba2013/d01")).getLines) ++
+      (Iterator.continually("d02") zip Source.fromURL(this.getClass.getResource("/kba2013/d02")).getLines) ++
+      (Iterator.continually("d03") zip Source.fromURL(this.getClass.getResource("/kba2013/d03")).getLines) ++
+      (Iterator.continually("d04") zip Source.fromURL(this.getClass.getResource("/kba2013/d04")).getLines) ++
+      (Iterator.continually("d05") zip Source.fromURL(this.getClass.getResource("/kba2013/d05")).getLines) ++
+      (Iterator.continually("d06") zip Source.fromURL(this.getClass.getResource("/kba2013/d06")).getLines) ++
+      (Iterator.continually("d07") zip Source.fromURL(this.getClass.getResource("/kba2013/d07")).getLines) ++
+      (Iterator.continually("d08") zip Source.fromURL(this.getClass.getResource("/kba2013/d08")).getLines)
   }
 
   /**
