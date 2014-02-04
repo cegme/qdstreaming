@@ -52,7 +52,7 @@ class KBAIngestor(startDate:Date = null ) extends Ingestor[streamcorpus.StreamIt
   def hasNext = streamIterator.streamItems.hasNext
   def next:streamcorpus.StreamItem =  streamIterator.streamItems.next
 
-  def vectorize(si: streamcorpus.StreamItem): KBAEntityChain = {
+  def vectorize[KBAEntityChain](si: streamcorpus.StreamItem): Iterator[KBAEntityChain] = {
     // TODO Extract the mentions from the StreamItem
     // NOTE: Each streamitem may have multiple entities 
     null

@@ -1,4 +1,4 @@
-package edu.ufl.cise.dsr
+package edu.ufl.cise.dsr.examples
 
 import akka.actor.Actor
 import akka.actor.Props
@@ -19,6 +19,8 @@ import scala.util.Random
 import scala.util.{Success, Failure}
 
 import scala.concurrent.{ ExecutionContext, Promise }
+
+import edu.ufl.cise.dsr.MyLogging
 
 import ExecutionContext.Implicits.global
 

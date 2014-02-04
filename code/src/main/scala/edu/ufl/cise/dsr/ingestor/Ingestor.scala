@@ -9,7 +9,7 @@ trait Ingestor[T] extends Iterator[T] {
 
   def next():T
 
-  def vectorize(t: T): Point
+  def vectorize[P <: Point](t: T): Iterator[P]
 
 }
 

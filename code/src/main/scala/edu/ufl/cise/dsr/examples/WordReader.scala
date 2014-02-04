@@ -1,5 +1,5 @@
 
-package edu.ufl.cise.dsr
+package edu.ufl.cise.dsr.examples
 
 import akka.actor.Actor
 import akka.actor.Props
