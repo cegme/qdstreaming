@@ -9,5 +9,6 @@ package edu.ufl.cise.dsr.point
 
 trait Point {
 
+  def dimentions[T <: AnyVal]():Iterator[T] 
 
 }

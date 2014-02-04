@@ -39,7 +39,7 @@ import streamcorpus.StreamItem
   * TODO: startDate needs to be integrated to fast forward the iterator
   *
   */
-class KBAIngestor(startDate:Date = null ) extends Ingestor[streamcorpus.StreamItem] with MyLogging {
+class KBAIngestor(startDate:Date = null) extends Ingestor[streamcorpus.StreamItem,KBAFolders] with MyLogging {
   
 
   /** TODO Implement a fast forwarding startdate */
@@ -47,9 +47,10 @@ class KBAIngestor(startDate:Date = null ) extends Ingestor[streamcorpus.StreamIt
     new KBAIngestor(startDate)
   }
 
-  lazy val streamIterator = new KBAFolders
+  override lazy val streamIterator = new KBAFolders
 
   def hasNext = streamIterator.streamItems.hasNext
+
   def next:streamcorpus.StreamItem =  streamIterator.streamItems.next
 
   def vectorize[KBAEntityChain](si: streamcorpus.StreamItem): Iterator[KBAEntityChain] = {
