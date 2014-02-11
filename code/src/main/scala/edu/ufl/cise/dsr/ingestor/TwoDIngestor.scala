@@ -5,6 +5,10 @@ import edu.ufl.cise.dsr.point.TwoDPoint
 import edu.ufl.cise.dsr.MyLogging
 
 
+/**
+  * 
+  * val ingestor = new TwoDIngestor("../datasets/joensuu_datasets/Aggregation.txt")
+  */
 class TwoDIngestor(dataFilePath:String = null) extends Ingestor[TwoDPoint,Iterator[String]] with MyLogging {
 
   def withFile(dataFilePath:String): TwoDIngestor = {
@@ -16,7 +20,7 @@ class TwoDIngestor(dataFilePath:String = null) extends Ingestor[TwoDPoint,Iterat
   def hasNext:Boolean = streamIterator.hasNext
 
   def next():TwoDPoint = {
-    val PointRegex =  """(\s+) (\s+) (\s+)""".r
+    val PointRegex =  """(\S+)\s+(\S+)\s+(\S+)""".r
     val line:String = streamIterator.next
     line match {
       case PointRegex(x, y, label) => new TwoDPoint(x.toFloat, y.toFloat, label.toInt)
