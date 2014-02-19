@@ -1,4 +1,15 @@
-This is your new Play application
+This Play application shows how to 
 =====================================
+
+Sample application from CHAPTER 8 of book 'Building a single-page JavaScript application with JSON'
+
+This is a single page Play application featuring :
+
+1. Defining RESTful webservice
+2. Sending JSON to web browser 
+3. Parsing JSON from HTTP request
+4. COnverting between JSON data  and SCALA objects
+5. VAlidating JSON Data 
+6. Authenticating JSON web service requests
 
 This file will be packaged with your application, when using `play dist`.
