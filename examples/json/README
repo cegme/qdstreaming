@@ -8,8 +8,13 @@ This is a single page Play application featuring :
 1. Defining RESTful webservice
 2. Sending JSON to web browser 
 3. Parsing JSON from HTTP request
-4. COnverting between JSON data  and SCALA objects
+4. Converting between JSON data  and SCALA objects
 5. VAlidating JSON Data 
 6. Authenticating JSON web service requests
 
-This file will be packaged with your application, when using `play dist`.
+To Check the JSON :
+$ curl --include http://localhost:9000/products
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Content-Length: 71
+[5010255079763,5018206244611,5018206244666,5018306312913,5018306332812]
