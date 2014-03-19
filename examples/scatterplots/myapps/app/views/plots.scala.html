@@ -1,0 +1,59 @@
+@(data:String)
+
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title></title>
+        <script src="@routes.Assets.at("javascripts/jquery-1.9.0.min.js")" type="text/javascript"></script>
+          <script src="@routes.Assets.at("javascripts/d3.min.js")" type="text/javascript"></script>
+    </head>
+    <body>
+    this is the body!
+<script> 
+		var linesdata = $.get('/jsondata', function(data){
+			var mydata = $.parseJSON(data);
+			for  (index in mydata) {
+					var data = mydata[index];
+			}
+			console.log(data);
+			var finaldata = [];
+			//for reasons unknown  "data" is not working ! 
+			//the below for loop is just a hack to make the input araay of array..
+			//TODO : ask god why n fix this..
+			for  (key in data) {
+					finaldata.push(data[key]);
+			}
+			console.log(finaldata);
+			//Creating  SVG element
+			var svg = d3.select("body")
+			            .append("svg")
+			            .attr("width", 800)
+			            .attr("height", 600);
+			svg.selectAll("circle")
+			   .data(finaldata)
+			   .enter()
+			   .append("circle") .attr("cx", function(d) {
+			        return d[0];
+			   })
+			   .attr("cy", function(d) {
+			        return d[1];
+			   }).attr("r", 5); //fixed size circles .. we can change the size as well accordingly..
+			svg.selectAll("text")
+			   .data(finaldata)
+			   .enter()
+			   .append("text").text(function(d) {
+			        return d[0] + "," + d[1];
+			   })   .attr("x", function(d) {
+			        return d[0];
+			   }).attr("y", function(d) {
+			        return d[1];
+			   }).attr("font-family", "sans-serif")
+			   .attr("font-size", "11px")
+			   .attr("fill", "green");
+		}
+		)
+
+</script>
+    </body>
+</html>
