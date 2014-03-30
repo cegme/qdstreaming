@@ -11,10 +11,12 @@
     <body>
     this is the body!
 <script> 
-		var linesdata = $.get('/jsondata', function(data){
-			var mydata = $.parseJSON(data);
+		var linesdata = $.get('/jsondata', function(data){	
+
+//			var mydata = $.parseJSON(data);
+			console.log(data);
 			for  (index in mydata) {
-					var data = mydata[index];
+					var data = mydata[index	];
 			}
 			console.log(data);
 			var finaldata = [];
@@ -28,26 +30,28 @@
 			//Creating  SVG element
 			var svg = d3.select("body")
 			            .append("svg")
-			            .attr("width", 800)
-			            .attr("height", 600);
+			            .attr("width", 900)
+			            .attr("height", 900);
 			svg.selectAll("circle")
 			   .data(finaldata)
 			   .enter()
 			   .append("circle") .attr("cx", function(d) {
-			        return d[0];
+			        return d[0]*10;
 			   })
 			   .attr("cy", function(d) {
-			        return d[1];
-			   }).attr("r", 5); //fixed size circles .. we can change the size as well accordingly..
+			        return d[1]*20;
+			   }).attr("r", function(d) {
+					return d[2]*1.5
+				   	}); //fixed size circles .. we can change the size as well accordingly..
 			svg.selectAll("text")
 			   .data(finaldata)
 			   .enter()
 			   .append("text").text(function(d) {
 			        return d[0] + "," + d[1];
 			   })   .attr("x", function(d) {
-			        return d[0];
+			        return d[0]*10;
 			   }).attr("y", function(d) {
-			        return d[1];
+			        return d[1]*20;
 			   }).attr("font-family", "sans-serif")
 			   .attr("font-size", "11px")
 			   .attr("fill", "green");

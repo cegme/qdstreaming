@@ -4,6 +4,9 @@ import play.api._
 import play.api.mvc._
 import play.api.libs.json.Json
 import views.html.plots
+import models.Kmeans
+import scala.collection.mutable.ListBuffer
+import play.api.libs.json.JsValue
 
 object Application extends Controller {
 
@@ -11,15 +14,24 @@ object Application extends Controller {
     Ok(views.html.index("Your new application is ready."))
   }
   
-  val sourcedata = scala.io.Source.fromFile("test.txt")
+  val sourcedata = scala.io.Source.fromFile("Aggregation.txt")
   val linesdata = sourcedata.mkString
   sourcedata.close()
-  
+  	
   def plots = Action {
 	 Ok(views.html.plots("yoyo"))
   }
   def jsondata = Action {
-	  Ok(Json.toJson(linesdata))
+    var test  = new Kmeans
+    var testone = test.KMeans.getFileData
+    var linesdata : String = "";
+    while(  testone.hasNext){
+    	linesdata = linesdata + testone.next
+    	println(linesdata);
+    }
+    	var json : JsValue = Json.parse(linesdata)
+	//  Ok(Json.toJson(linesdataone))
+    	Ok(json)
   }
 
 }
