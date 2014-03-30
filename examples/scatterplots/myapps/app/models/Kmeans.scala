@@ -1,4 +1,7 @@
 package models
+
+import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.ListBuffer
 /**
  *     
      Concept : 
@@ -33,7 +36,7 @@ object Canopy {
   /** Centroid:  essentially collects the center of all the TwoDPoints I have. Now to do that I merely do a fold-left i.e start with a initial value and a function
    *  and recursively apply that function to all the list members left -> right.
    */
-  def centroid(items:List[TwoDPoint]):TwoDPoint = {
+  def centroid(items:ListBuffer[TwoDPoint]):TwoDPoint = {
     items.foldLeft ((0.000, 0.000, 0)) {
       (t:(Double,Double,Int), p:TwoDPoint) => (t._1 + p.x, p.y + t._2, t._3 + 1)
     } match { 	
@@ -46,7 +49,7 @@ object Canopy {
   /**
    * defining labels on the points 
    */
-  def centroidWithLabel(items:(List[TwoDPoint], Int)):TwoDPoint = {
+  def centroidWithLabel(items:(ListBuffer[TwoDPoint], Int)):TwoDPoint = {
     centroid(items._1)
   }
 
@@ -61,26 +64,16 @@ object Canopy {
 
 object KMeans {
 		
-			var renderData  : List[TwoDPoint] = List[TwoDPoint]();
+			var renderData  : ListBuffer[TwoDPoint] = ListBuffer[TwoDPoint]();
 			var ingestor = new TwoDIngestor("../../../datasets/joensuu_datasets/Aggregation.txt");
-			var items : List[Array[Double]] =  List[Array[Double]]();
-			var counter = 0
-			for ( index <-  ingestor.streamIterator){
-									var strarray : Array[String] = index.split("\t")
-									var myDoubles : Array[Double] = Array[Double]()	
-									for ( value <- strarray){
-											myDoubles = value.toDouble +: myDoubles
-										}
-									items = myDoubles ::items
-							
-				
-
+				while (ingestor.streamIterator.hasNext){
+						println(ingestor.streamIterator.next)
 			}
+			var items : ListBuffer[Array[Double]]  = ListBuffer[Array[Double]]();
 			
 			
-			
-	def getFileData() : Iterator[List[Array[Double]]] = {
-				return Iterator[List[Array[Double]]](items);
+	def getFileData() : Iterator[ListBuffer[Array[Double]]] = {
+				return Iterator[ListBuffer[Array[Double]]](items);
 	}
 	
 		
