@@ -7,6 +7,7 @@ import views.html.plots
 import models.Kmeans
 import scala.collection.mutable.ListBuffer
 import play.api.libs.json.JsValue
+import scala.Array
 
 object Application extends Controller {
 
@@ -23,15 +24,10 @@ object Application extends Controller {
   }
   def jsondata = Action {
     var test  = new Kmeans
-    var testone = test.KMeans.getFileData
-    var linesdata : String = "";
-    while(  testone.hasNext){
-    	linesdata = linesdata + testone.next
-    	println(linesdata);
-    }
-    	var json : JsValue = Json.parse(linesdata)
-	//  Ok(Json.toJson(linesdataone))
-    	Ok(json)
+    var testone = test.KMeans.ingestor.streamIterator
+ //   var linesdata = testone.mkString
+    println(linesdata);
+    Ok(Json.toJson(linesdata));
   }
 
 }

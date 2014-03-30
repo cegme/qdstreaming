@@ -12,9 +12,9 @@
     this is the body!
 <script> 
 		var linesdata = $.get('/jsondata', function(data){	
-
-//			var mydata = $.parseJSON(data);
 			console.log(data);
+			var mydata = $.parseJSON(data);
+
 			for  (index in mydata) {
 					var data = mydata[index	];
 			}

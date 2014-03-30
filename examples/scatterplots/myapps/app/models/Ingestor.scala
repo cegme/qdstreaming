@@ -7,6 +7,8 @@ trait Ingestor[T,S] extends Iterator[T] {
   def hasNext:Boolean;
   
   def next: T
+  
+ // def vectorize[T <: AnyVal] : Iterator[T]
 
 
 }
