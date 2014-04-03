@@ -64,16 +64,26 @@ object Canopy {
 
 object KMeans {
 		
+			//data  model for the server side manipulations..
 			var renderData  : ListBuffer[TwoDPoint] = ListBuffer[TwoDPoint]();
+			
 			var ingestor = new TwoDIngestor("../../../datasets/joensuu_datasets/Aggregation.txt");
-				while (ingestor.streamIterator.hasNext){
-						println(ingestor.streamIterator.next)
+			var token : Array[String]=  new Array[String](3);
+			var datapoints : Array[Double] = new Array[Double](3);
+			var dataset  : ListBuffer[TwoDPoint] = ListBuffer[TwoDPoint]();
+			while ( ingestor.streamIterator.hasNext){
+				token =  ingestor.streamIterator.next.split("\t");
+				var datapoints = token map(_.toDouble);
+				var twoDpoint = new TwoDPoint(datapoints(0) , datapoints(1), datapoints(2));
+				dataset += twoDpoint;
+				
 			}
-			var items : ListBuffer[Array[Double]]  = ListBuffer[Array[Double]]();
 			
 			
-	def getFileData() : Iterator[ListBuffer[Array[Double]]] = {
-				return Iterator[ListBuffer[Array[Double]]](items);
+	//get client suitable  format of current snapshot of data points.
+	def ClientData() : String = {
+			//TODO : get all the data manipulate to the client form and send to   Controller.
+			return  "";
 	}
 	
 		
