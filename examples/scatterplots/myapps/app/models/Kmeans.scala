@@ -33,29 +33,7 @@ class Kmeans {
 
 object Canopy { 
   
-  /** Centroid:  essentially collects the center of all the TwoDPoints I have. Now to do that I merely do a fold-left i.e start with a initial value and a function
-   *  and recursively apply that function to all the list members left -> right.
-   */
-  def centroid(items:ListBuffer[TwoDPoint]):TwoDPoint = {
-    items.foldLeft ((0.000, 0.000, 0)) {
-      (t:(Double,Double,Int), p:TwoDPoint) => (t._1 + p.x, p.y + t._2, t._3 + 1)
-    } match { 	
-      case (x, y, c) => new TwoDPoint((x/c).toDouble, (y/c).toDouble, -1)
-      case _ => throw new Exception("huh??")
-    }
 
-  }
-
-  /**
-   * defining labels on the points 
-   */
-  def centroidWithLabel(items:(ListBuffer[TwoDPoint], Int)):TwoDPoint = {
-    centroid(items._1)
-  }
-
-  /**
-   * eucleadian distance    ( (x1-x2)^2 - (y1-y2)^2 )^1/2 
-   */
   def distance(p1:TwoDPoint, p2:TwoDPoint):Float = {
     scala.math.sqrt(scala.math.pow(p1.x - p2.x, 2) + scala.math.pow(p1.y - p2.y, 2)).asInstanceOf[Float]
   }
@@ -65,28 +43,33 @@ object Canopy {
 object KMeans {
 		
 			//data  model for the server side manipulations..
-			var renderData  : ListBuffer[TwoDPoint] = ListBuffer[TwoDPoint]();
-			
-			var ingestor = new TwoDIngestor("../../../datasets/joensuu_datasets/Aggregation.txt");
-			var token : Array[String]=  new Array[String](3);
-			var datapoints : Array[Double] = new Array[Double](3);
-			var dataset  : ListBuffer[TwoDPoint] = ListBuffer[TwoDPoint]();
-			while ( ingestor.streamIterator.hasNext){
-				token =  ingestor.streamIterator.next.split("\t");
-				var datapoints = token map(_.toDouble);
-				var twoDpoint = new TwoDPoint(datapoints(0) , datapoints(1), datapoints(2));
-				dataset += twoDpoint;
-				
-			}
-			
-			
-	//get client suitable  format of current snapshot of data points.
-	def ClientData() : String = {
-			//TODO : get all the data manipulate to the client form and send to   Controller.
-			return  "";
-	}
-	
-		
+var renderData  : ListBuffer[TwoDPoint] = ListBuffer[TwoDPoint]();
+var token : Array[String]=  new Array[String](3);
+var datapoints : Array[Double] = new Array[Double](3);
+var dataset  : ListBuffer[TwoDPoint] = ListBuffer[TwoDPoint]();
+
+def begin() : Unit = {
+		var ingestor = new TwoDIngestor("../../../datasets/joensuu_datasets/Aggregation.txt");
+		while ( ingestor.streamIterator.hasNext){
+			token =  ingestor.streamIterator.next.split("\t");
+			var datapoints = token map(_.toDouble);
+			var twoDpoint = new TwoDPoint(datapoints(0) , datapoints(1), datapoints(2));
+			dataset += twoDpoint;
+		}
+}
+def  updatePointList(point : TwoDPoint) : ListBuffer[TwoDPoint] = {
+		dataset += point;	
+}		
+def  updateLables(items : ListBuffer[TwoDPoint]) : Unit = {
+		//TODO : finsih this.
+}
+def formatClientData(items : ListBuffer[TwoDPoint]) : String = {
+		return "";
+}
+def fetchClientData() : String  = {
+			formatClientData(dataset);
+}	
+
 	}
 
 }

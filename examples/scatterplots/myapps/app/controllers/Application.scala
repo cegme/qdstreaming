@@ -25,22 +25,8 @@ object Application extends Controller {
 	 Ok(views.html.plots("yoyo"))
   }
   def jsondata = Action {
-//    var test  = new Kmeans
-//    var testone = test.KMeans.ingestor.streamIterator;
-//    println(linesdata);
-			var ingestor = new TwoDIngestor("../../../datasets/joensuu_datasets/Aggregation.txt");
-			var token : Array[String]=  new Array[String](3);
-			var datapoints : Array[Double] = new Array[Double](3);
-			var dataset  : ListBuffer[TwoDPoint] = ListBuffer[TwoDPoint]();
-			while ( ingestor.streamIterator.hasNext){
-				token =  ingestor.streamIterator.next.split("\t");
-				var datapoints = token map(_.toDouble);
-				var twoDpoint = new TwoDPoint(datapoints(0) , datapoints(1), datapoints(2));
-				dataset += twoDpoint;
-			}
-			for ( eachval <- dataset){
-				println(eachval);
-			}
+	  var test = new Kmeans
+	  test.KMeans.begin
     Ok(Json.toJson(linesdata));
   }
 
