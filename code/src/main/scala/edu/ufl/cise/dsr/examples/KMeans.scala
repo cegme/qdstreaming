@@ -44,8 +44,10 @@ object KMeans {
 
     for (i <- Range(0,7)) {
       // get the centroids
+      // List of centroids
       val centroids = canopies.map{ Canopy.centroidWithLabel(_)}
 
+      // Returns a: (List of points, Label)      
       val newCanopy =  points.map{ p => (p, 
                     centroids.map{c => Canopy.distance(c, p)}
                         .zipWithIndex

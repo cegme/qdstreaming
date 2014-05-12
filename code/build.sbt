@@ -42,4 +42,11 @@ libraryDependencies += "org.apache.camel" % "camel-jetty" % "2.3.0"
 
 libraryDependencies += "org.apache.camel" % "camel-core" % "2.3.0"
 
+libraryDependencies += "org.reactivestreams" % "reactive-streams-spi" % "0.3"
 
+libraryDependencies += "com.typesafe.akka" %% "akka-stream-experimental" % "0.2"
+
+libraryDependencies += "org.apache.spark" % "spark-mllib_2.10" % "0.9.1"
+
+libraryDependencies += "org.apache.spark" % "spark-streaming_2.10" % "0.9.1"
+ 
