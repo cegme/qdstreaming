@@ -65,13 +65,13 @@ class KBAIngestor(startDate:Date = null) extends Ingestor[streamcorpus.StreamIte
   * A class to access the StreamItem data. Assumes the GPG key has been loaded
   * and it assumes a file structure as seen in the variable gpgFilePathTemplate.
   */
-class KBAFolders /*extends MyLogging*/ {
+class KBAFolders extends MyLogging {
   val gpgFilePathTemplate = "/data/%s/kba2013/aws-publicdatasets/trec/kba/kba-streamcorpus-2013-v0_2_0-english-and-unknown-language/%s/"
 
   // FIXME My temp fix until logging is fixed
-  def logInfo(msg:String) { println(msg) }
+  /*def logInfo(msg:String) { println(msg) }
   def logDebug(msg:String) { println(msg) }
-  def logError(msg:String) { println(msg) }
+  def logError(msg:String) { println(msg) }*/
 
   /** An iterator for streamitems */
   lazy val streamItems:Iterator[streamcorpus.StreamItem] = {
@@ -141,7 +141,7 @@ class KBAFolders /*extends MyLogging*/ {
     } catch {
       case e:java.lang.OutOfMemoryError => logError("OOM Error: %s".format(e.getStackTrace.mkString("\n"))); None
       case e:TTransportException => e.getType match { 
-        case TTransportException.END_OF_FILE => logDebug("mkstream Finished."); None
+        case TTransportException.END_OF_FILE => /*logDebug("mkstream Finished.");*/ None
         case TTransportException.ALREADY_OPEN => logError("mkstream already opened."); None
         case TTransportException.NOT_OPEN => logError("mkstream not open."); None
         case TTransportException.TIMED_OUT => logError("mkstream timed out."); None

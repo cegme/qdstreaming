@@ -13,5 +13,9 @@ trait Ingestor[T,S] extends Iterator[T] {
 
   //def vectorize[P <: Point](t: T): Iterator[P] // FIXME
 
+  lazy val iterator = {
+    this.asInstanceOf[Iterator[T]]
+  }
+
 }
 

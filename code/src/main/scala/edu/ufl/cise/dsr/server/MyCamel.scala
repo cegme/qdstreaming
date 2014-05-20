@@ -1,7 +1,7 @@
 
 package edu.ufl.cise.dsr.server
 
-
+/*
 import akka.actor.Actor
 import akka.actor.{ActorSystem, Props}
 import akka.actor.Actor._
@@ -55,13 +55,13 @@ object MyCamel extends MyLogging {
     val mina = system.actorOf(Props[MyCamel])
 
 
-    //camel.context.addRoutes(MyCamel)
-    /*val service = CamelServiceManager.startCamelService
-    service.awaitEndpointActivationn(1) {
-      Actor.actorOf[Camel].start
+    ////camel.context.addRoutes(MyCamel)
+    //val service = CamelServiceManager.startCamelService
+    //service.awaitEndpointActivationn(1) {
+      //Actor.actorOf[Camel].start
 
-    }*/
+    //}
   }
-}
+}*/
 
 

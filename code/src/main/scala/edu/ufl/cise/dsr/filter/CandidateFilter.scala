@@ -1,8 +1,8 @@
 
-package edu.ufl.cise.dsr.examples
+package edu.ufl.cise.dsr.filter
 
 import streamcorpus.StreamItem
-import edu.ufl.cise.dsr.QueryNode
+import edu.ufl.cise.dsr.query.QueryNode
 
 object CandidateFilter {
 
@@ -14,7 +14,7 @@ object CandidateFilter {
     * candidates present
     */
 
-  def check(qns:Array[QueryNode], si: StreamItem):(Array[QueryNode],StreamItem) = {
+  def check(qns:Seq[QueryNode], si: StreamItem):(Seq[QueryNode],StreamItem) = {
 
     // TODO check for the existance of this query node
 

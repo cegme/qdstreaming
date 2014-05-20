@@ -15,7 +15,7 @@ class TwoDIngestor(dataFilePath:String = null) extends Ingestor[TwoDPoint,Iterat
     new TwoDIngestor(dataFilePath)
   }
 
-  override lazy val streamIterator = io.Source.fromFile(dataFilePath).getLines()
+  override lazy val streamIterator = scala.io.Source.fromFile(dataFilePath).getLines()
 
   def hasNext:Boolean = streamIterator.hasNext
 
