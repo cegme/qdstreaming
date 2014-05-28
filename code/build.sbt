@@ -4,7 +4,7 @@ version := "0.01"
 
 scalaVersion := "2.10.3"
 
-javacOptions ++= Seq("-Xlint:unchecked")
+//javacOptions ++= Seq("-Xlint:unchecked")
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 
