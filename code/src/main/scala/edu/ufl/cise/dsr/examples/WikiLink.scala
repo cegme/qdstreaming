@@ -93,7 +93,12 @@ object WikiLink extends MyLogging {
 
       val defaultVertex = -1L
 
+      logInfo("Loading the Graph...")
       val graph = Graph.fromEdges(edgeRdd, defaultVertex)
+      graph.cache
+      
+
+      logInfo("Graph has been loaded.")
 
       def max(a: (VertexId, Int), b: (VertexId, Int)): (VertexId, Int) = { if (a._2 > b._2) a else b }
       val maxDegrees = graph.degrees.reduce(max)
