@@ -74,32 +74,34 @@ object WikiLink extends MyLogging {
 
     //logInfo("Total number of wikiitems: " + theItems.count(w => true))
 
+    def titleHash(s:String) = s match {
+      case s:String => s.toLowerCase.hashCode
+      case _ => 0
+    }
+
     // Create RDD for Edges
-    val edgeRdd:RDD[(VertexId,VertexId)] = sc.parallelize (
-      theItems.flatMap{w => 
-        w.mentions.map{m => m.freebaseId match {
-            case Some(fbid) => Tuple2[VertexId,VertexId](m.wikiUrl, fbid)
+    val itemsRDD = sc.parallelize(theItems.toSeq)
+
+      val edgeRdd =
+        itemsRDD.flatMap{w => 
+          w.mentions.flatMap{m => m.freebaseId match {
+            case Some(fbid) => Some(Edge(titleHash(m.wikiUrl), titleHash(fbid), 1.0)) 
             case _ =>          None
           }
         }
-        //.withFilter(x => x._1 == -1 && x._2 == -1)
-      }.toSeq.asInstanceOf[Seq[(VertexId, VertexId)]]
-    )
+      }
 
-    edgeRdd.take(5).foreach(println)
+      val defaultVertex = -1L
 
-    val defaultVertex = -1L
+      val graph = Graph.fromEdges(edgeRdd, defaultVertex)
 
-    val graph = Graph.fromEdgeTuples(edgeRdd, defaultVertex)
+      def max(a: (VertexId, Int), b: (VertexId, Int)): (VertexId, Int) = { if (a._2 > b._2) a else b }
+      val maxDegrees = graph.degrees.reduce(max)
 
-    def max(a: (VertexId, Int), b: (VertexId, Int)): (VertexId, Int) = { if (a._2 > b._2) a else b }
-    val maxDegrees = graph.degrees.reduce(max)
+      logInfo(s"The maxDegrees of the graph is $maxDegrees")
 
-    logInfo(s"The maxDegrees of the graph is $maxDegrees")
 
-    
+    }
+
 
   }
-
-
-}
