@@ -12,18 +12,27 @@ import edu.ufl.cise.dsr.MyLogging
 object MySpark extends MyLogging {
 
   lazy val conf:SparkConf = {
-    val master = "local[16]"
+    val master = "local"
     val YOUR_SPARK_HOME= "/home/cgrant/projects/spark/"
+    // https://github.com/apache/spark/blob/master/docs/configuration.md
     val conf = new SparkConf()
-                .setMaster(master)
-                .setAppName("SSTest")
-                .set("spark.executor.memory", "5g")
-                .setSparkHome(s"$YOUR_SPARK_HOME")
-                .set("akka.version", "2.2.3")
-                //.set("spark.locality.wait", "10000")
-                //.set("spark.akka.failure-detector.threshold", "3000.0")
-                //.set("spark.akka.heartbeat.interval", "5000")
-                //.set("spark.akka.heartbeat.pauses", "3000")
+      .set("spark.logConf", "true")
+      .setMaster(master)
+      .setAppName("SSTest")
+      .setSparkHome(s"$YOUR_SPARK_HOME")
+      .set("akka.version", "2.2.3")
+      .set("spark.deploy.recoveryMode", "FILESYSTEM")
+      .set("spark.deploy.recoveryDirectory", "/tmp")
+      .set("spark.shuffle.consolidateFiles", "true")
+      .set("spark.executor.memory", "5g")
+      .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+      .set("spark.kryo.registrator", "org.apache.spark.graphx.GraphKryoRegistrator")
+      .set("spark.kryo.referenceTracking", "false")
+      .set("spark.kryoserializer.buffer.mb", "16")
+      .set("spark.rdd.compress", "true")
+      .set("spark.io.compression.codec", "org.apache.spark.io.SnappyCompressionCodec")
+      //.set("spark.io.compression.codec", "org.apache.spark.io.LZFCompressionCodec")
+      .set("spark.storage.memoryMapThreshold", "32768")
     conf
   }
 

@@ -80,7 +80,8 @@ object WikiLink extends MyLogging {
     }
 
     // Create RDD for Edges
-    val itemsRDD = sc.parallelize(theItems.toSeq)
+    logInfo("Retrieving items to add to the RDD")
+    val itemsRDD = sc.parallelize(theItems.take(10000).toSeq)
 
       val edgeRdd =
         itemsRDD.flatMap{w => 
@@ -104,6 +105,9 @@ object WikiLink extends MyLogging {
       val maxDegrees = graph.degrees.reduce(max)
 
       logInfo(s"The maxDegrees of the graph is $maxDegrees")
+
+      logInfo("The number of Vertices %d".format(graph.numVertices))
+      logInfo("The number of Edges %d".format(graph.numEdges))
 
 
     }
