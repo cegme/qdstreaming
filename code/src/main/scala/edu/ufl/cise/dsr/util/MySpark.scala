@@ -11,6 +11,10 @@ import edu.ufl.cise.dsr.MyLogging
 
 object MySpark extends MyLogging {
 
+  /**
+    * Tuning Docs:
+    * http://people.apache.org/~pwendell/catalyst-docs/tuning.html
+    */
   lazy val conf:SparkConf = {
     val master = "local"
     val YOUR_SPARK_HOME= "/home/cgrant/projects/spark/"
@@ -25,23 +29,24 @@ object MySpark extends MyLogging {
       .set("spark.deploy.recoveryDirectory", "/tmp")
       .set("spark.shuffle.consolidateFiles", "true")
       .set("spark.executor.memory", "5g")
-      .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-      .set("spark.kryo.registrator", "org.apache.spark.graphx.GraphKryoRegistrator")
-      .set("spark.kryo.referenceTracking", "false")
-      .set("spark.kryoserializer.buffer.mb", "16")
-      .set("spark.rdd.compress", "true")
-      .set("spark.io.compression.codec", "org.apache.spark.io.SnappyCompressionCodec")
+      //.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+      .set("spark.serializer", "org.apache.spark.serializer.JavaSerializer")
+      //.set("spark.kryo.registrator", "org.apache.spark.graphx.GraphKryoRegistrator")
+      //.set("spark.kryo.referenceTracking", "false")
+      //.set("spark.kryoserializer.buffer.mb", "16")
+      //.set("spark.rdd.compress", "true")
+      //.set("spark.io.compression.codec", "org.apache.spark.io.SnappyCompressionCodec")
       //.set("spark.io.compression.codec", "org.apache.spark.io.LZFCompressionCodec")
       .set("spark.storage.memoryMapThreshold", "32768")
     conf
   }
 
   lazy val sc:SparkContext = {
-    new SparkContext(conf)
+    new SparkContext(MySpark.conf)
   }
 
   lazy val ssc:StreamingContext = {
-    new StreamingContext(conf, Seconds(1))
+    new StreamingContext(MySpark.conf, Seconds(1))
   }
 
 }

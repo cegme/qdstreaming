@@ -11,7 +11,8 @@ import edu.ufl.cise.dsr.MyLogging
 import edu.ufl.cise.dsr.point.KBAEntityChain
 import edu.ufl.cise.dsr.util.Util
 
-import org.apache.commons.compress.compressors.xz.XZCompressorInputStream
+import org.tukaani.xz.XZInputStream
+//import org.apache.commons.compress.compressors.xz.XZCompressorInputStream
 import org.apache.thrift.protocol.TBinaryProtocol
 import org.apache.thrift.transport.TIOStreamTransport
 import org.apache.thrift.transport.TTransportException
@@ -87,7 +88,8 @@ class KBAFolders extends MyLogging {
  
       // Uncompress the decrypted stream
       val is = new ByteArrayInputStream(baos.toByteArray)
-      val bais = new XZCompressorInputStream(is)
+      //val bais = new XZCompressorInputStream(is)
+      val bais = new XZInputStream(is)
 
       // Open the transport so we can read the thrift objects
       val transport = new TIOStreamTransport(bais)

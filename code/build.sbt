@@ -4,7 +4,7 @@ version := "0.01"
 
 scalaVersion := "2.10.3"
 
-//javacOptions ++= Seq("-Xlint:unchecked")
+javacOptions ++= Seq("-Xlint:unchecked")
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 
@@ -23,6 +23,14 @@ resolvers += "spray repo" at "http://repo.spray.io"
 //resolvers += "Akka Repository" at "http://repo.akka.io/releases/"
 
 resolvers += "twitter-repo" at "http://maven.twttr.com"
+
+libraryDependencies += "com.twitter" % "parquet-format" % "2.1.0"
+
+libraryDependencies += "com.twitter" % "algebird_2.10" % "0.6.0"
+
+libraryDependencies += "com.twitter" % "algebird-core_2.10" % "0.6.0"
+
+libraryDependencies += "com.twitter" % "algebird-util_2.10" % "0.6.0"
 
 libraryDependencies += "com.twitter" % "scrooge-core" % "3.15.0" from "http://repo1.maven.org/maven2/com/twitter/scrooge-core_2.10/3.15.0/scrooge-core_2.10-3.15.0.jar"
 
@@ -44,7 +52,9 @@ libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % "2.2.3"
 
 //libraryDependencies += "org.apache.camel" % "camel-core" % "2.2.3"
 
-libraryDependencies += "org.tukaani" % "xz" % "1.2"
+libraryDependencies += "org.tukaani" % "xz" % "1.5"
+
+libraryDependencies += "org.apache.commons" % "commons-compress" % "1.8.1"
 
 //libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.7"
 
@@ -62,12 +72,12 @@ libraryDependencies += "org.apache.thrift" % "libthrift" % "0.9.1"
 
 //libraryDependencies += "org.reactivestreams" % "reactive-streams-spi" % "0.3"
 
-//libraryDependencies += "org.apache.spark" %% "spark-mllib" % "0.9.1"
+libraryDependencies += "org.apache.spark" %% "spark-mllib" % "1.0.0"
 
-libraryDependencies += "org.apache.spark" %% "spark-graphx" % "0.9.1"
+libraryDependencies += "org.apache.spark" %% "spark-graphx" % "1.0.0"
 
-libraryDependencies += "org.apache.spark" %% "spark-streaming" % "0.9.1"
+libraryDependencies += "org.apache.spark" %% "spark-streaming" % "1.0.0"
 
-libraryDependencies += "org.apache.spark" %% "spark-core" % "0.9.1"
+libraryDependencies += "org.apache.spark" %% "spark-core" % "1.0.0"
 
  
