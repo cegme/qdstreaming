@@ -80,4 +80,6 @@ libraryDependencies += "org.apache.spark" %% "spark-streaming" % "1.0.0"
 
 libraryDependencies += "org.apache.spark" %% "spark-core" % "1.0.0"
 
+libraryDependencies += "org.apache.spark" %% "spark-sql" % "1.0.0"
+
  
