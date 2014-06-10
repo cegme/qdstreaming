@@ -45,13 +45,19 @@ import MyWikiLinkItem._
 object MyWikiLinkItem {
   import scala.language.implicitConversions
   type WLI = edu.umass.cs.iesl.wikilink.expanded.data.WikiLinkItem
-  implicit def string2Option(s: String) = Some(s)
+  implicit def optionStringtoString(s: Option[String]) = s match {
+    case Some(s) => s
+    case None => ""
+   }
   //implicit def bytebuffer2Option(b:java.nio.ByteBuffer) = Some(b)
   implicit def context2Option(c:Context) = Some(c)
+  def smallTuple(w:edu.umass.cs.iesl.wikilink.expanded.data.WikiLinkItem ) = {
+    w.docId 
+  }
   def apply(w:edu.umass.cs.iesl.wikilink.expanded.data.WikiLinkItem ) = 
     new MyWikiLinkItem(
       w.docId, 
-      w.url, 
+      w.url/*, 
       PageContentItem(w.content.raw match {
                         case Some(b) => b.array()
                         case None    => Array[Byte]()},
@@ -65,24 +71,25 @@ object MyWikiLinkItem {
                 m.anchorText,
                 m.rawTextOffset,
                 m.context match {
-                  case Some(c) => Some(Context(c.left, c.right, c.middle))
-                  case None => None},
+                  case Some(c) => Context(c.left, c.right, c.middle)
+                  case None => Context("", "", "")},
                 m.freebaseId) }
-    )
+    */)
 }
 
 case class MyWikiLinkItem(
   val docId: Int,
-  val url: String,
-  val content: PageContentItem,
-  val rareWords: Seq[RareWord] = Seq[RareWord](),
-  val mentions: Seq[Mention] = Seq[Mention]())
+  val url: String//,
+  //val content: PageContentItem,
+  //val rareWords: Seq[RareWord] = Seq[RareWord](),
+  //val mentions: Seq[Mention] = Seq[Mention]()
+  )
 case class Mention(
   val wikiUrl: String,
   val anchorText: String,
   val rawTextOffset: Int,
-  val context: Option[Context] = None,
-  val freebaseId: Option[String] = None)
+  val context: Context,
+  val freebaseId: String)
 case class RareWord(
   val word: String,
   val offset: Int)
@@ -92,9 +99,9 @@ case class Context(
   val middle: String)
 case class PageContentItem(
   val raw: Array[Byte],
-  val fullText: Option[String] = None,
-  val articleText: Option[String] = None,
-  val dom: Option[String] = None)
+  val fullText: String,
+  val articleText: String,
+  val dom: String)
 
 
 
@@ -104,25 +111,45 @@ object WikiLink extends MyLogging {
 
   // TODO: Try Parque thttps://groups.google.com/forum/#!topic/parquet-dev/8Ei4IVKXgoc
 
-  def MakeRDD(sc:SparkContext, file:String = "/data/d04/wikilinks/content-only/001.gz"):RDD[MyWikiLinkItem] = {
+  def MakeRDD(sc:SparkContext, file:String = "/data/d04/wikilinks/content-only/001.gz") = {
 
     val (stream, protocol) = ThriftSerializerFactory
       .getReader(new java.io.File(file))
 
     val theItems = 
       Iterator.continually(getWikiItem(protocol))
-        .takeWhile(_ match { case None => stream.close; false; case _ => true})
-        .map { wli => MyWikiLinkItem(wli.get) }
-        .sliding(1000,1000) // Group the items
+        .takeWhile(_ match { 
+          case Some(x) => true
+          case None    => {stream.close; false}
+        })
+        .withFilter(_!=None)
+        .flatMap {wli => wli}
+        .map { wli => MyWikiLinkItem(wli) }
+        //.map { wli => MyWikiLinkItem.smallTuple(wli.get) }
+        .sliding(9,9) // Group the items
+        .toSeq
+        .take(11111)
 
     //var rdd = sc.emptyRDD[WikiLinkItem]
     //var rdd = sc.makeRDD(Seq(theItems.next))
-    var rdd:RDD[MyWikiLinkItem] = sc.makeRDD(theItems.next.toSeq)
+    //var rdd = sc.makeRDD(theItems.next.toSeq)
     //rdd.persist(StorageLevel.MEMORY_AND_DISK)
+    logInfo("The items group size %d".format(theItems.size))
 
-    for (itemGroup <- theItems) {
-      rdd = rdd.union(sc.makeRDD(itemGroup))
+
+    val rdd = {
+      import scala.language.implicitConversions
+      implicit def wikiitem2rdd(x:MyWikiLinkItem) = sc.makeRDD(Seq(x))
+      implicit def wikiseq2rdd(x:Seq[MyWikiLinkItem]) = sc.makeRDD(x)
+      val rdd = sc.makeRDD(theItems.take(11110).reduce(_ ++ _) )
+      logInfo("RDD Type: %s".format(rdd.toString))
+      rdd.foreach(x => println("First: %s".format(x)))
+      rdd
     }
+    /*for (itemGroup <- theItems) {
+      rdd = rdd.union(sc.makeRDD(Seq(itemGroup)))
+      rdd.cache
+    }*/
     rdd
   }
 
@@ -174,18 +201,24 @@ object WikiLink extends MyLogging {
     logInfo("Retrieving items to add to the RDD")
     //val stuff = theItems.toArray
     //val itemsRDD = sc.parallelize(stuff)
-   // val itemsRDD = sc.parallelize(theItems.take(10000).toSeq)
-   val itemsRDD = MakeRDD(sc, "/data/d04/wikilinks/content-only/001.gz")
-   itemsRDD.saveAsParquetFile("wikilinks.parquet")
+    // val itemsRDD = sc.parallelize(theItems.take(10000).toSeq)
+    val itemsRDD = MakeRDD(sc, "/data/d04/wikilinks/content-only/001.gz")
+    itemsRDD.cache
+    //itemsRDD.saveAsParquetFile("wikilinks.parquet")
+
+    logInfo("Counting the total items...")
+    val count1 = itemsRDD.count()
+    logInfo(s"Total item count is $count1")
+
+    //logInfo("Reading ParquetFile")
+    //val parquetFile = MySpark.sqlsc.parquetFile("wikilinks.parquet")
+    //parquetFile.registerAsTable("parquetFile")
+    itemsRDD.registerAsTable("itemsRDD")
+    val count = sql("SELECT * from itemsRDD LIMIT 10")
+      count.collect().foreach(println)
 
 
-    val parquetFile = MySpark.sqlsc.parquetFile("wikilinks.parquet")
-    parquetFile.registerAsTable("parquetFile")
-    val count = sql("SELECT * from parquetFile LIMIT 10")
-    count.collect.foreach(println)
-
-
-    logInfo("The itemsRDD count: %d".format(itemsRDD.count))
+   logInfo("The itemsRDD count: %d".format(itemsRDD.count))
 
     /*val edgeRdd =
       itemsRDD.flatMap{w => 
