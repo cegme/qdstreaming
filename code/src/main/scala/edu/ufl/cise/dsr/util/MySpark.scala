@@ -19,21 +19,22 @@ object MySpark extends MyLogging {
     * http://people.apache.org/~pwendell/catalyst-docs/tuning.html
     */
   lazy val conf:SparkConf = {
-    val master = "local"
     val YOUR_SPARK_HOME= "/home/cgrant/projects/spark/"
     // https://github.com/apache/spark/blob/master/docs/configuration.md
     val conf = new SparkConf()
-      //.set("spark.logConf", "true")
-      .setMaster(master)
+      .set("spark.logConf", "true")
+      //.setMaster("local")
+      .setMaster("spark://sm457-08:7077")
+      //.set("spark.driver.host", "128.227.176.46")
       .setAppName("SSTest")
-      .setSparkHome(s"$YOUR_SPARK_HOME")
+      //.setSparkHome(s"$YOUR_SPARK_HOME")
       .set("akka.version", "2.2.3")
       //.set("spark.deploy.recoveryMode", "FILESYSTEM")
       //.set("spark.deploy.recoveryDirectory", "/tmp")
       //.set("spark.shuffle.consolidateFiles", "true")
       .set("spark.executor.memory", "5g")
       //.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-      .set("spark.serializer", "org.apache.spark.serializer.JavaSerializer")
+      //.set("spark.serializer", "org.apache.spark.serializer.JavaSerializer")
       //.set("spark.kryo.registrator", "org.apache.spark.graphx.GraphKryoRegistrator")
       //.set("spark.kryo.referenceTracking", "false")
       //.set("spark.kryoserializer.buffer.mb", "16")
@@ -42,6 +43,8 @@ object MySpark extends MyLogging {
       //.set("spark.io.compression.codec", "org.apache.spark.io.LZFCompressionCodec")
       //.set("spark.storage.memoryMapThreshold", "32768")
       //.set("spark.task.maxFailures", "8")
+
+    logInfo("Akka Conf: %s".format(conf.getAkkaConf.toString))
     conf
   }
 

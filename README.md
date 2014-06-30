@@ -3,6 +3,15 @@ qdstreaming
 
 Query-driven entity resolution over a streaming data set 
 
+## Compile 
+  You need to have spark install and running somewhere
+
+    sbt compile
+    sbt -mem 8000 assembly
+    ~/projects/spark/bin/spark-submit --class "edu.ufl.cise.dsr.examples.WikiLink" --master "local[4]" /home/cgrant/projects/qdstreaming/code/target/scala-2.10/qdstreaming-assembly-0.01.jar
+
+
+
 ## Algorithm
 
 We apply the doubling algorithm in minibatches

@@ -26,7 +26,9 @@ import org.apache.thrift.protocol.TCompactProtocol
 import scala.collection.JavaConversions._
 
 import edu.ufl.cise.dsr.ingestor.KBAIngestor
+import edu.ufl.cise.dsr.ingestor.WikiLinkIngestor
 import edu.ufl.cise.dsr.MyLogging
+import edu.ufl.cise.dsr.point.WikiLinkMention
 import edu.ufl.cise.dsr.util.MySpark
 
 import streamcorpus.StreamItem
@@ -39,158 +41,14 @@ import edu.umass.cs.iesl.wikilink.expanded.process.ThriftSerializerFactory
 
 import java.nio.ByteBuffer
 
-
-
-import MyWikiLinkItem._
-object MyWikiLinkItem {
-  import scala.language.implicitConversions
-  type WLI = edu.umass.cs.iesl.wikilink.expanded.data.WikiLinkItem
-  implicit def optionStringtoString(s: Option[String]) = s match {
-    case Some(s) => s
-    case None => ""
-   }
-  //implicit def bytebuffer2Option(b:java.nio.ByteBuffer) = Some(b)
-  implicit def context2Option(c:Context) = Some(c)
-  def smallTuple(w:edu.umass.cs.iesl.wikilink.expanded.data.WikiLinkItem ) = {
-    w.docId 
-  }
-  def apply(w:edu.umass.cs.iesl.wikilink.expanded.data.WikiLinkItem ) = 
-    new MyWikiLinkItem(
-      w.docId, 
-      w.url/*, 
-      PageContentItem(w.content.raw match {
-                        case Some(b) => b.array()
-                        case None    => Array[Byte]()},
-                      w.content.fullText,
-                      w.content.articleText,
-                      w.content.dom),
-      w.rareWords.map{ r =>
-        RareWord(r.word, r.offset) },
-      w.mentions.map{ m =>
-        Mention(m.wikiUrl,
-                m.anchorText,
-                m.rawTextOffset,
-                m.context match {
-                  case Some(c) => Context(c.left, c.right, c.middle)
-                  case None => Context("", "", "")},
-                m.freebaseId) }
-    */)
-}
-
-case class MyWikiLinkItem(
-  val docId: Int,
-  val url: String//,
-  //val content: PageContentItem,
-  //val rareWords: Seq[RareWord] = Seq[RareWord](),
-  //val mentions: Seq[Mention] = Seq[Mention]()
-  )
-case class Mention(
-  val wikiUrl: String,
-  val anchorText: String,
-  val rawTextOffset: Int,
-  val context: Context,
-  val freebaseId: String)
-case class RareWord(
-  val word: String,
-  val offset: Int)
-case class Context(
-  val left: String,
-  val right: String,
-  val middle: String)
-case class PageContentItem(
-  val raw: Array[Byte],
-  val fullText: String,
-  val articleText: String,
-  val dom: String)
-
-
-
-
-
-object WikiLink extends MyLogging {
+object WikiLink extends MyLogging with App {
 
   // TODO: Try Parque thttps://groups.google.com/forum/#!topic/parquet-dev/8Ei4IVKXgoc
 
-  def MakeRDD(sc:SparkContext, file:String = "/data/d04/wikilinks/content-only/001.gz") = {
-
-    val (stream, protocol) = ThriftSerializerFactory
-      .getReader(new java.io.File(file))
-
-    val theItems = 
-      Iterator.continually(getWikiItem(protocol))
-        .takeWhile(_ match { 
-          case Some(x) => true
-          case None    => {stream.close; false}
-        })
-        .withFilter(_!=None)
-        .flatMap {wli => wli}
-        .map { wli => MyWikiLinkItem(wli) }
-        //.map { wli => MyWikiLinkItem.smallTuple(wli.get) }
-        .sliding(9,9) // Group the items
-        .toSeq
-        .take(11111)
-
-    //var rdd = sc.emptyRDD[WikiLinkItem]
-    //var rdd = sc.makeRDD(Seq(theItems.next))
-    //var rdd = sc.makeRDD(theItems.next.toSeq)
-    //rdd.persist(StorageLevel.MEMORY_AND_DISK)
-    logInfo("The items group size %d".format(theItems.size))
-
-
-    val rdd = {
-      import scala.language.implicitConversions
-      implicit def wikiitem2rdd(x:MyWikiLinkItem) = sc.makeRDD(Seq(x))
-      implicit def wikiseq2rdd(x:Seq[MyWikiLinkItem]) = sc.makeRDD(x)
-      val rdd = sc.makeRDD(theItems.take(11110).reduce(_ ++ _) )
-      logInfo("RDD Type: %s".format(rdd.toString))
-      rdd.foreach(x => println("First: %s".format(x)))
-      rdd
-    }
-    /*for (itemGroup <- theItems) {
-      rdd = rdd.union(sc.makeRDD(Seq(itemGroup)))
-      rdd.cache
-    }*/
-    rdd
-  }
-
-  def getWikiItem(protocol:TProtocol):Option[WikiLinkItem] = {
-
-    var w:WikiLinkItem = null
-    var successful = false
-    try {
-      w = WikiLinkItem.decode(protocol)
-      successful = true
-    } catch {
-      case e:java.lang.OutOfMemoryError => logError("OOM Error: %s".format(e.getStackTrace.mkString("\n"))); None
-      case e:TTransportException => e.getType match { 
-        case TTransportException.END_OF_FILE => /*logDebug("wikiLinkStream Finished.");*/ None
-        case TTransportException.ALREADY_OPEN => logError("wikiLinkStream already opened."); None
-        case TTransportException.NOT_OPEN => logError("wikiLinkStream not open."); None
-        case TTransportException.TIMED_OUT => logError("wikiLinkStream timed out."); None
-        case TTransportException.UNKNOWN => logError("wikiLinkStream unknown."); None
-        case e => logError("Error in wikiLinkStreamItem: %s".format(e.toString)); None
-      }
-      case e: Exception => logDebug("Error in wikiLinkStreamItem"); None
-    }
-    if (successful) Some(w) else None
-
-  }
-
-  def main(args: Array[String]) {
+  //def main(args: Array[String]) {
 
     val sc = MySpark.sc
     import MySpark.sqlsc._
-
-    // Loop through all the WikiLinkItems
-    /*val (stream, protocol) = ThriftSerializerFactory
-      .getReader(new java.io.File("/data/d04/wikilinks/content-only/001.gz"))
-
-    val theItems = 
-      Iterator.continually(getWikiItem(protocol))
-        .takeWhile(_ match { case None => stream.close; false; case _ => true})
-        .map { _.get }
-    */
-    //logInfo("Total number of wikiitems: " + theItems.count(w => true))
 
     def titleHash(s:String) = s match {
       case s:String => s.toLowerCase.hashCode
@@ -202,8 +60,9 @@ object WikiLink extends MyLogging {
     //val stuff = theItems.toArray
     //val itemsRDD = sc.parallelize(stuff)
     // val itemsRDD = sc.parallelize(theItems.take(10000).toSeq)
-    val itemsRDD = MakeRDD(sc, "/data/d04/wikilinks/content-only/001.gz")
-    itemsRDD.cache
+    val itemsRDD = MySpark.sc.makeRDD(
+      (new WikiLinkIngestor).take(10).flatMap(WikiLinkMention.getMentions).toSeq
+    )
     //itemsRDD.saveAsParquetFile("wikilinks.parquet")
 
     logInfo("Counting the total items...")
@@ -245,7 +104,8 @@ object WikiLink extends MyLogging {
     //logInfo("The number of Edges %d".format(graph.numEdges))
     */
     
-    }
+    MySpark.sc.stop()
+    //}
 
 
   }

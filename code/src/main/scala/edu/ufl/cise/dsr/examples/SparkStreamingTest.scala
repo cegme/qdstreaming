@@ -33,7 +33,8 @@ object SparkStreamingTest extends MyLogging {
       def main(args:Array[String]) {
       //val system = ActorSystem("spark")
       //val master = "spark://localhost:7077"
-      val master = "local[16]"
+      val master = "spark://sm457-08:7077"
+      //val master = "local[16]"
 
       logInfo(s"Starting at the master: $master")
       val YOUR_SPARK_HOME= "/home/cgrant/projects/spark/"
@@ -41,8 +42,9 @@ object SparkStreamingTest extends MyLogging {
                   .setMaster(master)
                   .setAppName("SSTest")
                   .set("spark.executor.memory", "5g")
-                  .setSparkHome(s"$YOUR_SPARK_HOME")
+                  //.setSparkHome(s"$YOUR_SPARK_HOME")
                   .set("akka.version", "2.2.3")
+                  //.set("akka.version", "2.1.4")
                   //.set("spark.locality.wait", "10000")
                   //.set("spark.akka.failure-detector.threshold", "3000.0")
                   //.set("spark.akka.heartbeat.interval", "5000")
