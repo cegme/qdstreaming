@@ -13,6 +13,8 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 
 import scala.collection.JavaConversions._
+import scala.collection.mutable.ArrayBuffer
+
 
 case class WikiLinkMention (
   val docId:Int, // From WikiLinkItem
@@ -21,7 +23,10 @@ case class WikiLinkMention (
   val contextLeft:String, // From Mention
   val contextRight:String, // From Mention
   val contextMiddle:String, // From Mention
-  val wikiUrl:String // The truth value (from Mention)
+  val wikiUrl:String, // The truth value (from Mention)
+  //TODO not yet supported 
+  //var canopy:ArrayBuffer[Int] = ArrayBuffer[Int]()
+  var canopy:String = ""
   ) extends Point {
 
   def dimentions[String]():Iterator[String] = {

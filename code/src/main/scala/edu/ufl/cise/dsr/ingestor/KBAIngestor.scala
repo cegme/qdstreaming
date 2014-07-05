@@ -134,11 +134,12 @@ class KBAFolders extends MyLogging {
    * Creates a StreamItem from a protocol. return an Option[StramItem] just in case
    * for some of them we don't have data we are safe.
    */
-  def mkStreamItem(protocol: TBinaryProtocol, s:StreamItem = new StreamItem): Option[StreamItem] = {
-    //val s = new StreamItem
+  def mkStreamItem(protocol: TBinaryProtocol/*, s:StreamItem = new StreamItem*/): Option[StreamItem] = {
+    var s:StreamItem = null
     var successful = false
     try {
-      s.read(protocol)
+      s = StreamItem.decode(protocol) 
+      //s.read(protocol)
       successful = true
     } catch {
       case e:java.lang.OutOfMemoryError => logError("OOM Error: %s".format(e.getStackTrace.mkString("\n"))); None

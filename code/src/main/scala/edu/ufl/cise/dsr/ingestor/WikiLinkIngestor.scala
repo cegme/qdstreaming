@@ -49,16 +49,11 @@ class WikiLinkFolders extends MyLogging {
     gzFiles.flatMap{ gzFile => 
       logDebug("Extracting Wikilinks from file: %s".format(gzFile.getName)) 
 
-
-      
-
       //val (stream, protocol) = ThriftSerializerFactory
         //.getReader(gzFile)
 
       val stream = new BufferedInputStream(new GZIPInputStream(new FileInputStream(gzFile)), 2048)
       val protocol = new TBinaryProtocol(new TIOStreamTransport(stream))
-            (stream, protocol)
-
 
       Iterator.continually(mkWikiItem(protocol))
         .takeWhile(_ match { 
