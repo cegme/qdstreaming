@@ -8,8 +8,20 @@ Query-driven entity resolution over a streaming data set
 
     sbt compile
     sbt -mem 8000 assembly
-    ~/projects/spark/bin/spark-submit --class "edu.ufl.cise.dsr.examples.WikiLink" --master "local[4]" /home/cgrant/projects/qdstreaming/code/target/scala-2.10/qdstreaming-assembly-0.01.jar
-
+  
+  This creates an assembly jar that has all the qdstreaming package.
+  To launch a class `edu.ufl.cise.dsr.examples.WikiLink` use the follwing command.
+    
+    ~/projects/spark/bin/spark-submit\
+    --class "edu.ufl.cise.dsr.examples.WikiLink"\
+    --master "local[4]"\
+    /home/cgrant/projects/qdstreaming/code/target/scala-2.10/qdstreaming-assembly-0.01.jar
+    
+  To launch a process in the *REPL* use the following command.
+    
+    ~/projects/spark/bin/spark-shell\
+    --master local[8]\
+    --jars /home/cgrant/projects/qdstreaming/code/target/scala-2.10/qdstreaming-assembly-0.01.jar 
 
 
 ## Algorithm
