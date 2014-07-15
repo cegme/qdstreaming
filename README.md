@@ -16,6 +16,14 @@ Query-driven entity resolution over a streaming data set
     --class "edu.ufl.cise.dsr.examples.WikiLink"\
     --master "local[4]"\
     /home/cgrant/projects/qdstreaming/code/target/scala-2.10/qdstreaming-assembly-0.01.jar
+
+  Even better, to run on the sm321 server use the following command.
+  
+    time ~/projects/spark/bin/spark-submit\
+    --class "edu.ufl.cise.dsr.examples.DistributedER"\
+    --supervise --driver-cores 1 --total-executor-cores 32 --executor-memory 2G\ 
+    --driver-memory 6G -v --master spark://sm321-01.cise.ufl.edu:7077\
+    /home/cgrant/projects/qdstreaming/code/target/scala-2.10/qdstreaming-assembly-0.01.jar
     
   To launch a process in the *REPL* use the following command.
     
