@@ -30,18 +30,18 @@ object DistributedER extends MyLogging {
       )
     rdd.registerAsTable("wikimentions")
     //rdd.persist(StorageLevel.MEMORY_AND_DISK_SER)
-    rdd.persist(StorageLevel.MEMORY_ONLY_SER)
+    //rdd.persist(StorageLevel.MEMORY_ONLY_SER)
     //rdd.unpersist(false)
 
     var totalMentions = 0L
     val subset = wikiStream//.take(100000)
     //for(g <- subset.grouped(200)) {
-    for(g <- subset.grouped(25000)) {
+    for(g <- subset.grouped(100000)) {
       val mentions = g.toVector
                       .flatMap(WikiLinkMention.getMentions)
       val smallRDD = MySpark.sc.makeRDD[WikiLinkMention](mentions)
       smallRDD.insertInto("wikimentions", false)
-      smallRDD.unpersist(true)
+      //smallRDD.unpersist(false)
       totalMentions += mentions.size
       logInfo("Mentions added: %d; Total; %d".format(mentions.size, totalMentions))
 

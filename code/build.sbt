@@ -62,36 +62,16 @@ libraryDependencies ++= Seq ("com.twitter" % "parquet-format" % "2.1.0",
     "ch.qos.logback" % "logback-core" % "1.1.2" ,
     "org.apache.thrift" % "libthrift" % "0.9.1",
     //"org.apache.commons" % "commons-compress" % "1.7",
-    ("org.apache.spark" %% "spark-mllib" % "1.0.0").
-      exclude("org.mortbay.jetty", "servlet-api").
-      exclude("commons-beanutils", "commons-beanutils-core").
-      exclude("commons-collections", "commons-collections").
-      exclude("commons-collections", "commons-collections").
-      exclude("com.esotericsoftware.minlog", "minlog"),
-    ("org.apache.spark" %% "spark-graphx" % "1.0.0").
-      exclude("org.mortbay.jetty", "servlet-api").
-      exclude("commons-beanutils", "commons-beanutils-core").
-      exclude("commons-collections", "commons-collections").
-      exclude("commons-collections", "commons-collections").
-      exclude("com.esotericsoftware.minlog", "minlog"),
-    ("org.apache.spark" %% "spark-streaming" % "1.0.0").
-      exclude("org.mortbay.jetty", "servlet-api").
-      exclude("commons-beanutils", "commons-beanutils-core").
-      exclude("commons-collections", "commons-collections").
-      exclude("commons-collections", "commons-collections").
-      exclude("com.esotericsoftware.minlog", "minlog"),
-    ("org.apache.spark" %% "spark-core" % "1.0.0").
-      exclude("org.mortbay.jetty", "servlet-api").
-      exclude("commons-beanutils", "commons-beanutils-core").
-      exclude("commons-collections", "commons-collections").
-      exclude("commons-collections", "commons-collections").
-      exclude("com.esotericsoftware.minlog", "minlog"),
-    ("org.apache.spark" %% "spark-sql" % "1.0.0").
-      exclude("org.mortbay.jetty", "servlet-api").
-      exclude("commons-beanutils", "commons-beanutils-core").
-      exclude("commons-collections", "commons-collections").
-      exclude("commons-collections", "commons-collections").
-      exclude("com.esotericsoftware.minlog", "minlog"),
+    "org.apache.spark" %% "spark-core" % "1.0.1",
+    "org.apache.spark" %% "spark-sql" % "1.0.1",
+    "org.apache.spark" %% "spark-catalyst" % "1.0.1",
+    "org.apache.spark" %% "spark-hive" % "1.0.1",
+    "org.apache.spark" %% "spark-graphx" % "1.0.1",
+    "org.apache.spark" %% "spark-mllib" % "1.0.1",
+    "org.apache.spark" %% "spark-streaming" % "1.0.1",
+    "org.apache.spark" %% "spark-tools" % "1.0.1",
+    "org.apache.spark" %% "spark-repl" % "1.0.1",
+    "org.apache.spark" %% "spark-examples" % "1.0.1",
     "org.apache.hadoop" % "hadoop-client" % "2.4.0",
     "org.apache.hadoop" % "hadoop-common" % "2.4.0",
     //"org.mortbay.jetty" % "servlet-api" % "3.0.20100224",
