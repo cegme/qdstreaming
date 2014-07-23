@@ -1,0 +1,29 @@
+
+\section{Hybrid ER Structure}
+
+% Dynamic Structures (linked list vs array vs Vector)
+% http://kjellkod.wordpress.com/2012/02/25/why-you-should-never-ever-ever-use-linked-list-in-your-code-again/
+
+% RDD
+% 
+
+
+
+We introduce a distributed structure that adapts to the changing and diverse requirements 
+of entity resolution.
+
+Has the following properties:
+
+1) This systems enables adaptable column compression when needed.
+  - For example large entities will be compressed
+2) Fast updates for streaming 
+  - Updates to entities is an amortized \Theta(1) operation
+3) Efficient Book keeping for fast approximate methods
+  - Keep Approximate counts for the size of entities, the number of terms, etc
+4) Efficient Distributed structure
+  - Based on the RDD structure
+5) Support for query aware techniques
+  - Book Keeping makes it easy to perform query specific clustering
+
+
+

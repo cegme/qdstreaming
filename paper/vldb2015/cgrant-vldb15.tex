@@ -1,0 +1,111 @@
+
+%\documentclass{article}
+\documentclass{vldb}
+%\documentclass[10pt,conference]{IEEEtran}
+%\documentclass{sig-alternate}
+%\usepackage[utf8]{inputenc}
+%\usepackage{algorithm2e}
+%\usepackage[noend]{algorithm2e}
+%\usepackage[boxed,commentsnumbered]{algorithm2e}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+%\usepackage{algorithmicx}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{xspace}
+\usepackage{graphicx}
+\usepackage{caption}
+\DeclareCaptionType{copyrightbox} % Temporary hack to use the caption package
+\usepackage{subcaption}
+\usepackage{alltt}
+\usepackage{balance}
+\usepackage{hyperref}
+\usepackage{paralist}
+%\usepackage[top=0.75in, bottom=1in, left = 0.68in, right=0.68in]{geometry}
+\usepackage{cite}
+\usepackage{amsmath}
+
+
+\newcommand{\ceg}[1]{{\textcolor{green}{#1 --- CEG}}}
+\newcommand{\dzw}[1]{{\textcolor{magenta}{#1 --- CEG}}}
+\newcommand{\eat}[1]{}
+\newcommand{\qgram}{$q$-gram\xspace}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\newcommand{\added}[1]{\textcolor{blue}{#1}}
+\newcommand{\changed}[1]{\textcolor{red}{#1}}
+\newcommand{\removed}[1]{\textcolor{gray}{#1}}
+
+
+\definecolor{light-gray}{gray}{0.15}
+\newcommand{\thereviewer}[1]{\textcolor{light-gray}{\textit{#1}}}
+
+\newcommand{\hide}[2]{#2}
+
+\newenvironment{compactitemize}%
+    {\begin{list}{}{
+       \renewcommand{\makelabel}[1]{\bf $\bullet$}\hfil%
+       \settowidth{\labelwidth}{\bf $\bullet$}%
+       \setlength{\partopsep}{0mm}%
+       \setlength{\parsep}{0mm}%
+       \setlength{\parindent}{0mm}%
+       \setlength{\itemsep}{0mm}%
+       \setlength{\topsep}{0mm}%
+       \setlength{\leftmargin}{\labelwidth}%
+       \addtolength{\leftmargin}{\labelsep}
+     }}%
+    {\end{list}}
+
+% Try to get rid of orphans
+%\clubpenalty=10000
+%\widowpenalty = 10000
+
+\title{Hybrid Structures for Efficient Entity Resolution}
+
+\numberofauthors{2}
+\author{\alignauthor{Christan Earl Grant}\\
+    \affaddr{University of Florida}\\
+    \affaddr{Dept.\ of Computer Science}\\
+    \affaddr{Gainesville, Florida, USA} \\
+    \email{cgrant@cise.ufl.edu}\\
+
+\alignauthor{Daisy Zhe Wang}\\
+    \affaddr{University of Florida}\\
+    \affaddr{Dept.\ of Computer Science}\\
+    \affaddr{Gainesville, Florida, USA}\\
+    \email{daisyw@cise.ufl.edu}\\
+}
+
+\begin{document}
+\maketitle
+
+
+\input{content/abstract.tex}
+
+\input{content/introduction.tex}
+
+% Discussion of the ER data sets
+\input{content/erdatasets.tex}
+
+% Discussion of the ER algorithms
+% Distribution/Costs of each ER action
+\input{content/eralgos.tex}
+
+% Discussion of ER data structures in algorithms/systems
+\input{content/erstructure.tex}
+
+% Implemention of Hybrid/Parallel Data structure/Algorithm
+\input{content/hybrid.tex}
+
+% Experiments
+\input{content/experiments.tex}
+
+\input{content/conclusion.tex}
+
+
+{%
+  \scriptsize%
+  \bibliographystyle{abbrv}
+  \bibliography{citations}
+}
+
+\end{document}
