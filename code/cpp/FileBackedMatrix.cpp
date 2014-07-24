@@ -5,8 +5,8 @@
 #include <string.h>
 #include <time.h>
 
-#define MAX(a,b) ( ((a) > (b)) ? (a) : (b) )
-#define MIN(a,b) ( ((a) < (b)) ? (a) : (b) )
+#include "Util.h"
+
 
 /**
   * Create random large matrix in binary on disk.
@@ -36,9 +36,9 @@ void randomFileMatrix(int rows, int cols, const char * fileName) {
   * The user must delete the reference.
   * No bounds checks and fp must be open, YOLO
   */
-const float * getRow(int rowNum, int cols, FILE *fp) {
+float * getRow(int rowNum, int cols, FILE *fp) {
   
-  const float * rowBuffer1 = (const float *) malloc(sizeof(float) * cols);
+  float * rowBuffer1 = (float *) malloc(sizeof(float) * cols);
   
   // Get row 1
   int offset = rowNum * cols * sizeof(float);
@@ -72,7 +72,7 @@ void local_samples(FILE * fp, int samples, float distance, int rows, int cols) {
     int rowid1 = rand() % rows;
     int jump = rand() % (int) rows * distance;
     int direction = (rand() % 2 == 1) ? 1 : -1;
-    int rowid2 = rowid1 + jump*direction;
+    int rowid2 = MIN(MAX(rowid1 + jump*direction, rows), 0);
 
     const float * row1 = getRow(rowid1, cols, fp);
     const float * row2 = getRow(rowid2, cols, fp);
@@ -80,29 +80,30 @@ void local_samples(FILE * fp, int samples, float distance, int rows, int cols) {
     float sim = cosine(row1, row2, cols);
    
     // Free the row because room was allocated for it
-    for (int j = 0; j < cols; ++j) {
-      free((void*)(&row1[j]));
-      free((void*)(&row2[j]));
-    }
+    free((void*)(row1));
+    free((void*)(row2));
   }
 
 }
 
 
-/** TODO make inpus parameters */
+/** TODO make input parameters */
 int main(int argc, char** argv) {
 
   // Create matrix
   const char * file = "/tmp/mymatrix.mat";
-  int rows = 10;
+  int rows = 10000;
   int cols = 5;
-  int samples = 100;
-  float distance = .2;
+  int samples = 10000000;
+  float distance = .2F;
 
+  log_info("Creating a matrix of size %dx%d", rows, cols);
   randomFileMatrix(rows, cols, file);
   FILE * fp = fopen(file, "rb");
   // TODO add timing
+  log_info("Starting the sampling %d.", samples);
   local_samples(fp, samples, distance, rows, cols);
+  log_info("Finished sampling.");
   
   return 0;
 }
