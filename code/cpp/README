@@ -1,0 +1,11 @@
+
+
+# Cpp test for close and far samples
+
+
+# FileBackedMatrix.cpp
+    
+    gcc FileBackedMatrix.cpp -g -lm
+
+Still some debuggin needs to be done.
+I will also add some command line paramters to make testing with a sctipt easier.
