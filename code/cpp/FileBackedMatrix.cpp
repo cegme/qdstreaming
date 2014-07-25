@@ -77,6 +77,11 @@ void local_samples(FILE * fp, int samples, float distance, int rows, int cols) {
     const float * row1 = getRow(rowid1, cols, fp);
     const float * row2 = getRow(rowid2, cols, fp);
 
+    // FIXME checking the row1 values
+    for (int i = 0; i < cols; ++i) {
+      log_debug("row: %d, col: %d, value: %f", rowid1, i, row1[i]);
+    }
+
     float sim = cosine(row1, row2, cols);
    
     // Free the row because room was allocated for it
@@ -87,23 +92,62 @@ void local_samples(FILE * fp, int samples, float distance, int rows, int cols) {
 }
 
 
-/** TODO make input parameters */
+
+
 int main(int argc, char** argv) {
 
-  // Create matrix
-  const char * file = "/tmp/mymatrix.mat";
+  clock_t tic, toc, diff;
+
+  // Default arguments
+  char  file[50] = "/tmp/mymatrix.mat";
   int rows = 10000;
   int cols = 5;
   int samples = 10000000;
   float distance = .2F;
 
+  // Process commandline args
+  for (int i = 1; i < argc; ++i) {
+    if (strcmp(argv[i], "-r") == 0) {
+      rows = atoi(argv[++i]);
+    }
+    else if (strcmp(argv[i], "-c") == 0) {
+      cols  = atoi(argv[++i]);
+    }
+    else if (strcmp(argv[i], "-s") == 0) {
+      samples  = atoi(argv[++i]);
+    }
+    else if (strcmp(argv[i], "-d") == 0) {
+      distance  = atof(argv[++i]);
+    }
+    else if (strcmp(argv[i],"-f") == 0) {
+      strcpy(file, argv[++i]);
+    }
+    else {
+      log_info("Usage: ./a.out -f <tempmatrix> -c <cols> -r <rows> -d <distance> -s <samples>");
+      exit(1);
+    }
+  }
+
+  log_info("Running with parameters: -f %s -c %d -r %d -d %f -s %d", file, cols, rows, distance, samples);
+
+
   log_info("Creating a matrix of size %dx%d", rows, cols);
+  tic = clock();
   randomFileMatrix(rows, cols, file);
+  toc = clock();
+  log_timer(tic, toc, "Time to create matrix");
+
+  // Now openng the matrix file
   FILE * fp = fopen(file, "rb");
-  // TODO add timing
+
   log_info("Starting the sampling %d.", samples);
+  tic = clock();
   local_samples(fp, samples, distance, rows, cols);
+  toc = clock();
   log_info("Finished sampling.");
+  log_timer(tic, toc, "Time to make %d samples", samples);
+
+  fclose(fp);
   
   return 0;
 }

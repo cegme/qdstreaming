@@ -33,5 +33,7 @@ const char *  currentTime () {
 
 #define check_mem(A) check((A), "Out of memory.")
 
+#define log_timer(tic, toc, M, ...) fprintf(stderr, "%s [INFO] (%s:%d) | " M " (%lf msecs) \n", DATE_STRING,  __FILE__, __LINE__, ##__VA_ARGS__, (toc-tic)/CLOCKS_PER_SEC/1000.0)
+
 #endif  // UTIL_H
 
