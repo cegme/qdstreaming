@@ -23,7 +23,7 @@ void randomFileMatrix(int rows, int cols, const char * fileName) {
   for (int r = 0; r < rows; ++r) {
     for (int c = 0; c < cols; ++c) {
       float cell = ((float)rand() / (float)RAND_MAX);
-      fwrite (&cell, sizeof(float), sizeof(cell), fp); 
+      fwrite (&cell, sizeof(float), 1, fp); 
     }
   }
 
@@ -38,19 +38,18 @@ void randomFileMatrix(int rows, int cols, const char * fileName) {
   */
 float * getRow(int rowNum, int cols, FILE *fp) {
   
-  float * rowBuffer1 = (float *) malloc(sizeof(float) * cols);
+  float * rowBuffer1 = (float *) malloc(cols * sizeof(float));
   
   // Get row 1
   int offset = rowNum * cols * sizeof(float);
   fseek(fp, offset, SEEK_SET);
-  fgets((char*)rowBuffer1, sizeof(float)*cols, fp);
+  fread((void*)rowBuffer1, sizeof(float), cols, fp);
 
   return rowBuffer1;
 }
 
 float cosine (const float * row1, const float * row2, int size) {
 
-  float sim = 0.0F;
   float dot = 0.0F;
   float mag1 = 0.0F;
   float mag2 = 0.0F;
@@ -67,20 +66,19 @@ float cosine (const float * row1, const float * row2, int size) {
   * To a bunch of sample on the file backed matrix
   */
 void local_samples(FILE * fp, int samples, float distance, int rows, int cols) {
-  
+ 
   for (int s = 0; s < samples; ++s) {
+    // Sample the first row
     int rowid1 = rand() % rows;
+    
+    // Sample the second row
     int jump = rand() % (int) rows * distance;
     int direction = (rand() % 2 == 1) ? 1 : -1;
     int rowid2 = MIN(MAX(rowid1 + jump*direction, rows), 0);
 
+    // Fetch the two rows
     const float * row1 = getRow(rowid1, cols, fp);
     const float * row2 = getRow(rowid2, cols, fp);
-
-    // FIXME checking the row1 values
-    for (int i = 0; i < cols; ++i) {
-      log_debug("row: %d, col: %d, value: %f", rowid1, i, row1[i]);
-    }
 
     float sim = cosine(row1, row2, cols);
    
