@@ -63,10 +63,12 @@ float cosine (const float * row1, const float * row2, int size) {
 }
 
 /**
-  * To a bunch of sample on the file backed matrix
+  * To a bunch of sample on the file backed matrix.
+  * Return the average distance.
   */
-void local_samples(FILE * fp, int samples, float distance, int rows, int cols) {
+float local_samples(FILE * fp, int samples, float distance, int rows, int cols) {
  
+  unsigned long int avg_dist = 0L;
   for (int s = 0; s < samples; ++s) {
     // Sample the first row
     int rowid1 = rand() % rows;
@@ -74,19 +76,21 @@ void local_samples(FILE * fp, int samples, float distance, int rows, int cols) {
     // Sample the second row
     int jump = rand() % (int) rows * distance;
     int direction = (rand() % 2 == 1) ? 1 : -1;
-    int rowid2 = MIN(MAX(rowid1 + jump*direction, rows), 0);
+    int rowid2 = MAX(MIN(rowid1 + jump*direction, rows), 0); 
 
     // Fetch the two rows
     const float * row1 = getRow(rowid1, cols, fp);
     const float * row2 = getRow(rowid2, cols, fp);
 
     float sim = cosine(row1, row2, cols);
-   
+    
+    avg_dist += abs(rowid1 - rowid2);
     // Free the row because room was allocated for it
     free((void*)(row1));
     free((void*)(row2));
   }
 
+  return (float) avg_dist / samples;
 }
 
 
@@ -140,9 +144,9 @@ int main(int argc, char** argv) {
 
   log_info("Starting the sampling %d.", samples);
   tic = clock();
-  local_samples(fp, samples, distance, rows, cols);
+  float dist = local_samples(fp, samples, distance, rows, cols);
   toc = clock();
-  log_info("Finished sampling.");
+  log_info("Finished sampling. Avg distance: %f", dist);
   log_timer(tic, toc, "Time to make %d samples", samples);
 
   fclose(fp);
