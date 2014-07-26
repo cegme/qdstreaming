@@ -20,8 +20,9 @@ void randomFileMatrix(int rows, int cols, const char * fileName) {
   FILE * fp;
   fp = fopen (fileName, "wb");
 
-  for (int r = 0; r < rows; ++r) {
-    for (int c = 0; c < cols; ++c) {
+  int r, c;
+  for (r = 0; r < rows; ++r) {
+    for (c = 0; c < cols; ++c) {
       float cell = ((float)rand() / (float)RAND_MAX);
       fwrite (&cell, sizeof(float), 1, fp); 
     }
@@ -53,7 +54,8 @@ float cosine (const float * row1, const float * row2, int size) {
   float dot = 0.0F;
   float mag1 = 0.0F;
   float mag2 = 0.0F;
-  for (int i = 0; i < size; ++i) {
+  int i;
+  for (i = 0; i < size; ++i) {
     dot += row1[i] * row2[i];
     mag1 += pow(row1[i], 2);
     mag2 += pow(row2[i], 2);
@@ -69,7 +71,8 @@ float cosine (const float * row1, const float * row2, int size) {
 float local_samples(FILE * fp, int samples, float distance, int rows, int cols) {
  
   unsigned long int avg_dist = 0L;
-  for (int s = 0; s < samples; ++s) {
+  int s;
+  for (s = 0; s < samples; ++s) {
     // Sample the first row
     int rowid1 = rand() % rows;
     
@@ -108,7 +111,8 @@ int main(int argc, char** argv) {
   float distance = .2F;
 
   // Process commandline args
-  for (int i = 1; i < argc; ++i) {
+  int i;
+  for (i = 1; i < argc; ++i) {
     if (strcmp(argv[i], "-r") == 0) {
       rows = atoi(argv[++i]);
     }
