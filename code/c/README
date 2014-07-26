@@ -3,9 +3,9 @@
 # Cpp test for close and far samples
 
 
-# FileBackedMatrix.cpp
+# FileBackedMatrix.c
     
-    gcc FileBackedMatrix.cpp -g -lm
+    gcc FileBackedMatrix.c -g -lm
 
 # Running tests
 

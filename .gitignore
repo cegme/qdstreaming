@@ -122,3 +122,5 @@ sympy-plots-for-*.tex/
 
 # xindy
 *.xdy
+
+*.pyc
