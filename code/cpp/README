@@ -1,0 +1,28 @@
+
+
+# Cpp test for close and far samples
+
+
+# FileBackedMatrix.cpp
+    
+    gcc FileBackedMatrix.cpp -g -lm
+
+# Running tests
+
+Here is an example run
+
+    ./a.out -d 0.1 -s 1000000 -c 500 -r 50000 -f /tmp/mymatrix.mat
+
+The command line paramters are the following:
+
+  `-s` The number of samples
+  `-d` The distance window
+  `-c` The number of columns
+  `-r` The number of rows 
+  `-f` The file for the matrix
+
+
+Next, I will write a script to run hundreds of these test and extract
+and average the results.
+
+
