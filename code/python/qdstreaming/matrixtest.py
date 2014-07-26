@@ -1,7 +1,6 @@
 
 
 import numpy as np
-import pandas as pd
 import scipy as sp 
 
 import logging
@@ -18,13 +17,14 @@ from numpy import memmap
 from scipy.spatial.distance import cosine
 
 class MatrixTest:
-    def __init__(self, num_rows=10000, num_cols=5000, chunk=10, cell_size=4):
+    def __init__(self, num_rows=10000, num_cols=5000, chunk=10, tmpdir='/tmp', cell_size=4):
         self.NUM_ROWS = num_rows
         self.NUM_COLS = num_cols
         self.CELL_SIZE = cell_size
         self.chunk = chunk
         print >> stderr, "Setting up matrix of size {NUM_ROWS}x{NUM_COLS}".format(NUM_COLS=self.NUM_COLS, NUM_ROWS=self.NUM_ROWS)
-        self.setup_matrix()
+        self.tmpdir = tmpdir
+        self.setup_matrix(tmpfile=mkstemp(dir=tmpdir, suffix='.mat') )
 
 
     def setup_matrix(self, tmpfile=mkstemp(suffix='.mat')):
