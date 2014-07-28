@@ -2,6 +2,7 @@
 #define UTIL_H
 
 #include <time.h>
+#include <errno.h>
 
 #define MAX(a,b) ( ((a) > (b)) ? (a) : (b) )
 #define MIN(a,b) ( ((a) < (b)) ? (a) : (b) )
@@ -19,6 +20,8 @@ const char *  currentTime () {
   //return asctime(timeinfo);
 }
 
+#define clean_errno() (errno == 0 ? "None" : strerror(errno))
+
 #define DATE_STRING currentTime()
 
 #define log_info(M, ...) fprintf(stderr, "%s [INFO] (%s:%d) | " M "\n", DATE_STRING,  __FILE__, __LINE__, ##__VA_ARGS__)
@@ -34,6 +37,8 @@ const char *  currentTime () {
 #define check_mem(A) check((A), "Out of memory.")
 
 #define log_timer(tic, toc, M, ...) fprintf(stderr, "%s [INFO] (%s:%d) | " M " (%lf msecs) \n", DATE_STRING,  __FILE__, __LINE__, ##__VA_ARGS__, 1000.0*(toc-tic)/CLOCKS_PER_SEC)
+
+
 
 #endif  // UTIL_H
 

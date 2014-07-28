@@ -44,7 +44,8 @@ float * getRow(int rowNum, int cols, FILE *fp) {
   // Get row 1
   int offset = rowNum * cols * sizeof(float);
   fseek(fp, offset, SEEK_SET);
-  fread((void*)rowBuffer1, sizeof(float), cols, fp);
+  size_t success = fread((void*)rowBuffer1, sizeof(float), cols, fp);
+	//if (success != cols) log_err("Error reading rowNum %d (%d of %d)", rowNum, success, cols);
 
   return rowBuffer1;
 }
@@ -74,12 +75,12 @@ float local_samples(FILE * fp, int samples, float distance, int rows, int cols) 
   int s;
   for (s = 0; s < samples; ++s) {
     // Sample the first row
-    int rowid1 = rand() % rows;
+    int rowid1 = rand() % rows ;
     
     // Sample the second row
     int jump = rand() % (int) rows * distance;
     int direction = (rand() % 2 == 1) ? 1 : -1;
-    int rowid2 = MAX(MIN(rowid1 + jump*direction, rows), 0); 
+    int rowid2 = MAX(MIN(rowid1 + jump*direction, rows - 1), 0); 
 
     // Fetch the two rows
     const float * row1 = getRow(rowid1, cols, fp);
@@ -142,6 +143,7 @@ int main(int argc, char** argv) {
   randomFileMatrix(rows, cols, file);
   toc = clock();
   log_timer(tic, toc, "Time to create matrix");
+	long matrixbuildtime = toc - tic;
 
   // Now openng the matrix file
   FILE * fp = fopen(file, "rb");
@@ -150,10 +152,18 @@ int main(int argc, char** argv) {
   tic = clock();
   float dist = local_samples(fp, samples, distance, rows, cols);
   toc = clock();
+
+  fclose(fp);
+
   log_info("Finished sampling. Avg distance: %f", dist);
   log_timer(tic, toc, "Time to make %d samples", samples);
 
-  fclose(fp);
+	long sampletime = toc - tic;
+	
+
+	// Write output to stdout according to script expectation
+	// matrixbuildtime(msecs)|sampletime(msecs)
+	printf("%lf|%lf", 1000.0*matrixbuildtime/CLOCKS_PER_SEC, 1000.0*sampletime/CLOCKS_PER_SEC);
   
   return 0;
 }

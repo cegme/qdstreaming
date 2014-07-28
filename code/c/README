@@ -1,13 +1,22 @@
 
 
-# Cpp test for close and far samples
+# Cpp test for close and far sampling
 
 
 # FileBackedMatrix.c
-    
-    gcc FileBackedMatrix.c -g -lm
 
-# Running tests
+Use the Makefile to compile the source.
+The default is to make with the debugging options.    
+
+To make with optimization flags use `make all`.
+
+To understand which compile flags are enabled use
+the help command.
+
+		gcc -march=native -O3 -l -Q --help=target FileBackedMatrix.c
+
+
+# Running the code
 
 Here is an example run
 
@@ -21,8 +30,21 @@ The command line paramters are the following:
   `-r` The number of rows 
   `-f` The file for the matrix
 
+You can estimate the size of the temporary matrix by multiplying
+the `rows x cols x 4 (bytes)`.
+The 4 bytes is the size of the float.
+The current version only uses floats.
+This may change in the future.
 
-Next, I will write a script to run hundreds of these test and extract
-and average the results.
+# Running tests
+
+I wrote a script `matrixtest.sh` to run several test on different
+parameter ranges and print the results to stdout.
+To run th result you may execute the following command:
+
+    time bash matrixtest.sh | tee results.log
+
+The `tee` command will print all log into to the terminal.
+Note that only output from stdout will be saved to the file.
 
 
