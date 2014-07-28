@@ -47,4 +47,14 @@ To run th result you may execute the following command:
 The `tee` command will print all log into to the terminal.
 Note that only output from stdout will be saved to the file.
 
+The format of the output is the following:
+
+    row|col|sample|dist|memory(bytes)|avgdist|matrixbuildtime(msecs)|sampletime(msecs)
+
+For each line the size of the `row` and `col` are returned.
+Following this is the number of samples (`sample`) and the distance multiplier between samples (`dist`).
+Next, is the number of free bytes in memory right before program execution (`memory (bytes)`). 	
+Following is the average distance between each sample `avgdist`, the amout of time 
+in miliseconds it took to build the matrix, and then the amount of time it took to perform 
+all samples.
 

@@ -162,8 +162,8 @@ int main(int argc, char** argv) {
 	
 
 	// Write output to stdout according to script expectation
-	// matrixbuildtime(msecs)|sampletime(msecs)
-	printf("%lf|%lf", 1000.0*matrixbuildtime/CLOCKS_PER_SEC, 1000.0*sampletime/CLOCKS_PER_SEC);
+	// avgdist|matrixbuildtime(msecs)|sampletime(msecs)
+	printf("%f|%lf|%lf", dist, 1000.0*matrixbuildtime/CLOCKS_PER_SEC, 1000.0*sampletime/CLOCKS_PER_SEC);
   
   return 0;
 }

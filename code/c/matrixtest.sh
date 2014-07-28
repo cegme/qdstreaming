@@ -12,7 +12,7 @@ matfile='/tmp/mymatrix.mat'
 
 
 # Header
-echo "row|col|sample|dist|memory(bytes)|matrixbuildtime(msecs)|sampletime(msecs)"
+echo "row|col|sample|dist|memory(bytes)|avgdist|matrixbuildtime(msecs)|sampletime(msecs)"
 
 # Compile 
 `make all`
@@ -32,9 +32,10 @@ do
 			  currentmem=`free -b | egrep Mem | awk '{print $4}'`
 
 			  # Run with the current setting
+				# Returns to stdout: avgdist|matrix build time|sample time
 			  runtime=`./a.out -d $dist -s $sample -c $col -r $row -f $matfile`
 
-				# Print results
+				# Print results 
 			  echo $row"|"$col"|"$sample"|"$dist"|"$currentmem"|"$runtime
 			done
 		done
