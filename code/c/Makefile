@@ -4,3 +4,6 @@ debug:
 
 all:
 	gcc FileBackedMatrix.c -O3 -march=native -lm
+
+clean:
+	rm a.out
