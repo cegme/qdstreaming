@@ -7,3 +7,9 @@ all:
 
 clean:
 	rm a.out
+
+cp2tmp:
+	cp FileBackedMatrix.c /tmp/
+	cp Makefile /tmp/
+	cp matrixtest.sh /tmp/
+	cp Util.h /tmp/
