@@ -1,21 +1,14 @@
 
-\section{Entity Resolution algorithms}
-
-
-In this section we give a short overview of the different entity resolution algorithms found in literature.
-This is not an exhaustive list; we classify the list into classes of algorithms and discuss one of the algorithms from each of the classes.
-
-
 % Algorithms Features
-% - Supervised/Unsupervised
-% - Approximate/Exact
-% - Collective/Pairwise
-% - Batch/Iterative
-% - Joint/Isolated
 % - Distributed/Standalone
-% - Deterministic/Nondeterministic
 % - Static/Streaming
+% - Batch/Iterative
+% - Approximate/Exact
+% - Joint/Isolated
 % - Query-Aware/Query-Agostic 
+% - Deterministic/Nondeterministic
+% - Collective/Pairwise
+% - Supervised/Unsupervised
 
 % For each describe
 % - 1) The definitions of each
@@ -23,3 +16,41 @@ This is not an exhaustive list; we classify the list into classes of algorithms 
 % - 3) A suggestion for the best option
 
 % Create a comparison table for each of the approaches and add where each pubication applies fall
+% Algorithms Features
+
+\section{Entity Resolution algorithms}
+
+
+In this section we give a short overview of the different entity resolution algorithms found in literature.
+This is not an exhaustive list; we classify the list into classes of algorithms and discuss one of the algorithms from each of the classes.
+
+
+
+
+
+
+% Entity resolution algorithm
+
+% TODO Create the ER lineage graph
+
+% Can I derive a partitioning scheme using canopy clustering
+%% http://rorlig.wordpress.com/2011/05/13/project-report-cs-292-kmeans-algorithm-with-canopy-clustering/
+
+
+  val mentions = SELECT * from mentions
+  // TODO develop new RDD.coalesce function to redistribute partitions by canopy cluster
+
+  for (i <- 1 to ITERATIONS) {
+    
+    mentions = mentions.mapPartitionsWithContext[](
+
+    )
+
+  }
+
+
+
+
+
+
+
