@@ -1,3 +1,29 @@
 
 \section{Algorithms}
 
+In this section we will describe XXX algorithms for entity sampling.
+The main method we use to improve the computation speed is to reduce the
+number of comparisons we make for large entity clusters.
+We additionally discuss methods to improve the performance of algorithms
+over time by collecting statistics from the processes.
+
+\textbf{Random Iterator.} This method shuffles the mentions in both the
+source and destination entity clusters when doing pairwise comparisons. 
+
+\textbf{Sorted Iterator.} This method sorts them mentions in both the source
+and destination entity clusters when performing pairwise comparisons.
+
+\textbf{SubSample Iterator.} This method only samples $M$ mentions from the
+source and destination entities clusters when performing pairwise comparisons.
+
+\textbf{Top-K SubSample Iterator.} This method uses a priority queue to sort
+the mentions and only performs comparisons for the first $M$ values.
+
+\textbf{Blocked Iterator.} This method performs blocking on the mentions in the
+source and destination entities and takes the average gain from pairwise
+comparisons inside each block .
+
+
+Further, We examine active learning techniques to adjust threshold sizes based on statistics collected while running the algorithms.
+
+...% Add active learning strategies
