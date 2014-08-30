@@ -7,24 +7,35 @@ number of comparisons we make for large entity clusters.
 We additionally discuss methods to improve the performance of algorithms
 over time by collecting statistics from the processes.
 
-\textbf{Random Iterator.} This method shuffles the mentions in both the
-source and destination entity clusters when doing pairwise comparisons. 
+\textbf{Naive Iterator.} This method performs pairwise comparisons by 
+iterating over the mentions using the order on disk. This is the traditional
+method of computing the pairwise similarity of two clusters. 
 
-\textbf{Sorted Iterator.} This method sorts them mentions in both the source
-and destination entity clusters when performing pairwise comparisons.
-
-\textbf{SubSample Iterator.} This method only samples $M$ mentions from the
-source and destination entities clusters when performing pairwise comparisons.
+\textbf{SubSample Iterator.} This method performs uniform samples of the
+mentions from the source and destination entities clusters. This method
+measures the confidence of the calculated pairwise samples and stops when the
+confidence exceeds a threshold of 0.95.
 
 \textbf{Top-K SubSample Iterator.} This method uses a priority queue to sort
-the mentions and only performs comparisons for the first $M$ values.
+the mentions and only performs comparisons between the top $M$ mentions.
 
 \textbf{Blocked Iterator.} This method performs blocking on the mentions in the
 source and destination entities and takes the average gain from pairwise
-comparisons inside each block.
+comparisons inside each block. Blocks are formed arbitrarily and are of fixed
+size. In database terms this method is a \emph{block nested loop} comparison.
 
+\textbf{Blocked Subsample Iterator.} This performs a block nested loop
+comparisom but it performes book keeping to only perform pairwise sampling
+until we reach a confidence threshold of 0.95.
 
-Further, We examine active learning techniques to adjust threshold sizes based on statistics collected while running the algorithms.
+\textbf{Blocked Top-k Iterator.} This method performs a block nested loop
+comparison except blocks are created by reading mentions from a priority queue.
+
+\textbf{Blocked Top-K Subsample Iterator.} This method is a combination of the
+Block subsample iterator and the blocked top-k iterator.
+
+Further, We examine active learning techniques to adjust threshold sizes based
+on statistics collected while running the algorithms.
 
 We collect the following statistics from each training run:
 
@@ -34,8 +45,9 @@ Number of uniques tokens.
 Average pairwise score between mentions.
 Maximum pairwise score between mentions.
 Minimum pairwise score between mentions.
-Variable pairwise score between mentions.
+Variance of the pairwise score between mentions.
 Mention Token tfidf scores.
+Cardinality of tokens in both entities.
 \ceg{Generailze the feature explaination and move it to the implementation section}
 
 Using this information we train a decision tree classsifier to minimize the 
