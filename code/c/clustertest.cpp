@@ -2,6 +2,8 @@
 #include "Random.h"
 #include "Util.h"
 
+#include <iostream>
+#include <numeric>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -17,7 +19,33 @@ struct point {
       x.push_back(RandInt());
     }
   }
+
+  static double doCompare(point left, point right) {
+    // Assume other is the same dimension or larger
+    double sum = 0.0;
+    for (size_t i = 0; i < left.x.size(); ++i) {
+      sum +=  pow(left.x[i] - right.x[i], 2); 
+    }
+    return sqrt(sum);
+  }
 };
+
+/**
+  * Welford's method for computing variance.
+  * It would be good to generalize this for
+  * any container type
+  */
+double variance(std::vector<long>& vec) {
+  size_t N = 0;
+  long M = 0, S = 0, Mprev = 0; 
+  for (auto x: vec) {
+    ++N;
+    Mprev = M;
+    M += (x - Mprev) / N;
+    S += (x - Mprev) * (x - M);
+  }
+  return S / (N - 1);
+}
 
 void create_cluster(std::vector<point>& a, int size, int dimensions) {
 
@@ -27,20 +55,20 @@ void create_cluster(std::vector<point>& a, int size, int dimensions) {
   for (int i = 0; i < size; ++i) {
     // Call the random constructor
     a.push_back(point(dimensions));
-    
   }
-
 }
 
-long baseline(std::vector<point>* a,
-                    std::vector<point>* b) {
+long baseline(std::vector<point> a,
+                    std::vector<point> b) {
 
   clock_t tic = clock();
 
-  size_t asize = a->size();
-  size_t bsize = b->size();
+  size_t asize = a.size();
+  size_t bsize = b.size();
   for (size_t i = 0; i != asize; ++i) {
     for (size_t j = 0; j != bsize; ++j) {
+      // compare the two vectors
+      point::doCompare(a[i],b[j]);
     } 
   }
   
@@ -48,8 +76,6 @@ long baseline(std::vector<point>* a,
   return toc - tic;
   
 }
-
-// TODO create statistis collections method
 
 
 int main (int argc, char** argv) {
@@ -68,13 +94,13 @@ int main (int argc, char** argv) {
     ("dimension,d", boost::program_options::value<int>(&dimensions)->default_value(2),
        "The dimensions of the points")
     ("algorithms,a", boost::program_options::value<int>(&algo)->default_value((int)Algo::ALL),
-       "Choose the algorithm to run, all is default, Choose values 1-3");
+       "Choose the algorithm to run, all is default, Choose values 1-3")
     ("iterations,i", boost::program_options::value<int>(&iterations)->default_value(100), "Iterations for each algo");
 
   boost::program_options::variables_map vm;
   try {
     boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
-    boost::program_options::notify(vm);
+    po::notify(vm);
     if (vm.count("help") ) {
       logInfo(desc);
       exit(0);
@@ -87,8 +113,6 @@ int main (int argc, char** argv) {
     exit(1);
   }
 
-
-  // Add for timing map
 
   // Run the test 
   int thesizes = (sizeof(sizes)/sizeof(*sizes));
@@ -105,11 +129,10 @@ int main (int argc, char** argv) {
       for (int m = BASELINE; m != TOPK; ++m) {
         switch (m) {
           case BASELINE: {
-            std::string key("BASELINE ");
-              key += std::to_string(a) + " " + std::to_string(b); 
+            std::string key("BASELINE");
             timer_map[key] = std::vector<long>();
             for (int i = 0; i < iterations; ++i) {
-              long time = baseline(&ca, &cb);
+              long time = baseline(ca, cb);
               timer_map[key].push_back(time);
             }
             break;
@@ -118,12 +141,19 @@ int main (int argc, char** argv) {
             break;
         }
       }
-    }
-    // TODO Print results as csv and clear the cache
-  }
 
-  
-    
+      // Print results as csv and clear the cache
+      for (auto e : timer_map) {
+        // Name, N, a clustersize, b clustersize, Sum, Variance
+        std::cout << e.first << "," << iterations << ","
+          << sizes[a] << "," << sizes[b]
+          << "," << std::accumulate(e.second.begin(), e.second.end(), 0L)
+          << "," << variance(e.second)
+          << std::endl;
+      }
+      timer_map.clear();
+    }
+  }
 
   return 0;
 }
