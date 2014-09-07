@@ -1,8 +1,9 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#include <time.h>
+#include <cstring>
 #include <errno.h>
+#include <time.h>
 
 #define MAX(a,b) ( ((a) > (b)) ? (a) : (b) )
 #define MIN(a,b) ( ((a) < (b)) ? (a) : (b) )
@@ -23,6 +24,8 @@ const char *  currentTime () {
 #define clean_errno() (errno == 0 ? "None" : strerror(errno))
 
 #define DATE_STRING currentTime()
+
+#define logInfo(M) std::cerr << DATE_STRING << "[INFO] (" << __FILE__ << ":" << __LINE__ << ") | " << M  << "\n"
 
 #define log_info(M, ...) fprintf(stderr, "%s [INFO] (%s:%d) | " M "\n", DATE_STRING,  __FILE__, __LINE__, ##__VA_ARGS__)
 
