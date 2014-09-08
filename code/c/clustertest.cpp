@@ -58,19 +58,19 @@ void create_cluster(std::vector<point>& a, int size, int dimensions) {
   }
 }
 
-long baseline(std::vector<point> a,
+long baseline_method(std::vector<point> a,
               std::vector<point> b,
               std::vector<int> qn,
               bool & accept) {
   // TODO pass vectors by reference, don't make a copy
   // TODO need a vector of results for each query node. migrate accept to a vector
-  accept = false;
+  accept = false; // This method sets the accept parameters
   size_t asize = a.size();
   size_t bsize = b.size();
+  int qnsize = qn.size();
 
   clock_t tic = clock();
 
-  int qnsize = qn.size();
   for (int q = 0; q < qnsize; ++q) {
     double ascore_with = 0.0, ascore_without = 0.0;
 
@@ -104,6 +104,28 @@ long baseline(std::vector<point> a,
     double score_with = (ascore_with/(asize*asize)) + (bscore_without/(bsize*bsize));
     double score_without = (ascore_without/((asize-1)*(asize-1))) + (bscore_with/((bsize+1)*(bsize+1)));
     accept = score_with < score_without;
+  }
+  
+  clock_t toc = clock();
+  return toc - tic;
+}
+
+
+long sorted_method(std::vector<point> a,
+              std::vector<point> b,
+              std::vector<int> qn,
+              bool & accept) {
+
+  size_t asize = a.size();
+  size_t bsize = b.size();
+  int qnsize = qn.size();
+
+  clock_t tic = clock();
+
+  // TODO need to keep track of the correct and incorrect decision
+  for (int q = 0; q < qnsize; ++q) {
+    // TODO sort the points based on the query node
+    
   }
   
   clock_t toc = clock();
@@ -149,6 +171,9 @@ int main (int argc, char** argv) {
     exit(1);
   }
 
+  // Print header
+  // Name, N, a clustersize, b clustersize, Sum, Variance
+  std::cout << "Method," << "Samples," << "A Cluster Size," << "B Cluster Size," << "Sum," << "Variance\n";
 
   // Run the test 
   int thesizes = (sizeof(sizes)/sizeof(*sizes));
@@ -183,12 +208,18 @@ int main (int argc, char** argv) {
             std::string key("BASELINE");
             timer_map[key] = std::vector<long>();
             for (int i = 0; i < iterations; ++i) {
-              long time = baseline(ca, cb, qn, accept);
+              long time = baseline_method(ca, cb, qn, accept);
               timer_map[key].push_back(time);
             }
             break;
           }
           case SORTED: {
+            std::string key("SORTED");
+            timer_map[key] = std::vector<long>();
+            for (int i = 0; i < iterations; ++i) {
+              long time = sorted_method(ca, cb, qn, accept);
+              timer_map[key].push_back(time);
+            }
             break;
           }
           case TOPK: {
