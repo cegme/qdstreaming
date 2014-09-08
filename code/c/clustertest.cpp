@@ -59,22 +59,55 @@ void create_cluster(std::vector<point>& a, int size, int dimensions) {
 }
 
 long baseline(std::vector<point> a,
-                    std::vector<point> b) {
+              std::vector<point> b,
+              std::vector<int> qn,
+              bool & accept) {
+  // TODO pass vectors by reference, don't make a copy
+  // TODO need a vector of results for each query node. migrate accept to a vector
+  accept = false;
+  size_t asize = a.size();
+  size_t bsize = b.size();
 
   clock_t tic = clock();
 
-  size_t asize = a.size();
-  size_t bsize = b.size();
-  for (size_t i = 0; i != asize; ++i) {
-    for (size_t j = 0; j != bsize; ++j) {
-      // compare the two vectors
-      point::doCompare(a[i],b[j]);
-    } 
+  int qnsize = qn.size();
+  for (int q = 0; q < qnsize; ++q) {
+    double ascore_with = 0.0, ascore_without = 0.0;
+
+    // Compute a with and without q
+    for (size_t i = 0; i != asize; ++i) {
+      for (size_t j = 0; j != asize; ++j) {
+        // compare the two vectors
+        double score = point::doCompare(a[i],a[j]);
+        if (i == qn[q] || j == qn[q]) ascore_with += score;
+        else ascore_without += score;
+      } 
+    }
+    // Get exact scire width
+    ascore_with += ascore_without;
+
+    double bscore_with = 0.0, bscore_without = 0.0;
+    // Compute b with and without q
+    for (size_t i = 0; i != bsize; ++i) {
+      for (size_t j = 0; j != bsize; ++j) {
+        // compare the two vectors
+        double score = point::doCompare(b[i],b[j]);
+        bscore_without += score;
+      } 
+      double score = point::doCompare(b[i], a[qn[q]]);
+      bscore_with = score;
+      score = point::doCompare(a[qn[q]], b[i]);
+      bscore_with = score;
+    }
+    bscore_with = point::doCompare(a[qn[q]], a[qn[q]]);
+
+    double score_with = (ascore_with/(asize*asize)) + (bscore_without/(bsize*bsize));
+    double score_without = (ascore_without/((asize-1)*(asize-1))) + (bscore_with/((bsize+1)*(bsize+1)));
+    accept = score_with < score_without;
   }
   
   clock_t toc = clock();
   return toc - tic;
-  
 }
 
 
@@ -84,18 +117,21 @@ int main (int argc, char** argv) {
   int iterations;
   int dimensions;
   int algo; 
-  int sizes[6] = { 10, 100, 1000, 10000, 1000000, 10000000 };
+  int sizes[5] = { 10, 100, 1000, 10000, 1000000/*, 10000000*/ };
+  int querynodes;
   
   std::unordered_map<std::string, std::vector<long> > timer_map;
 
   boost::program_options::options_description desc("Cluster Improvement test.");
   desc.add_options()
     ("help,h", "Print a helpul help message")
-    ("dimension,d", boost::program_options::value<int>(&dimensions)->default_value(2),
+    ("dimension,d", po::value<int>(&dimensions)->default_value(2),
        "The dimensions of the points")
     ("algorithms,a", boost::program_options::value<int>(&algo)->default_value((int)Algo::ALL),
        "Choose the algorithm to run, all is default, Choose values 1-3")
-    ("iterations,i", boost::program_options::value<int>(&iterations)->default_value(100), "Iterations for each algo");
+    ("querynodes,q", po::value<int>(&querynodes)->default_value(1),
+      "The number of query nodes to test for each set")
+    ("iterations,i", po::value<int>(&iterations)->default_value(100), "Iterations for each algo");
 
   boost::program_options::variables_map vm;
   try {
@@ -117,14 +153,29 @@ int main (int argc, char** argv) {
   // Run the test 
   int thesizes = (sizeof(sizes)/sizeof(*sizes));
   for (int a = 0; a < thesizes; ++a) {
-    for (int b = 0; b < thesizes; ++b) {
-      // Create cluster a
-      std::vector<point> ca;
-      create_cluster(ca, sizes[a], dimensions);
 
+    // Create cluster a
+    std::vector<point> ca;
+    create_cluster(ca, sizes[a], dimensions);
+
+    // Get $querynode querynodes
+    auto qn = [&ca,querynodes] () -> std::vector<int> {
+      std::vector<int> qn;
+      // Do sampling with replacement. We'll allow duplicate nodes
+      for (int i = 0; i < querynodes; ++i) { 
+        qn.push_back(RandInt() % ca.size());
+      }
+      return qn;
+    }();
+
+    for (int b = 0; b < thesizes; ++b) {
       // Create cluster b
       std::vector<point> cb;
       create_cluster(cb, sizes[b], dimensions);
+
+      // Need to know the optimal decision
+      // Always run baseline first to get it.
+      bool accept; 
 
       for (int m = BASELINE; m != TOPK; ++m) {
         switch (m) {
@@ -132,9 +183,15 @@ int main (int argc, char** argv) {
             std::string key("BASELINE");
             timer_map[key] = std::vector<long>();
             for (int i = 0; i < iterations; ++i) {
-              long time = baseline(ca, cb);
+              long time = baseline(ca, cb, qn, accept);
               timer_map[key].push_back(time);
             }
+            break;
+          }
+          case SORTED: {
+            break;
+          }
+          case TOPK: {
             break;
           }
           default:
