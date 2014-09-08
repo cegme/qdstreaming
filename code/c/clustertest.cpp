@@ -36,6 +36,7 @@ struct point {
   * any container type
   */
 double variance(std::vector<long>& vec) {
+  assert(vec.size() >= 2);
   size_t N = 0;
   long M = 0, S = 0, Mprev = 0; 
   for (auto x: vec) {
@@ -149,7 +150,7 @@ int main (int argc, char** argv) {
     ("help,h", "Print a helpul help message")
     ("dimension,d", po::value<int>(&dimensions)->default_value(2),
        "The dimensions of the points")
-    ("algorithms,a", boost::program_options::value<int>(&algo)->default_value((int)Algo::ALL),
+    ("algorithms,a", po::value<int>(&algo)->default_value((int)Algo::ALL),
        "Choose the algorithm to run, all is default, Choose values 1-3")
     ("querynodes,q", po::value<int>(&querynodes)->default_value(1),
       "The number of query nodes to test for each set")
