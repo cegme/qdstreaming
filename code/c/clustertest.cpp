@@ -2,6 +2,7 @@
 #include "Random.h"
 #include "Util.h"
 
+#include <algorithm>
 #include <iostream>
 #include <numeric>
 #include <string>
@@ -20,7 +21,17 @@ struct point {
     }
   }
 
-  static double doCompare(point left, point right) {
+  bool  operator==(const point & p) const {
+    if (p.x.size() == x.size()) {
+      for (int i = 0; i < p.x.size(); ++i) {
+        if (p.x[i] != x[i]) return false;    
+      }
+      return true;
+    }
+    else return false;
+  }
+  
+  static double doCompare (point left, point right) {
     // Assume other is the same dimension or larger
     double sum = 0.0;
     for (size_t i = 0; i < left.x.size(); ++i) {
@@ -28,6 +39,33 @@ struct point {
     }
     return sqrt(sum);
   }
+
+};
+
+/**
+  * Use this stats data structure to get online variance calculation.
+  */
+struct Stats {
+  unsigned int n; 
+  double mean;
+  double M2;
+  
+  Stats (): n(0), mean(0.0), M2(0.0) { } 
+
+  void add(double x) {
+    ++n;
+    auto delta = x - mean;
+    mean += (delta / n);
+    M2 = M2 + delta * (x - mean);
+  }
+
+  double variance (void) {
+    if (n > 2) 
+      return M2 / (n-1);
+    else
+      return 0.0;
+  } 
+
 };
 
 /**
@@ -48,6 +86,7 @@ double variance(std::vector<long>& vec) {
   return S / (N - 1);
 }
 
+
 void create_cluster(std::vector<point>& a, int size, int dimensions) {
 
   // Clear old cluster
@@ -59,12 +98,14 @@ void create_cluster(std::vector<point>& a, int size, int dimensions) {
   }
 }
 
+
 long baseline_method(std::vector<point> a,
               std::vector<point> b,
               std::vector<int> qn,
               bool & accept) {
   // TODO pass vectors by reference, don't make a copy
   // TODO need a vector of results for each query node. migrate accept to a vector
+  // TODO make another version of this that does triangle parsing instead of the full n^2
   accept = false; // This method sets the accept parameters
   size_t asize = a.size();
   size_t bsize = b.size();
@@ -96,11 +137,11 @@ long baseline_method(std::vector<point> a,
         bscore_without += score;
       } 
       double score = point::doCompare(b[i], a[qn[q]]);
-      bscore_with = score;
+      bscore_with += score;
       score = point::doCompare(a[qn[q]], b[i]);
-      bscore_with = score;
+      bscore_with += score;
     }
-    bscore_with = point::doCompare(a[qn[q]], a[qn[q]]);
+    bscore_with += point::doCompare(a[qn[q]], a[qn[q]]);
 
     double score_with = (ascore_with/(asize*asize)) + (bscore_without/(bsize*bsize));
     double score_without = (ascore_without/((asize-1)*(asize-1))) + (bscore_with/((bsize+1)*(bsize+1)));
@@ -125,8 +166,49 @@ long sorted_method(std::vector<point> a,
 
   // TODO need to keep track of the correct and incorrect decision
   for (int q = 0; q < qnsize; ++q) {
-    // TODO sort the points based on the query node
-    
+    // TODO keep track of where the query nodes are... maybe do a find on the point
+    // Sort the vectors based on the query node
+    point qnode = a[q];
+    [a,b,&asize,&bsize,&qnode,&accept] (void) -> void {
+
+      std::sort (a.begin(), a.end(), [qnode] (const point& a1, const point& a2) -> bool {
+        return point::doCompare(a1, qnode) > point::doCompare(a2, qnode);
+      });
+      std::sort (b.begin(), b.end(), [qnode] (const point& b1, const point& b2) -> bool {
+        return point::doCompare(b1, qnode) > point::doCompare(b2, qnode);
+      });
+
+      // Compute a with and without q
+      Stats astats_with, astats_without;
+      for (size_t i = 0; i != asize; ++i) {
+        for (size_t j = 0; j != asize; ++j) {
+          // compare the two vectors
+          double score = point::doCompare(a[i],a[j]);
+          if (a[i] == qnode || a[j] == qnode) astats_with.add(score);
+          else { astats_without.add(score); astats_with.add(score); }
+        }
+      }
+
+      // Compute b with and without q
+      Stats bstats_with, bstats_without;
+      for (size_t i = 0; i != bsize; ++i) {
+        for (size_t j = 0; j != bsize; ++j) {
+          // compare the two vectors
+          double score = point::doCompare(b[i],b[j]);
+          bstats_without.add(score);
+          bstats_with.add(score);
+        } 
+        double score = point::doCompare(b[i], qnode);
+        bstats_with.add(score);
+        score = point::doCompare(qnode, b[i]);
+        bstats_with.add(score);
+      }
+      bstats_with.add( point::doCompare(qnode, qnode) );
+      
+      double score_with = astats_with.mean + bstats_without.mean;
+      double score_without = astats_without.mean + bstats_with.mean;
+      accept = score_with < score_without;   
+    }();
   }
   
   clock_t toc = clock();
