@@ -244,7 +244,6 @@ long sorted_method(std::vector<point> a,
     accept = score_with < score_without;   
 
     // Repare the clusters
-    //a.clear(); b.clear(); not necessary
     std::copy(begin(preserveb), end(preserveb), begin(b));
     std::copy(begin(preservea), end(preservea), begin(a));
   }
@@ -265,6 +264,7 @@ int main (int argc, char** argv) {
   double conf;
   
   std::unordered_map<std::string, std::vector<long> > timer_map;
+  std::unordered_map<std::string, std::vector<bool> > accuracy_map;
 
   boost::program_options::options_description desc("Cluster Improvement test.");
   desc.add_options()
@@ -300,7 +300,7 @@ int main (int argc, char** argv) {
 
   // Print header
   // Name, N, a clustersize, b clustersize, Sum, Variance
-  std::cout << "Method," << "Samples," << "A Cluster Size," << "B Cluster Size," << "Sum," << "Variance\n";
+  std::cout << "Method," << "Samples," << "A Cluster Size," << "B Cluster Size," << "Sum," << "Variance," << "Accuracy\n";
 
   // Run the test 
   int thesizes = (sizeof(sizes)/sizeof(*sizes));
@@ -328,24 +328,30 @@ int main (int argc, char** argv) {
       // Need to know the optimal decision
       // Always run baseline first to get it.
       bool accept; 
+      std::vector<bool> baseline_accept, sorted_accept;
 
+      // Always do baseline first so we can get the accuracy info!
       for (int m = BASELINE; m != TOPK; ++m) {
         switch (m) {
           case BASELINE: {
             std::string key("BASELINE");
             timer_map[key] = std::vector<long>();
+            accuracy_map[key] = std::vector<bool>();
             for (int i = 0; i < iterations; ++i) {
               long time = baseline_method(ca, cb, qn, accept);
               timer_map[key].push_back(time);
+              accuracy_map[key].push_back(accept);
             }
             break;
           }
           case SORTED: {
             std::string key("SORTED");
             timer_map[key] = std::vector<long>();
+            accuracy_map[key] = std::vector<bool>();
             for (int i = 0; i < iterations; ++i) {
               long time = sorted_method(ca, cb, qn, conf, accept);
               timer_map[key].push_back(time);
+              accuracy_map[key].push_back(accept);
             }
             break;
           }
@@ -357,13 +363,24 @@ int main (int argc, char** argv) {
         }
       }
 
+      // Compute Accuracy
+      auto accuracy = [&accuracy_map, iterations] (std::vector<bool> a) -> float {
+        auto base = accuracy_map["BASELINE"];
+        float s = 0.0;
+        for (int i = 0; i < iterations; ++i) {
+          if (base[i] == a[i]) s += 1.0; 
+        }
+        return s/iterations;
+      };
+
       // Print results as csv and clear the cache
       for (auto e : timer_map) {
-        // Name, N, a clustersize, b clustersize, Sum, Variance
+        // Name, N, a clustersize, b clustersize, Sum, Variance, Accuracy
         std::cout << e.first << "," << iterations << ","
           << sizes[a] << "," << sizes[b]
           << "," << std::accumulate(e.second.begin(), e.second.end(), 0L)
           << "," << variance(e.second)
+          << "," << accuracy(accuracy_map[e.first])
           << std::endl;
       }
       timer_map.clear();
