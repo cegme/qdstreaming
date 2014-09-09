@@ -52,8 +52,9 @@ struct point {
     // Assume other is the same dimension or larger
     double sum = 0.0;
     for (size_t i = 0; i < left.x.size(); ++i) {
-      sum +=  (left.x[i] - right.x[i])*(left.x[i] - right.x[i]); 
+      sum +=  pow(left.x[i] - right.x[i], 2);
     }
+    //log_info("doCompare: %f, sum: %f", sqrt(sum), sum);
     return sqrt(sum);
   }
 
@@ -64,10 +65,12 @@ struct point {
   */
 struct Stats {
   unsigned int n; 
-  double mean;
-  double M2;
+  long double mean;
+  long double M2;
   
   Stats (): n(0), mean(0.0), M2(0.0) { } 
+
+  void reset (void) { n = 0; mean = 0.0; M2 = 0.0; }
 
   void add(double x) {
     ++n;
@@ -82,6 +85,12 @@ struct Stats {
     else
       return 0.0;
   } 
+  double conf (void) {
+    //double v = variance();
+    //if (v == 0.0) return 1.0;
+    //else return sqrt(v);
+    return sqrt(variance())/mean;
+  }
 
 };
 
@@ -91,16 +100,16 @@ struct Stats {
   * any container type
   */
 double variance(std::vector<long>& vec) {
-  assert(vec.size() >= 2);
   size_t N = 0;
-  long M = 0, S = 0, Mprev = 0; 
+  double M = 0, S = 0, Mprev = 0; 
   for (auto x: vec) {
     ++N;
     Mprev = M;
     M += (x - Mprev) / N;
     S += (x - Mprev) * (x - M);
   }
-  return S / (N - 1);
+  if (N <= 2) return 0.0;
+  else return S / (N - 1.0);
 }
 
 
@@ -166,13 +175,14 @@ long baseline_method(std::vector<point> a,
   }
   
   clock_t toc = clock();
-  return toc - tic;
+  return (double)(toc - tic);
 }
 
 
 long sorted_method(std::vector<point> a,
               std::vector<point> b,
               std::vector<int> qn,
+              double conf,
               bool & accept) {
 
   size_t asize = a.size();
@@ -181,67 +191,78 @@ long sorted_method(std::vector<point> a,
 
   clock_t tic = clock();
 
+  // Don't mutilate the vector so create new ones
+  std::vector<point> preservea(asize), preserveb(bsize);
+  std::copy(begin(a), end(a), begin(preservea));
+  std::copy(begin(b), end(b), begin(preserveb));
+
   // TODO need to keep track of the correct and incorrect decision
   for (int q = 0; q < qnsize; ++q) {
-    // TODO keep track of where the query nodes are... maybe do a find on the point
+
     // Sort the vectors based on the query node
-    point qnode (a[q]);
+    point qnode (a[q]); // Copy the query node;
     const auto sortcomparator = [qnode] (point p1, point p2) -> bool const {
-      return p1.doCompare(p1,qnode) < p1.doCompare(p2,qnode);
+      return point::doCompare(p1,qnode) < point::doCompare(p2,qnode);
     };
+    std::sort (begin(a), end(a), sortcomparator); 
+    std::sort (begin(b), end(b), sortcomparator);
 
-    // Put this into a lambda so we don't have to explicitly copy variables
-    [&a,&b,asize,bsize,qnode,&sortcomparator, &accept] (void) -> void {
-
-      std::sort (begin(a), end(a), sortcomparator ); 
-      std::sort (begin(b), end(b), sortcomparator );
-
-      // Compute a with and without q
-      Stats astats_with, astats_without;
-      for (size_t i = 0; i != asize; ++i) {
-        for (size_t j = 0; j != asize; ++j) {
-          // compare the two vectors
-          double score = point::doCompare(a[i],a[j]);
-          if (a[i] == qnode || a[j] == qnode) astats_with.add(score);
-          else { astats_without.add(score); astats_with.add(score); }
-        }
+    // Compute a with and without q
+    Stats astats_with, astats_without;
+    //log_info("mean: %Lf,%Lf", astats_with.mean, astats_without.mean);
+    bool done = false;
+    for (size_t i = 0; i != asize && !done; ++i) {
+      for (size_t j = 0; j != asize && !done; ++j) {
+        // compare the two vectors
+        double score = point::doCompare(a[i],a[j]);
+        if (a[i] == qnode || a[j] == qnode) astats_with.add(score);
+        else { astats_without.add(score); astats_with.add(score); }
       }
+      if (astats_with.conf() > (1-conf) && astats_without.conf() > (1-conf)) { done = true; }
+    }
 
-      // Compute b with and without q
-      Stats bstats_with, bstats_without;
-      for (size_t i = 0; i != bsize; ++i) {
-        for (size_t j = 0; j != bsize; ++j) {
-          // compare the two vectors
-          double score = point::doCompare(b[i],b[j]);
-          bstats_without.add(score);
-          bstats_with.add(score);
-        } 
-        double score = point::doCompare(b[i], qnode);
-        bstats_with.add(score);
-        score = point::doCompare(qnode, b[i]);
+    // Compute b with and without q
+    Stats bstats_with, bstats_without;
+    done = false;
+    for (size_t i = 0; i != bsize && !done; ++i) {
+      for (size_t j = 0; j != bsize && !done; ++j) {
+        // compare the two vectors
+        double score = point::doCompare(b[i],b[j]);
+        bstats_without.add(score);
         bstats_with.add(score);
       }
-      bstats_with.add( point::doCompare(qnode, qnode) );
-      
-      double score_with = astats_with.mean + bstats_without.mean;
-      double score_without = astats_without.mean + bstats_with.mean;
-      accept = score_with < score_without;   
-    }();
+      double score = point::doCompare(b[i], qnode);
+      bstats_with.add(score);
+      score = point::doCompare(qnode, b[i]);
+      bstats_with.add(score);
+      if (bstats_with.conf() > (1-conf) && bstats_without.conf() > (1-conf)) { done = true; }
+    }
+    bstats_with.add( point::doCompare(qnode, qnode) );
+    
+    double score_with = astats_with.mean + bstats_without.mean;
+    double score_without = astats_without.mean + bstats_with.mean;
+    accept = score_with < score_without;   
+
+    // Repare the clusters
+    //a.clear(); b.clear(); not necessary
+    std::copy(begin(preserveb), end(preserveb), begin(b));
+    std::copy(begin(preservea), end(preservea), begin(a));
   }
   
   clock_t toc = clock();
-  return toc - tic;
+  return (double)(toc - tic);
 }
 
 
 int main (int argc, char** argv) {
   namespace po = boost::program_options;
 
-  int iterations;
+  int sizes[5] = { 10, 100, 1000, 10000, 1000000/*, 10000000*/ };
   int dimensions;
   int algo; 
-  int sizes[5] = { 10, 100, 1000, 10000, 1000000/*, 10000000*/ };
   int querynodes;
+  int iterations;
+  double conf;
   
   std::unordered_map<std::string, std::vector<long> > timer_map;
 
@@ -254,6 +275,7 @@ int main (int argc, char** argv) {
        "Choose the algorithm to run, all is default, Choose values 1-3")
     ("querynodes,q", po::value<int>(&querynodes)->default_value(1),
       "The number of query nodes to test for each set")
+    ("conf,c", po::value<double>(&conf)->default_value(0.95), "The confidence interval for early stopping")
     ("iterations,i", po::value<int>(&iterations)->default_value(100), "Iterations for each algo");
 
   boost::program_options::variables_map vm;
@@ -271,6 +293,10 @@ int main (int argc, char** argv) {
     logInfo(desc);
     exit(1);
   }
+
+  log_info("#Params: dimensions=%d; algorithms=%d; querynodes=%d; conf=%f; iterations=%d",\
+    dimensions, algo, querynodes, conf, iterations);
+  std::cout << "#dimensions="<< dimensions <<"; algorithms=" << algo << "; querynodes="<< querynodes <<"; conf="<< conf <<"; iterations="<< iterations << "; clocks_per_sec=" << CLOCKS_PER_SEC << "\n";
 
   // Print header
   // Name, N, a clustersize, b clustersize, Sum, Variance
@@ -318,7 +344,7 @@ int main (int argc, char** argv) {
             std::string key("SORTED");
             timer_map[key] = std::vector<long>();
             for (int i = 0; i < iterations; ++i) {
-              long time = sorted_method(ca, cb, qn, accept);
+              long time = sorted_method(ca, cb, qn, conf, accept);
               timer_map[key].push_back(time);
             }
             break;
