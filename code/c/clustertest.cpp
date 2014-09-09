@@ -16,6 +16,7 @@ enum Algo {ALL = 0, BASELINE = 1, SORTED = 2, TOPK = 3};
 struct point {
   std::vector<int> x;
   point (): x(std::vector<int>()) { }
+
   point(const point &o) {
     x = std::vector<int>();
     for (auto i : o.x) {
@@ -29,8 +30,10 @@ struct point {
   }
 
   point & operator= (const point & p) {
+    x = std::vector<int> ();
     if (x != p.x) {
-      x = p.x;
+      for (auto i = 0; i != p.x.size(); ++i)
+        x.push_back(p.x[i]);
     }
     return *this;
   }
@@ -49,7 +52,7 @@ struct point {
     // Assume other is the same dimension or larger
     double sum = 0.0;
     for (size_t i = 0; i < left.x.size(); ++i) {
-      sum +=  pow(left.x[i] - right.x[i], 2); 
+      sum +=  (left.x[i] - right.x[i])*(left.x[i] - right.x[i]); 
     }
     return sqrt(sum);
   }
@@ -183,12 +186,12 @@ long sorted_method(std::vector<point> a,
     // TODO keep track of where the query nodes are... maybe do a find on the point
     // Sort the vectors based on the query node
     point qnode (a[q]);
-    auto sortcomparator = [qnode] (const point &p1, const point &p2) -> bool const {
-      return point::doCompare(p1,qnode) < point::doCompare(p2,qnode);
+    const auto sortcomparator = [qnode] (point p1, point p2) -> bool const {
+      return p1.doCompare(p1,qnode) < p1.doCompare(p2,qnode);
     };
 
     // Put this into a lambda so we don't have to explicitly copy variables
-    [a,b,asize,bsize,qnode,sortcomparator, &accept] (void) -> void {
+    [&a,&b,asize,bsize,qnode,&sortcomparator, &accept] (void) -> void {
 
       std::sort (begin(a), end(a), sortcomparator ); 
       std::sort (begin(b), end(b), sortcomparator );
