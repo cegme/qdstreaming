@@ -15,13 +15,27 @@ enum Algo {ALL = 0, BASELINE = 1, SORTED = 2, TOPK = 3};
 
 struct point {
   std::vector<int> x;
+  point (): x(std::vector<int>()) { }
+  point(const point &o) {
+    x = std::vector<int>();
+    for (auto i : o.x) {
+      x.push_back(i);
+    }
+  }
   point(int dim): x(std::vector<int>()) {
     for (int i = 0; i < dim; ++i) {
       x.push_back(RandInt());
     }
   }
 
-  bool  operator==(const point & p) const {
+  point & operator= (const point & p) {
+    if (x != p.x) {
+      x = p.x;
+    }
+    return *this;
+  }
+
+  bool operator==(const point & p) const {
     if (p.x.size() == x.size()) {
       for (int i = 0; i < p.x.size(); ++i) {
         if (p.x[i] != x[i]) return false;    
@@ -31,7 +45,7 @@ struct point {
     else return false;
   }
   
-  static double doCompare (point left, point right) {
+  static double doCompare (const point& left, const point& right) {
     // Assume other is the same dimension or larger
     double sum = 0.0;
     for (size_t i = 0; i < left.x.size(); ++i) {
@@ -168,15 +182,16 @@ long sorted_method(std::vector<point> a,
   for (int q = 0; q < qnsize; ++q) {
     // TODO keep track of where the query nodes are... maybe do a find on the point
     // Sort the vectors based on the query node
-    point qnode = a[q];
-    [a,b,&asize,&bsize,&qnode,&accept] (void) -> void {
+    point qnode (a[q]);
+    auto sortcomparator = [qnode] (const point &p1, const point &p2) -> bool const {
+      return point::doCompare(p1,qnode) < point::doCompare(p2,qnode);
+    };
 
-      std::sort (a.begin(), a.end(), [qnode] (const point& a1, const point& a2) -> bool {
-        return point::doCompare(a1, qnode) > point::doCompare(a2, qnode);
-      });
-      std::sort (b.begin(), b.end(), [qnode] (const point& b1, const point& b2) -> bool {
-        return point::doCompare(b1, qnode) > point::doCompare(b2, qnode);
-      });
+    // Put this into a lambda so we don't have to explicitly copy variables
+    [a,b,asize,bsize,qnode,sortcomparator, &accept] (void) -> void {
+
+      std::sort (begin(a), end(a), sortcomparator ); 
+      std::sort (begin(b), end(b), sortcomparator );
 
       // Compute a with and without q
       Stats astats_with, astats_without;
