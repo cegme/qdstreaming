@@ -17,12 +17,20 @@ struct point {
   std::vector<int> x;
   point (): x(std::vector<int>()) { }
 
-  point(const point &o) {
-    x = std::vector<int>();
-    for (auto i : o.x) {
-      x.push_back(i);
+  point(const point &o): x(std::vector<int>()) {
+    if (o.dim() > 0) {
+      //for (auto i : o.x) {
+      for (int i = 0; i < o.x.size(); ++i) {
+        x.push_back(i);
+      }
     }
   }
+
+  ~point() {
+    x.clear();
+    x.resize(0);
+  }
+
   point(int dim): x(std::vector<int>()) {
     for (int i = 0; i < dim; ++i) {
       x.push_back(RandInt());
@@ -47,11 +55,15 @@ struct point {
     }
     else return false;
   }
+
+  int dim (void) const { return x.size(); }
   
   static double doCompare (const point& left, const point& right) {
     // Assume other is the same dimension or larger
     double sum = 0.0;
-    for (size_t i = 0; i < left.x.size(); ++i) {
+    int leftxsize = left.x.size();
+    int rightxsize = right.x.size();
+    for (size_t i = 0; i < leftxsize && i < rightxsize; ++i) {
       sum +=  pow(left.x[i] - right.x[i], 2);
     }
     //log_info("doCompare: %f, sum: %f", sqrt(sum), sum);
@@ -128,11 +140,9 @@ void create_cluster(std::vector<point>& a, int size, int dimensions) {
 long baseline_method(std::vector<point> a,
               std::vector<point> b,
               std::vector<int> qn,
-              bool & accept) {
+              std::vector<bool> & accept) {
   // TODO pass vectors by reference, don't make a copy
-  // TODO need a vector of results for each query node. migrate accept to a vector
   // TODO make another version of this that does triangle parsing instead of the full n^2
-  accept = false; // This method sets the accept parameters
   size_t asize = a.size();
   size_t bsize = b.size();
   int qnsize = qn.size();
@@ -171,7 +181,7 @@ long baseline_method(std::vector<point> a,
 
     double score_with = (ascore_with/(asize*asize)) + (bscore_without/(bsize*bsize));
     double score_without = (ascore_without/((asize-1)*(asize-1))) + (bscore_with/((bsize+1)*(bsize+1)));
-    accept = score_with < score_without;
+    accept.push_back(score_with < score_without);
   }
   
   clock_t toc = clock();
@@ -179,28 +189,34 @@ long baseline_method(std::vector<point> a,
 }
 
 
-long sorted_method(std::vector<point> a,
-              std::vector<point> b,
-              std::vector<int> qn,
+long sorted_method(std::vector<point> &a,
+              std::vector<point> &b,
+              const std::vector<int> &qn,
               double conf,
-              bool & accept) {
+              std::vector<bool> & accept) {
 
   size_t asize = a.size();
   size_t bsize = b.size();
   int qnsize = qn.size();
 
   clock_t tic = clock();
+  
+// Copy all of the query nodes first
+  std::vector<point> qs;
+  for (int q = 0; q < qnsize; ++q) {
+    qs.push_back(a[q]);
+  }
 
   // Don't mutilate the vector so create new ones
   std::vector<point> preservea(asize), preserveb(bsize);
   std::copy(begin(a), end(a), begin(preservea));
   std::copy(begin(b), end(b), begin(preserveb));
 
-  // TODO need to keep track of the correct and incorrect decision
+  // Need to keep track of the correct and incorrect decision
   for (int q = 0; q < qnsize; ++q) {
 
     // Sort the vectors based on the query node
-    point qnode (a[q]); // Copy the query node;
+    point qnode = qs[q];
     const auto sortcomparator = [qnode] (point p1, point p2) -> bool const {
       return point::doCompare(p1,qnode) < point::doCompare(p2,qnode);
     };
@@ -215,7 +231,7 @@ long sorted_method(std::vector<point> a,
       for (size_t j = 0; j != asize && !done; ++j) {
         // compare the two vectors
         double score = point::doCompare(a[i],a[j]);
-        if (a[i] == qnode || a[j] == qnode) astats_with.add(score);
+        if (a[i] == qs[q] || a[j] == qs[q]) astats_with.add(score);
         else { astats_without.add(score); astats_with.add(score); }
       }
       if (astats_with.conf() > (1-conf) && astats_without.conf() > (1-conf)) { done = true; }
@@ -231,17 +247,17 @@ long sorted_method(std::vector<point> a,
         bstats_without.add(score);
         bstats_with.add(score);
       }
-      double score = point::doCompare(b[i], qnode);
+      double score = point::doCompare(b[i], qs[q]);
       bstats_with.add(score);
-      score = point::doCompare(qnode, b[i]);
+      score = point::doCompare(qs[q], b[i]);
       bstats_with.add(score);
       if (bstats_with.conf() > (1-conf) && bstats_without.conf() > (1-conf)) { done = true; }
     }
-    bstats_with.add( point::doCompare(qnode, qnode) );
+    bstats_with.add( point::doCompare(qs[q], qs[q]) );
     
     double score_with = astats_with.mean + bstats_without.mean;
     double score_without = astats_without.mean + bstats_with.mean;
-    accept = score_with < score_without;   
+    accept.push_back(score_with < score_without);
 
     // Repare the clusters
     std::copy(begin(preserveb), end(preserveb), begin(b));
@@ -256,7 +272,7 @@ long sorted_method(std::vector<point> a,
 int main (int argc, char** argv) {
   namespace po = boost::program_options;
 
-  int sizes[5] = { 10, 100, 1000, 10000, 1000000/*, 10000000*/ };
+  int sizes[5] = { 10, 100, 1000, 10000/*, 1000000, 10000000*/ };
   int dimensions;
   int algo; 
   int querynodes;
@@ -264,7 +280,7 @@ int main (int argc, char** argv) {
   double conf;
   
   std::unordered_map<std::string, std::vector<long> > timer_map;
-  std::unordered_map<std::string, std::vector<bool> > accuracy_map;
+  std::unordered_map<std::string, std::vector<std::vector<bool>>> accuracy_map;
 
   boost::program_options::options_description desc("Cluster Improvement test.");
   desc.add_options()
@@ -284,14 +300,14 @@ int main (int argc, char** argv) {
     po::notify(vm);
     if (vm.count("help") ) {
       logInfo(desc);
-      exit(0);
+      return 0;
     }
 
   }
   catch (boost::program_options::error &e) {
     log_err("Bad parameters");
     logInfo(desc);
-    exit(1);
+    return 1;
   }
 
   log_info("#Params: dimensions=%d; algorithms=%d; querynodes=%d; conf=%f; iterations=%d",\
@@ -327,31 +343,29 @@ int main (int argc, char** argv) {
 
       // Need to know the optimal decision
       // Always run baseline first to get it.
-      bool accept; 
-      std::vector<bool> baseline_accept, sorted_accept;
-
-      // Always do baseline first so we can get the accuracy info!
       for (int m = BASELINE; m != TOPK; ++m) {
         switch (m) {
           case BASELINE: {
+            std::vector<bool> baseaccept; 
             std::string key("BASELINE");
             timer_map[key] = std::vector<long>();
-            accuracy_map[key] = std::vector<bool>();
+            accuracy_map[key] = std::vector<std::vector<bool>>();
             for (int i = 0; i < iterations; ++i) {
-              long time = baseline_method(ca, cb, qn, accept);
+              long time = baseline_method(ca, cb, qn, baseaccept);
               timer_map[key].push_back(time);
-              accuracy_map[key].push_back(accept);
+              accuracy_map[key].push_back(baseaccept);
             }
             break;
           }
           case SORTED: {
             std::string key("SORTED");
+            std::vector<bool> thisaccept; 
             timer_map[key] = std::vector<long>();
-            accuracy_map[key] = std::vector<bool>();
+            accuracy_map[key] = std::vector<std::vector<bool>>();
             for (int i = 0; i < iterations; ++i) {
-              long time = sorted_method(ca, cb, qn, conf, accept);
+              long time = sorted_method(ca, cb, qn, conf, thisaccept);
               timer_map[key].push_back(time);
-              accuracy_map[key].push_back(accept);
+              accuracy_map[key].push_back(thisaccept);
             }
             break;
           }
@@ -364,13 +378,15 @@ int main (int argc, char** argv) {
       }
 
       // Compute Accuracy
-      auto accuracy = [&accuracy_map, iterations] (std::vector<bool> a) -> float {
+      auto accuracy = [&accuracy_map,iterations,querynodes] (const std::vector<std::vector<bool>> &a) -> float {
         auto base = accuracy_map["BASELINE"];
         float s = 0.0;
         for (int i = 0; i < iterations; ++i) {
-          if (base[i] == a[i]) s += 1.0; 
+          for (int j = 0; j < querynodes; ++j) {
+            if (base[i][j] == a[i][j]) s += 1.0; 
+          }
         }
-        return s/iterations;
+        return s/(iterations*querynodes);
       };
 
       // Print results as csv and clear the cache
