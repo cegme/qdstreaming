@@ -4,7 +4,7 @@ DEBUG = -g -pg
 
 CPP = $(GPP) $(DEBUG)
 
-EXTRAS = -lfl -lboost_date_time -lboost_program_options -lboost_system -lpthread -lboost_filesystem -lboost_regex -lthrift -DHAVE_NETINET_IN_H -DHAVE_INTTYPES_H
+EXTRAS = -lfl -lboost_date_time -lboost_program_options -lboost_system -lpthread -lboost_filesystem -lboost_regex -DHAVE_NETINET_IN_H -DHAVE_INTTYPES_H
 
 clustertest: Random.o
 	$(CPP) -o clustertest clustertest.cpp Random.o $(EXTRAS)
