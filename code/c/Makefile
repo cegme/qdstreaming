@@ -1,5 +1,5 @@
 
-GPP = g++ --std=c++11 -march=native -w -O3 
+GPP = g++ --std=c++11 -march=native -w  
 DEBUG = -g -pg
 
 CPP = $(GPP) $(DEBUG)

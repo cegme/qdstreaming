@@ -21,7 +21,7 @@ struct point {
     if (o.dim() > 0) {
       //for (auto i : o.x) {
       for (int i = 0; i < o.x.size(); ++i) {
-        x.push_back(i);
+        x.push_back(o.x[i]);
       }
     }
   }
@@ -33,7 +33,7 @@ struct point {
 
   point(int dim): x(std::vector<int>()) {
     for (int i = 0; i < dim; ++i) {
-      x.push_back(RandInt());
+      x.push_back(RandInt() % 100);
     }
   }
 
@@ -56,7 +56,29 @@ struct point {
     else return false;
   }
 
-  int dim (void) const { return x.size(); }
+  inline int dim (void) const { return x.size(); }
+
+  std::ostream& operator<< (std::ostream &strm) const {
+    strm << "<"; 
+    for (int i = 0; i < x.size()-1; ++i) {
+      strm << x[i] << ",";
+    }
+    if (x.size() > 0) strm << x.back();
+    strm << ">"; 
+    return strm;
+  }
+
+  std::string to_string() const {
+    std::stringstream strm;
+    strm << "<"; 
+    for (int i = 0; i < x.size()-1; ++i) {
+      strm << x[i] << ",";
+    }
+    if (x.size() > 0) strm << x.back();
+    strm << ">"; 
+    return strm.str();
+
+  }
   
   static double doCompare (const point& left, const point& right) {
     // Assume other is the same dimension or larger
@@ -67,6 +89,7 @@ struct point {
       sum +=  pow(left.x[i] - right.x[i], 2);
     }
     //log_info("doCompare: %f, sum: %f", sqrt(sum), sum);
+    //if (sqrt(sum) > 0.0) std::cerr << left.to_string() << "::" << right.to_string() << "::" << sqrt(sum) << "\n";
     return sqrt(sum);
   }
 
@@ -79,12 +102,14 @@ struct Stats {
   unsigned int n; 
   long double mean;
   long double M2;
+  long double _sum;
   
-  Stats (): n(0), mean(0.0), M2(0.0) { } 
+  Stats (): n(0), mean(0.0), M2(0.0), _sum(0.0) { } 
 
-  void reset (void) { n = 0; mean = 0.0; M2 = 0.0; }
+  void reset (void) { n = 0; mean = 0.0; M2 = 0.0; _sum = 0.0; }
 
-  void add(double x) {
+  void add(long double x) {
+    _sum += x;
     ++n;
     auto delta = x - mean;
     mean += (delta / n);
@@ -97,12 +122,13 @@ struct Stats {
     else
       return 0.0;
   } 
-  double conf (void) {
+  double std_err (void) {
     //double v = variance();
     //if (v == 0.0) return 1.0;
     //else return sqrt(v);
-    return sqrt(variance())/mean;
+    return sqrt(variance()/n);
   }
+  double sum (void) const { return _sum; }
 
 };
 
@@ -111,17 +137,12 @@ struct Stats {
   * It would be good to generalize this for
   * any container type
   */
-double variance(std::vector<long>& vec) {
-  size_t N = 0;
-  double M = 0, S = 0, Mprev = 0; 
-  for (auto x: vec) {
-    ++N;
-    Mprev = M;
-    M += (x - Mprev) / N;
-    S += (x - Mprev) * (x - M);
+double variance(const std::vector<long>& vec) {
+  Stats s;
+  for (auto a : vec) {
+    s.add((long double)a);
   }
-  if (N <= 2) return 0.0;
-  else return S / (N - 1.0);
+  return s.variance();
 }
 
 
@@ -195,13 +216,15 @@ long sorted_method(std::vector<point> &a,
               double conf,
               std::vector<bool> & accept) {
 
+  int debug_iter = 0;
+
   size_t asize = a.size();
   size_t bsize = b.size();
   int qnsize = qn.size();
 
   clock_t tic = clock();
   
-// Copy all of the query nodes first
+  // Copy all of the query nodes first
   std::vector<point> qs;
   for (int q = 0; q < qnsize; ++q) {
     qs.push_back(a[q]);
@@ -227,33 +250,45 @@ long sorted_method(std::vector<point> &a,
     Stats astats_with, astats_without;
     //log_info("mean: %Lf,%Lf", astats_with.mean, astats_without.mean);
     bool done = false;
-    for (size_t i = 0; i != asize && !done; ++i) {
-      for (size_t j = 0; j != asize && !done; ++j) {
+    for (size_t i = 0; i < asize && !done; ++i) {
+      for (size_t j = 0; j < asize && !done; ++j) {
         // compare the two vectors
         double score = point::doCompare(a[i],a[j]);
         if (a[i] == qs[q] || a[j] == qs[q]) astats_with.add(score);
         else { astats_without.add(score); astats_with.add(score); }
+        ++debug_iter;
       }
-      if (astats_with.conf() > (1-conf) && astats_without.conf() > (1-conf)) { done = true; }
+      if (astats_with.std_err() > (1.0-conf) || astats_without.std_err() > (1.0-conf)) { done = true; }
     }
+    //if (debug_iter < asize*asize) std::cerr << " a debug_iter: " << debug_iter << ", " << asize*asize-debug_iter << "\n";
+    //std::cerr << "astats_with: " << astats_with.sum() << "\n";
+    //std::cerr << "astats_without: " << astats_with.sum() << "\n";
 
+
+
+    debug_iter = 0;
     // Compute b with and without q
     Stats bstats_with, bstats_without;
     done = false;
-    for (size_t i = 0; i != bsize && !done; ++i) {
-      for (size_t j = 0; j != bsize && !done; ++j) {
+    for (size_t i = 0; i < bsize && !done; ++i) {
+      for (size_t j = 0; j < bsize && !done; ++j) {
         // compare the two vectors
         double score = point::doCompare(b[i],b[j]);
         bstats_without.add(score);
         bstats_with.add(score);
+        ++debug_iter;
       }
       double score = point::doCompare(b[i], qs[q]);
       bstats_with.add(score);
       score = point::doCompare(qs[q], b[i]);
       bstats_with.add(score);
-      if (bstats_with.conf() > (1-conf) && bstats_without.conf() > (1-conf)) { done = true; }
+      if (bstats_with.std_err() > (1-conf) || bstats_without.std_err() > (1-conf)) { done = true;}
     }
     bstats_with.add( point::doCompare(qs[q], qs[q]) );
+    //if (debug_iter < bsize*bsize) std::cerr << " b debug_iter: " << debug_iter << ", " << bsize*bsize-debug_iter << "\n";
+    //std::cerr << "bstats_with: " << bstats_with.sum() << "\n";
+    //std::cerr << "bstats_without: " << bstats_with.sum() << "\n";
+    
     
     double score_with = astats_with.mean + bstats_without.mean;
     double score_without = astats_without.mean + bstats_with.mean;
@@ -272,7 +307,11 @@ long sorted_method(std::vector<point> &a,
 int main (int argc, char** argv) {
   namespace po = boost::program_options;
 
-  int sizes[5] = { 10, 100, 1000, 10000/*, 1000000, 10000000*/ };
+  //int sizes[5] = { 10, 100, 1000, 10000/*, 1000000, 10000000*/ };
+  std::pair<int,int>  absizes[25] = {std::make_pair(10,10), std::make_pair(10,100), std::make_pair(100,10), std::make_pair(100,100), 
+                                  std::make_pair(1000,10), std::make_pair(10,1000), std::make_pair(1000,100), std::make_pair(100,1000), std::make_pair(1000,1000),
+                                  std::make_pair(10000,10), std::make_pair(10,10000), std::make_pair(10000,100), std::make_pair(100,10000), std::make_pair(10000,1000), std::make_pair(1000,10000), std::make_pair(10000,10000),
+                                  std::make_pair(100000,10), std::make_pair(10,100000), std::make_pair(100000,100), std::make_pair(100,100000), std::make_pair(100000,1000), std::make_pair(1000,100000), std::make_pair(100000,10000), std::make_pair(10000,100000), std::make_pair(100000,100000)};
   int dimensions;
   int algo; 
   int querynodes;
@@ -316,15 +355,17 @@ int main (int argc, char** argv) {
 
   // Print header
   // Name, N, a clustersize, b clustersize, Sum, Variance
-  std::cout << "Method," << "Samples," << "A Cluster Size," << "B Cluster Size," << "Sum," << "Variance," << "Accuracy\n";
+  std::cout << "Method," << "Samples," << "A Cluster Size," << "B Cluster Size," << "Time," << "Variance," << "Accuracy," << "Conf\n";
 
   // Run the test 
-  int thesizes = (sizeof(sizes)/sizeof(*sizes));
-  for (int a = 0; a < thesizes; ++a) {
+  int thesizes = (sizeof(absizes)/sizeof(*absizes));
+  //for (int a = 0; a < thesizes; ++a) {
+  for (auto ab : absizes) { 
+    int a = ab.first;
 
     // Create cluster a
     std::vector<point> ca;
-    create_cluster(ca, sizes[a], dimensions);
+    create_cluster(ca, a, dimensions);
 
     // Get $querynode querynodes
     auto qn = [&ca,querynodes] () -> std::vector<int> {
@@ -336,71 +377,71 @@ int main (int argc, char** argv) {
       return qn;
     }();
 
-    for (int b = 0; b < thesizes; ++b) {
-      // Create cluster b
-      std::vector<point> cb;
-      create_cluster(cb, sizes[b], dimensions);
+    int b = ab.second;
+    // Create cluster b
+    std::vector<point> cb;
+    create_cluster(cb, b, dimensions);
 
-      // Need to know the optimal decision
-      // Always run baseline first to get it.
-      for (int m = BASELINE; m != TOPK; ++m) {
-        switch (m) {
-          case BASELINE: {
-            std::vector<bool> baseaccept; 
-            std::string key("BASELINE");
-            timer_map[key] = std::vector<long>();
-            accuracy_map[key] = std::vector<std::vector<bool>>();
-            for (int i = 0; i < iterations; ++i) {
-              long time = baseline_method(ca, cb, qn, baseaccept);
-              timer_map[key].push_back(time);
-              accuracy_map[key].push_back(baseaccept);
-            }
-            break;
+    // Need to know the optimal decision
+    // Always run baseline first to get it.
+    for (int m = BASELINE; m != TOPK; ++m) {
+      switch (m) {
+        case BASELINE: {
+          std::vector<bool> baseaccept; 
+          std::string key("BASELINE");
+          timer_map[key] = std::vector<long>();
+          accuracy_map[key] = std::vector<std::vector<bool>>();
+          for (int i = 0; i < iterations; ++i) {
+            long time = baseline_method(ca, cb, qn, baseaccept);
+            timer_map[key].push_back(time);
+            accuracy_map[key].push_back(baseaccept);
           }
-          case SORTED: {
-            std::string key("SORTED");
-            std::vector<bool> thisaccept; 
-            timer_map[key] = std::vector<long>();
-            accuracy_map[key] = std::vector<std::vector<bool>>();
-            for (int i = 0; i < iterations; ++i) {
-              long time = sorted_method(ca, cb, qn, conf, thisaccept);
-              timer_map[key].push_back(time);
-              accuracy_map[key].push_back(thisaccept);
-            }
-            break;
-          }
-          case TOPK: {
-            break;
-          }
-          default:
-            break;
+          break;
         }
-      }
-
-      // Compute Accuracy
-      auto accuracy = [&accuracy_map,iterations,querynodes] (const std::vector<std::vector<bool>> &a) -> float {
-        auto base = accuracy_map["BASELINE"];
-        float s = 0.0;
-        for (int i = 0; i < iterations; ++i) {
-          for (int j = 0; j < querynodes; ++j) {
-            if (base[i][j] == a[i][j]) s += 1.0; 
+        case SORTED: {
+          std::string key("SORTED");
+          std::vector<bool> thisaccept; 
+          timer_map[key] = std::vector<long>();
+          accuracy_map[key] = std::vector<std::vector<bool>>();
+          for (int i = 0; i < iterations; ++i) {
+            long time = sorted_method(ca, cb, qn, conf, thisaccept);
+            timer_map[key].push_back(time);
+            accuracy_map[key].push_back(thisaccept);
           }
+          break;
         }
-        return s/(iterations*querynodes);
-      };
-
-      // Print results as csv and clear the cache
-      for (auto e : timer_map) {
-        // Name, N, a clustersize, b clustersize, Sum, Variance, Accuracy
-        std::cout << e.first << "," << iterations << ","
-          << sizes[a] << "," << sizes[b]
-          << "," << std::accumulate(e.second.begin(), e.second.end(), 0L)
-          << "," << variance(e.second)
-          << "," << accuracy(accuracy_map[e.first])
-          << std::endl;
+        case TOPK: {
+          break;
+        }
+        default:
+          break;
       }
-      timer_map.clear();
     }
+
+    // Compute Accuracy
+    auto accuracy = [&accuracy_map,iterations,querynodes] (const std::vector<std::vector<bool>> &a) -> float {
+      auto base = accuracy_map["BASELINE"];
+      float s = 0.0;
+      for (int i = 0; i < iterations; ++i) {
+        for (int j = 0; j < querynodes; ++j) {
+          if (base[i][j] == a[i][j]) s += 1.0; 
+        }
+      }
+      return s/(iterations*querynodes);
+    };
+
+    // Print results as csv and clear the cache
+    for (auto e : timer_map) {
+      // Name, N, a clustersize, b clustersize, Time, Variance, Accuracy, confidence
+      std::cout << e.first << "," << iterations << ","
+        << a << "," << b
+        << "," << std::accumulate(e.second.begin(), e.second.end(), 0L)
+        << "," << variance(e.second)
+        << "," << accuracy(accuracy_map[e.first])
+        << "," << conf
+        << std::endl;
+    }
+    timer_map.clear();
   }
 
   return 0;
