@@ -14,7 +14,7 @@
 // Finite population control to reduce the sampling variation of the mean.
 #define fpc(N,n) sqrt((N-n)/(N-1))
 
-enum Algo {ALL = 0, BASELINE = 1, SORTED = 2, TOPK = 3};
+enum Algo {ALL = 0, BASELINE = 1, SORTED = 2, BLOCKING = 3};
 
 struct point {
   std::vector<int> x;
@@ -302,6 +302,38 @@ long sorted_method(const std::vector<point> &_a,
   return (double)(toc - tic);
 }
 
+long blocking_method(const std::vector<point> &_a,
+              const std::vector<point> &_b,
+              const std::vector<int> &qn,
+              double conf,
+              std::vector<bool> & accept) {
+
+  size_t asize = _a.size();
+  size_t bsize = _b.size();
+  int qnsize = qn.size();
+
+  clock_t tic = clock();
+  
+  // Copy all of the query nodes first
+  std::vector<point> qs;
+  for (int q = 0; q < qnsize; ++q) {
+    qs.push_back(_a[q]);
+  }
+
+  // Don't mutilate the vector so create new ones
+  std::vector<point> a(asize), b(bsize);
+  std::copy(_a.cbegin(), _a.cend(), a.begin());
+  std::copy(_b.cbegin(), _b.cend(), b.begin());
+
+  // Need to keep track of the correct and incorrect decision
+  for (int q = 0; q < qnsize; ++q) {
+    // TODO This is where the magic happend
+  }
+
+  clock_t toc = clock();
+  return (double)(toc - tic);
+}
+
 
 int main (int argc, char** argv) {
   namespace po = boost::program_options;
@@ -382,7 +414,7 @@ int main (int argc, char** argv) {
 
     // Need to know the optimal decision
     // Always run baseline first to get it.
-    for (int m = BASELINE; m != TOPK; ++m) {
+    for (int m = BASELINE; m != BLOCKING; ++m) {
       switch (m) {
         case BASELINE: {
           std::vector<bool> baseaccept; 
@@ -408,7 +440,16 @@ int main (int argc, char** argv) {
           }
           break;
         }
-        case TOPK: {
+        case BLOCKING: {
+          std::string key("BLOCKING");
+          std::vector<bool> thisaccept; 
+          timer_map[key] = std::vector<long>();
+          accuracy_map[key] = std::vector<std::vector<bool>>();
+          for (int i = 0; i < iterations; ++i) {
+            long time = blocking_method(ca, cb, qn, conf, thisaccept);
+            timer_map[key].push_back(time);
+            accuracy_map[key].push_back(thisaccept);
+          }
           break;
         }
         default:
