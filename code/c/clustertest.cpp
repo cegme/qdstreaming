@@ -13,8 +13,10 @@
 
 // Finite population control to reduce the sampling variation of the mean.
 #define fpc(N,n) sqrt((N-n)/(N-1))
+// Size of the upper triangle n*n matrix
+#define TRISIZE(n) ((n/2)*(n-1))
 
-enum Algo {ALL = 0, BASELINE = 1, SORTED = 2, BLOCKING = 3};
+enum Algo {ALL = 0, BASELINE = 1, BASELINE_TRIANGLE = 2, SORTED = 3, BLOCKING = 4};
 
 struct point {
   std::vector<int> x;
@@ -164,7 +166,7 @@ void create_cluster(std::vector<point>& a, int size, int dimensions) {
 }
 
 
-long baseline_method(const std::vector<point> &a,
+long baseline_method (const std::vector<point> &a,
               const std::vector<point> &b,
               std::vector<int> qn,
               std::vector<bool> & accept) {
@@ -188,7 +190,7 @@ long baseline_method(const std::vector<point> &a,
         else ascore_without += score;
       } 
     }
-    // Get exact scire width
+    // Get exact score width
     ascore_with += ascore_without;
 
     double bscore_with = 0.0, bscore_without = 0.0;
@@ -211,6 +213,57 @@ long baseline_method(const std::vector<point> &a,
     accept.push_back(score_with < score_without);
   }
   
+  clock_t toc = clock();
+  return (double)(toc - tic);
+}
+
+
+long baseline_triangle_method (const std::vector<point> &a,
+              const std::vector<point> &b,
+              std::vector<int> qn,
+              std::vector<bool> & accept) {
+
+  size_t asize = a.size();
+  size_t bsize = b.size();
+  int qnsize = qn.size();
+
+  clock_t tic = clock();
+
+  // Use http://www.boost.org/doc/libs/1_56_0/libs/numeric/ublas/doc/triangular.htm?
+  for (int q = 0; q < qnsize; ++q) {
+    double ascore_with = 0.0, ascore_without = 0.0;
+
+    // Compute a with and without q
+    for (size_t i = 0; i < asize; ++i) {
+      for (size_t j = i+1; j < asize; ++j) {
+        // compare the two vectors
+        double score = point::doCompare(a[i],a[j]);
+        if (i == qn[q] || j == qn[q]) ascore_with += score;
+        else ascore_without += score;
+      } 
+    }
+    // Get exact score width
+    ascore_with += ascore_without;
+
+    double bscore_with = 0.0, bscore_without = 0.0;
+    // Compute b with and without q
+    for (size_t i = 0; i < bsize; ++i) {
+      for (size_t j = i+1; j < bsize; ++j) {
+        // compare the two vectors
+        double score = point::doCompare(b[i],b[j]);
+        bscore_without += score;
+      } 
+      double score = point::doCompare(b[i], a[qn[q]]);
+      bscore_with += score;
+      score = point::doCompare(a[qn[q]], b[i]);
+      bscore_with += score;
+    }
+    bscore_with += point::doCompare(a[qn[q]], a[qn[q]]);
+
+    double score_with = (ascore_with/TRISIZE(asize)) + (bscore_without/TRISIZE(bsize));
+    double score_without = (ascore_without/TRISIZE(asize-1)) + (bscore_with/TRISIZE(bsize+1));
+    accept.push_back(score_with < score_without);
+  }
   clock_t toc = clock();
   return (double)(toc - tic);
 }
@@ -428,6 +481,19 @@ int main (int argc, char** argv) {
           }
           break;
         }
+        case BASELINE_TRIANGLE: {
+          std::vector<bool> baseaccept; 
+          std::string key("BASELINE_TRIANGLE");
+          timer_map[key] = std::vector<long>();
+          accuracy_map[key] = std::vector<std::vector<bool>>();
+          for (int i = 0; i < iterations; ++i) {
+            long time = baseline_triangle_method(ca, cb, qn, baseaccept);
+            timer_map[key].push_back(time);
+            accuracy_map[key].push_back(baseaccept);
+          }
+          break;
+        }
+
         case SORTED: {
           std::string key("SORTED");
           std::vector<bool> thisaccept; 
@@ -452,6 +518,7 @@ int main (int argc, char** argv) {
           }
           break;
         }
+        
         default:
           break;
       }
