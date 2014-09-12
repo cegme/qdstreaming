@@ -11,6 +11,9 @@
 
 #include <boost/program_options.hpp>
 
+// Finite population control to reduce the sampling variation of the mean.
+#define fpc(N,n) sqrt((N-n)/(N-1))
+
 enum Algo {ALL = 0, BASELINE = 1, SORTED = 2, TOPK = 3};
 
 struct point {
@@ -123,10 +126,13 @@ struct Stats {
       return 0.0;
   } 
   double std_err (void) {
-    //double v = variance();
-    //if (v == 0.0) return 1.0;
-    //else return sqrt(v);
     return sqrt(variance()/n);
+  }
+  /** If we know the population size we can get the error
+    * with finite population control (fpc).
+    */
+  double std_err(unsigned int N) {
+    return sqrt(variance()/n)*fpc(N,n);
   }
   double sum (void) const { return _sum; }
 
@@ -158,8 +164,8 @@ void create_cluster(std::vector<point>& a, int size, int dimensions) {
 }
 
 
-long baseline_method(std::vector<point> a,
-              std::vector<point> b,
+long baseline_method(const std::vector<point> &a,
+              const std::vector<point> &b,
               std::vector<int> qn,
               std::vector<bool> & accept) {
   // TODO pass vectors by reference, don't make a copy
@@ -210,16 +216,16 @@ long baseline_method(std::vector<point> a,
 }
 
 
-long sorted_method(std::vector<point> &a,
-              std::vector<point> &b,
+long sorted_method(const std::vector<point> &_a,
+              const std::vector<point> &_b,
               const std::vector<int> &qn,
               double conf,
               std::vector<bool> & accept) {
 
   int debug_iter = 0;
 
-  size_t asize = a.size();
-  size_t bsize = b.size();
+  size_t asize = _a.size();
+  size_t bsize = _b.size();
   int qnsize = qn.size();
 
   clock_t tic = clock();
@@ -227,13 +233,13 @@ long sorted_method(std::vector<point> &a,
   // Copy all of the query nodes first
   std::vector<point> qs;
   for (int q = 0; q < qnsize; ++q) {
-    qs.push_back(a[q]);
+    qs.push_back(_a[q]);
   }
 
   // Don't mutilate the vector so create new ones
-  std::vector<point> preservea(asize), preserveb(bsize);
-  std::copy(begin(a), end(a), begin(preservea));
-  std::copy(begin(b), end(b), begin(preserveb));
+  std::vector<point> a(asize), b(bsize);
+  std::copy(_a.cbegin(), _a.cend(), a.begin());
+  std::copy(_b.cbegin(), _b.cend(), b.begin());
 
   // Need to keep track of the correct and incorrect decision
   for (int q = 0; q < qnsize; ++q) {
@@ -260,10 +266,6 @@ long sorted_method(std::vector<point> &a,
       }
       if (astats_with.std_err() > (1.0-conf) || astats_without.std_err() > (1.0-conf)) { done = true; }
     }
-    //if (debug_iter < asize*asize) std::cerr << " a debug_iter: " << debug_iter << ", " << asize*asize-debug_iter << "\n";
-    //std::cerr << "astats_with: " << astats_with.sum() << "\n";
-    //std::cerr << "astats_without: " << astats_with.sum() << "\n";
-
 
 
     debug_iter = 0;
@@ -285,9 +287,6 @@ long sorted_method(std::vector<point> &a,
       if (bstats_with.std_err() > (1-conf) || bstats_without.std_err() > (1-conf)) { done = true;}
     }
     bstats_with.add( point::doCompare(qs[q], qs[q]) );
-    //if (debug_iter < bsize*bsize) std::cerr << " b debug_iter: " << debug_iter << ", " << bsize*bsize-debug_iter << "\n";
-    //std::cerr << "bstats_with: " << bstats_with.sum() << "\n";
-    //std::cerr << "bstats_without: " << bstats_with.sum() << "\n";
     
     
     double score_with = astats_with.mean + bstats_without.mean;
@@ -295,8 +294,8 @@ long sorted_method(std::vector<point> &a,
     accept.push_back(score_with < score_without);
 
     // Repare the clusters
-    std::copy(begin(preserveb), end(preserveb), begin(b));
-    std::copy(begin(preservea), end(preservea), begin(a));
+    std::copy(_b.cbegin(), _b.cend(), b.begin());
+    std::copy(_a.cbegin(), _a.cend(), a.begin());
   }
   
   clock_t toc = clock();
@@ -341,7 +340,6 @@ int main (int argc, char** argv) {
       logInfo(desc);
       return 0;
     }
-
   }
   catch (boost::program_options::error &e) {
     log_err("Bad parameters");
