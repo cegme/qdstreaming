@@ -2,9 +2,24 @@
 GPP = g++ --std=c++11 -march=native -w -O3
 DEBUG = -g -pg
 
+THRIFT = -I/usr/local/include/thrift
+
 CPP = $(GPP) $(DEBUG)
 
-EXTRAS = -lfl -lboost_date_time -lboost_program_options -lboost_system -lpthread -lboost_filesystem -lboost_regex -DHAVE_NETINET_IN_H -DHAVE_INTTYPES_H
+EXTRAS = -lthrift -lfl -lboost_date_time -lboost_program_options -lboost_system -lpthread -lboost_filesystem -lboost_regex -DHAVE_NETINET_IN_H -DHAVE_INTTYPES_H
+
+
+# Wikilink Stats
+wikilinkstats: wiki-link.o
+	$(CPP) -o wikilinkstats wikilinkstats.cpp wikilink_constants.o wikilink_types.o $(EXTRAS)
+
+wiki-link.o:	
+	thrift -r --gen cpp wikilink.thrift
+	$(CPP) $(THRIFT) -c gen-cpp/wikilink_constants.cpp -o wikilink_constants.o
+	$(CPP) $(THRIFT) -c gen-cpp/wikilink_types.cpp -o wikilink_types.o
+
+
+# Cluster test
 
 clustertest: Random.o
 	$(CPP) -o clustertest clustertest.cpp Random.o $(EXTRAS)
@@ -13,9 +28,14 @@ Random.o: Random.cc
 	$(CPP) -c Random.cc
 
 clean:
+	rm -rf gen-cpp
 	rm clustertest
 	rm Random.o
 
+
+
+
+# Matrix test
 
 matrxtest_debug: 
 	gcc FileBackedMatrix.c -g -lm
