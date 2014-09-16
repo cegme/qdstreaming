@@ -3,6 +3,7 @@
 #include "Util.h"
 
 #include <algorithm>
+#include <future>
 #include <iostream>
 #include <numeric>
 #include <string>
@@ -16,7 +17,7 @@
 // Size of the upper triangle n*n matrix
 #define TRISIZE(n) ((n/2)*(n-1))
 
-enum Algo {ALL = 0, BASELINE = 1, BASELINE_TRIANGLE = 2, SORTED = 3, BLOCKING = 4};
+enum Algo {ALL = 0, BASELINE = 1, BASELINE_TRIANGLE = 2, SORTED = 3, SORTED_TRIANGLE = 4, BLOCKING = 5, LAST = 6};
 
 struct point {
   std::vector<int> x;
@@ -269,6 +270,93 @@ long baseline_triangle_method (const std::vector<point> &a,
 }
 
 
+long sorted_triangle_method(const std::vector<point> &_a,
+              const std::vector<point> &_b,
+              const std::vector<int> &qn,
+              double conf,
+              std::vector<bool> & accept) {
+
+  int debug_iter = 0;
+
+  size_t asize = _a.size();
+  size_t bsize = _b.size();
+  int qnsize = qn.size();
+
+  clock_t tic = clock();
+  
+  // Copy all of the query nodes first
+  std::vector<point> qs;
+  for (int q = 0; q < qnsize; ++q) {
+    qs.push_back(_a[q]);
+  }
+
+  // Don't mutilate the vector so create new ones
+  std::vector<point> a(asize), b(bsize);
+  std::copy(_a.cbegin(), _a.cend(), a.begin());
+  std::copy(_b.cbegin(), _b.cend(), b.begin());
+
+  // Need to keep track of the correct and incorrect decision
+  for (int q = 0; q < qnsize; ++q) {
+
+    // Sort the vectors based on the query node
+    point qnode = qs[q];
+    const auto sortcomparator = [qnode] (point p1, point p2) -> bool const {
+      return point::doCompare(p1,qnode) < point::doCompare(p2,qnode);
+    };
+    std::sort (begin(a), end(a), sortcomparator); 
+    std::sort (begin(b), end(b), sortcomparator);
+
+    // Compute a with and without q
+    Stats astats_with, astats_without;
+    //log_info("mean: %Lf,%Lf", astats_with.mean, astats_without.mean);
+    bool done = false;
+    for (size_t i = 0; i < asize && !done; ++i) {
+      for (size_t j = i+1; j < asize && !done; ++j) {
+        // compare the two vectors
+        double score = point::doCompare(a[i],a[j]);
+        if (a[i] == qs[q] || a[j] == qs[q]) astats_with.add(score);
+        else { astats_without.add(score); astats_with.add(score); }
+        ++debug_iter;
+      }
+      if (astats_with.std_err() > (1-conf) || astats_without.std_err() > (1-conf)) { done = true; }
+    }
+
+
+    debug_iter = 0;
+    // Compute b with and without q
+    Stats bstats_with, bstats_without;
+    done = false;
+    for (size_t i = 0; i < bsize && !done; ++i) {
+      for (size_t j = i+1; j < bsize && !done; ++j) {
+        // compare the two vectors
+        double score = point::doCompare(b[i],b[j]);
+        bstats_without.add(score);
+        bstats_with.add(score);
+        ++debug_iter;
+      }
+      double score = point::doCompare(b[i], qs[q]);
+      bstats_with.add(score);
+      score = point::doCompare(qs[q], b[i]);
+      bstats_with.add(score);
+      if (bstats_with.std_err() > (1-conf) || bstats_without.std_err() > (1-conf)) { done = true;}
+    }
+    bstats_with.add( point::doCompare(qs[q], qs[q]) );
+    
+    
+    double score_with = astats_with.mean + bstats_without.mean;
+    double score_without = astats_without.mean + bstats_with.mean;
+    accept.push_back(score_with < score_without);
+
+    // Repare the clusters
+    std::copy(_b.cbegin(), _b.cend(), b.begin());
+    std::copy(_a.cbegin(), _a.cend(), a.begin());
+  }
+  
+  clock_t toc = clock();
+  return (double)(toc - tic);
+}
+
+
 long sorted_method(const std::vector<point> &_a,
               const std::vector<point> &_b,
               const std::vector<int> &qn,
@@ -378,9 +466,129 @@ long blocking_method(const std::vector<point> &_a,
   std::copy(_a.cbegin(), _a.cend(), a.begin());
   std::copy(_b.cbegin(), _b.cend(), b.begin());
 
+
   // Need to keep track of the correct and incorrect decision
   for (int q = 0; q < qnsize; ++q) {
-    // TODO This is where the magic happend
+    // Break the upper triangle range into two
+    // smaller triangles and a square. Sum each part.
+
+    // Triangle #1 (top left)
+   auto atriangle1 = [&qn,&q,&a,asize] () -> std::pair<double,double> {
+      double ascore_with = 0.0, ascore_without = 0.0;
+      for (int i = 0; i < asize/2; ++i) {
+        for (int j = i+1; j < asize/2; ++j) {
+          double score = point::doCompare(a[i],a[j]);
+          if (i == qn[q] || j == qn[q]) ascore_with += score;
+          else ascore_without += score;
+        }
+      }
+      return std::make_pair(ascore_with, ascore_without);
+    };
+
+    // Triangle #2 (bottom right)
+   auto atriangle2 = [&qn,&q,&a,asize] () -> std::pair<double,double> {
+      double ascore_with = 0.0, ascore_without = 0.0;
+      for (int i = asize/2 +1; i < asize; ++i) {
+        for (int j = i+1; j < asize; ++j) {
+          double score = point::doCompare(a[i],a[j]);
+          if (i == qn[q] || j == qn[q]) ascore_with += score;
+          else ascore_without += score;
+        }
+      }
+      return std::make_pair(ascore_with, ascore_without);
+    };
+
+    // The Square
+
+   auto asq = [&qn,&q,&a,asize] () -> std::pair<double,double> {
+      double ascore_with = 0.0, ascore_without = 0.0;
+      for (int i = asize/2 + 1; i < asize; ++i) {
+        for (int j = 0; j < asize/2; ++j) {
+          double score = point::doCompare(a[i],a[j]);
+          if (i == qn[q] || j == qn[q]) ascore_with += score;
+          else ascore_without += score;
+        }
+      }
+      return std::make_pair(ascore_with, ascore_without);
+    };
+
+    
+
+   
+    // TODO the b version of above
+    auto btriangle1 = [&qn,&q,&a,&b,&bsize] () -> std::pair<double,double> {
+      double bscore_with = 0.0, bscore_without = 0.0;
+      for (int i = 0; i < bsize/2; ++i) {
+        for (int j = i+1; j < bsize/2; ++j) {
+          double score = point::doCompare(b[i],b[j]);
+          bscore_without += score;
+        }
+      }
+      return std::make_pair(bscore_with, bscore_without);
+    };
+
+    auto btriangle2 = [&qn,&q,&a,&b,&bsize] () -> std::pair<double,double> {
+      double bscore_with = 0.0, bscore_without = 0.0;
+      for (int i = bsize/2 +1; i < bsize; ++i) {
+        for (int j = i+1; j < bsize; ++j) {
+          double score = point::doCompare(b[i],b[j]);
+          bscore_without += score;
+        }
+        double score = point::doCompare(b[i], a[qn[q]]);
+        bscore_with += score;
+        score = point::doCompare(a[qn[q]], b[i]);
+        bscore_with += score;
+      }
+      return std::make_pair(bscore_with, bscore_without);
+    };
+
+     auto bsq = [&qn,&q,&a,&b,bsize] () -> std::pair<double,double> {
+      double bscore_with = 0.0, bscore_without = 0.0;
+      for (int i = bsize/2 + 1; i < bsize; ++i) {
+        for (int j = 0; j < bsize/2; ++j) {
+          double score = point::doCompare(b[i],b[j]);
+          bscore_without += score;
+        }
+        double score = point::doCompare(b[i], a[qn[q]]);
+        bscore_with += score;
+        score = point::doCompare(a[qn[q]], b[i]);
+        bscore_with += score;
+      }
+      bscore_with += point::doCompare(a[qn[q]], a[qn[q]]);
+      return std::make_pair(bscore_with, bscore_without);
+    };
+
+
+    // Run and sum the As and Bs
+    double bscore_with = 0.0, bscore_without = 0.0;
+    double ascore_with = 0.0, ascore_without = 0.0;
+    {
+      std::vector<std::future<std::pair<double,double>>> avec;
+      avec.push_back(std::async(std::launch::async, atriangle1));
+      avec.push_back(std::async(std::launch::async, atriangle2));
+      avec.push_back(std::async(std::launch::async, asq));
+
+      for (auto &f : avec) {
+        auto a = f.get();
+        ascore_with += a.first;
+        ascore_without += a.second;
+      }
+
+      std::vector<std::future<std::pair<double,double>>> bvec;
+      bvec.push_back(std::async(std::launch::async, btriangle1));
+      bvec.push_back(std::async(std::launch::async, btriangle2));
+      bvec.push_back(std::async(std::launch::async, bsq));
+
+      for (auto &f : bvec) {
+        auto b = f.get();
+        bscore_with += b.first;
+        bscore_without += b.second;
+      }
+    }
+    double score_with = (ascore_with/TRISIZE(asize)) + (bscore_without/TRISIZE(bsize));
+    double score_without = (ascore_without/TRISIZE(asize-1)) + (bscore_with/TRISIZE(bsize+1));
+    accept.push_back(score_with < score_without);
+    
   }
 
   clock_t toc = clock();
@@ -467,7 +675,7 @@ int main (int argc, char** argv) {
 
     // Need to know the optimal decision
     // Always run baseline first to get it.
-    for (int m = BASELINE; m != BLOCKING; ++m) {
+    for (int m = BASELINE_TRIANGLE; m != LAST; ++m) {
       switch (m) {
         case BASELINE: {
           std::vector<bool> baseaccept; 
@@ -506,6 +714,19 @@ int main (int argc, char** argv) {
           }
           break;
         }
+
+        case SORTED_TRIANGLE: {
+          std::string key("SORTED_TRIANGLE");
+          std::vector<bool> thisaccept; 
+          timer_map[key] = std::vector<long>();
+          accuracy_map[key] = std::vector<std::vector<bool>>();
+          for (int i = 0; i < iterations; ++i) {
+            long time = sorted_triangle_method(ca, cb, qn, conf, thisaccept);
+            timer_map[key].push_back(time);
+            accuracy_map[key].push_back(thisaccept);
+          }
+          break;
+        }
         case BLOCKING: {
           std::string key("BLOCKING");
           std::vector<bool> thisaccept; 
@@ -526,7 +747,7 @@ int main (int argc, char** argv) {
 
     // Compute Accuracy
     auto accuracy = [&accuracy_map,iterations,querynodes] (const std::vector<std::vector<bool>> &a) -> float {
-      auto base = accuracy_map["BASELINE"];
+      auto base = accuracy_map["BASELINE_TRIANGLE"];
       float s = 0.0;
       for (int i = 0; i < iterations; ++i) {
         for (int j = 0; j < querynodes; ++j) {

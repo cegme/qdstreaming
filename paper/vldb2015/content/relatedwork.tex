@@ -1,18 +1,77 @@
 
 \section{Background}
 
-Entity Resolution
+\textbf{Factor Graphs.}
+Factor graphs are a pairwise formalism for expressing arbitrarily complex
+relationships between random variables.
+A factor graph $\mathcal{F}$, will contain a set of random variables, $r$
+and a set of factors $f$. Random variables are connected to eachother
+through factors. Factors represent a mapping of the relationship to a 
+real valued number.
 
-Blocking
 
-The distribution of entitiy sizes
+\textbf{Markov Chain Monte Carlo Metropolis Hastings.}
+Inference over complex factors graphs is computationally prohibitive.
+Therefore, it is popular for researchers to use Markov Chain Monte Carlo (MCMC) 
+approximation techniques to estimate probability values.
+In particular, for large dense factor graphs MCMC Metropolis Hastings has
+been shown to be a scalable and efficive technique for 
+inference calculation~\cite{singh2011large}.
+
+\ldots details of mcmc mh \ldots
+
+
+
+\textbf{Cross-Document Coreference.}
+
+Cross-Document coreference come in a variety of techniques.
+
+We model entity resolution as a factor graph for flexibility and the ability
+to generalize the mathematical model.
+The inference for these large dense graphical models are computationally
+intractable therefore it is typical to use approximate methods such as MCMC-MH\@.
+
+
+The distribution of entity sizes
+In large text corpora, the sizes of entities follows the power law~\cite{singh12:wiki-links}.
+This data set contains 40 million mentions and 3 million entities 
+over 11 million web pages.
+
+In this data set XX percent of mentions are smaller that 100 mentions in size.
+Additionally, YY percent of entities contain more than 1000 mentions.
+
+Doing pairwise comparison over clusters is $O(n^2)$.
+For clusters larger than 1000 mentions calculating scores of the model
+becomes extremely expensive.
+Performing sophisticated techniques over smaller clusters could also 
+add extra over head.
+
+In this paper, we examine the trade-off of selecting techniques to
+accelerate the feature computation process.
+
+
+
+\begin{figure}
+\centering
+\includegraphics[width=\columnwidth]{media/entity-distribution.png}
+\caption{A distribution of entity sizes from the wiki-links corpus~\cite{singh12:wiki-links}.}
+\label{fig:entity-distribution}
+\end{figure}
+
 
 
 \section{Related Work}
 
-Wick et al
+In this paper use use sampling based ER over factor graphs.
 
-Sameer Singh
+Sameer Singh~\cite{singh2011large}
+% Slides: http://people.cs.umass.edu/~sameer/files/largescale-acl11-ppt.pdf
+% Slides: http://people.cs.umass.edu/~sameer/files/mcmcmc-emnlp12-ppt.pdf
 
-Pay as you go ER
+Wick et al perform hierarchal compression of entities~\cite{Wick:2012:DHM:2390524.2390578}.
+
+
+As we see, in Section~\ref{sec:microbenchmark} the entity sizes have a
+large effect on the factor computation size.
+
 

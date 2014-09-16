@@ -4,8 +4,9 @@
 % What is the problem
 The storage of user generated content within systems has introduced 
 vast amounts of data.
-To clean the dump an important task is entity resolution.
-Entity Resolution (ER) is the problem of resolving the records in
+To correctly process this data must be cleaned. 
+Entity resolution is an important part of the ubiquitous cleaning task.
+Entity Resolution (ER) is the problem of resolving records in
 a data set that correspond the same real world entity.
 
 % Why is the problem hard
@@ -14,24 +15,31 @@ Several efforts in different domains have made outstanding progress~\cite{}.
 The main issues still affecting runtimes of ER systems are
 twofold, first, the computation of large entities and second, excessive
 computation spent resolving unambiguous entities.
-Optimization that touches these difficult points is wholly understudied.
-Amdahl's argument suggests that compression and approximation 
+Optimization that touches these critical portions is wholly understudied.
+We argue that compression and approximation 
 techniques can efficiently decrease the runtimes of traditional ER systems.
 
 % What are the technical challenges and validation
 Some recently, researchers have suggest methods of compressing entities.
-Wick et al Heirchical ...
-Singh et all efficient facttoring http://people.cs.umass.edu/~sameer/files/mcmcmc-emnlp12-ppt.pdf
+Wick et al Heirchical \ldots
+
+Singh et all efficient factoring % http://people.cs.umass.edu/~sameer/files/mcmcmc-emnlp12-ppt.pdf
+
+Each of these methods has drawbacks \ldots
 
 % How we differ
-In this paper we propose aggressive compression methods to maximize resolution time.
-...
+In this paper, we train a multi-class classifier to optimize the decision of
+the sampling inference technique to apply.
+
 
 % Our contributions
 We make the following contributions
 
-% Outline (with forward links)
-In the paper we ... 
+\begin{itemize}
+\item We identify several techniques to speed up sampling past the baseline~\ref{}.
+\item We create an optimizer to choose parameters and methods at run time~\ref{}.
+\item We empirically evaluate these methods over a large data set~\ref{}.
+\end{itemize}
 
 
 
