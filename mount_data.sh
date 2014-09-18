@@ -31,7 +31,7 @@ if [ ! -z "$1" ]; then
 fi
 
 if [ ! -z "$2" ]; then
-  echo "$1" | sshfs -C -o idmap=user,follow_symlinks -o uid=1000 -o gid=1000 -o allow_other -o password_stdin cgrant@neo.cise.ufl.edu:/data/wikilinks /data/wikilinks
+  echo "$2" | sshfs -C -o idmap=user,follow_symlinks -o uid=1000 -o gid=1000 -o allow_other -o password_stdin cgrant@neo.cise.ufl.edu:/data/wikilinks /data/wikilinks
   echo "Mounted /data/wikilinks"
 fi
 

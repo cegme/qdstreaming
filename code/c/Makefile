@@ -15,18 +15,31 @@ BOOST = -lboost_date_time -lboost_program_options -lboost_system -lboost_filesys
 EXTRAS = -lfl -lssl -lcrypto -lrt -lpthread -DHAVE_NETINET_IN_H -DHAVE_INTTYPES_H $(BOOST) $(THRIFT)
 
 
-# Wikilink Stats
-wikilinkstats: Util.o wiki-link.o WikiLinkFile.o 
-	$(CPP) -o wikilinkstats wikilinkstats.cpp wikilink_constants.o wikilink_types.o WikiLinkFile.o $(EXTRAS) 
+all: wikilinkstats
 
-wiki-link.o:	
+
+# Wikilink Stats
+wikilinkstats: wikilink wikilinkstats.o wikilink_types.o wikilink_constants.o WikiLinkFile.o Util.o
+	$(CPP) -o wikilinkstats wikilinkstats.o wikilink_constants.o wikilink_types.o WikiLinkFile.o Util.o $(EXTRAS) 
+
+wikilinkstats.o: wikilinkstats.cpp
+	$(CPP) -c wikilinkstats.cpp $(EXTRAS)
+
+wikilink:	
 	thrift -r --gen cpp wikilink.thrift
+
+wikilink_constants.o:	
 	$(CPP) -c gen-cpp/wikilink_constants.cpp -o wikilink_constants.o $(EXTRAS)
+
+wikilink_types.o:	
 	$(CPP) -c gen-cpp/wikilink_types.cpp -o wikilink_types.o $(EXTRAS)
 
 WikiLinkFile.o: WikiLinkFile.cpp
-	$(CPP) -c WikiLinkFile.cpp -o WikiLinkFile.o $(EXTRAS)
+	$(CPP) -c WikiLinkFile.cpp $(EXTRAS)
 	
+Util.o: Util.cpp
+	$(CPP) -c Util.cpp $(EXTRAS)
+
 
 
 # Cluster test
@@ -37,14 +50,8 @@ clustertest: Random.o
 Random.o: Random.cc
 	$(CPP) -c Random.cc
 
-Util.o: Util.cpp
-	$(CPP) -c Util.cpp
-
 clean:
-	rm -rf gen-cpp
-	rm clustertest
-	rm Random.o
-
+	rm -rf gen-cpp *.o
 
 
 

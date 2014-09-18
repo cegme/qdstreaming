@@ -34,9 +34,12 @@
 #include "gen-cpp/wikilink_types.h"
 
 #include "Util.h"
+#include "WikiLinkFile.h"
 
 
 std::vector<WikiLinkItem> FileToWikiLinkItem(std::string filePath) {
+  // FIXME this code explods because the vector grows so large, will remove soon
+
 
   using namespace apache::thrift::transport;
   using namespace apache::thrift::protocol;
@@ -126,7 +129,7 @@ std::vector<WikiLinkItem> FileToWikiLinkItem(std::string filePath) {
 
 int main (int argc, char** argv) {
   //std::cout << "Hello world with thrift";
-
+/*
   //auto wlis = FileToWikiLinkItem("/data/wikilinks/002.gz");
   auto wlis = FileToWikiLinkItem("/data/wikilinks/001.gz");
   //auto wlis = FileToWikiLinkItem("/data/wikilinks/tmp/001");
@@ -134,8 +137,19 @@ int main (int argc, char** argv) {
   for (auto& w : wlis) {
     std::cout << "|" << w.doc_id << ", " << w.url << "\n";
 
-  }
+  }*/
+
   
+  WikiLinkFile wlf("/data/wikilinks/001.gz");
+
+  int counter = 0;
+  while(wlf.hasNext()) {
+    wlf.next();
+    if(++counter % 10000 == 0) std::cerr << ".";
+  }
+  log_info("\n");
+  log_info("The number of items: %d", counter);
+    
 
 
   return 0;

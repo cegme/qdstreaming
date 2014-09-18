@@ -11,5 +11,6 @@ fusermount -u /data/d06
 fusermount -u /data/d07
 fusermount -u /data/d08
 
+fusermount -u /data/wikilinks
 
 

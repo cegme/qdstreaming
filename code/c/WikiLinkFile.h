@@ -2,16 +2,8 @@
 #define WIKILINK_FILE_H
 
 #include <thrift/protocol/TBinaryProtocol.h>
-#include <thrift/protocol/TJSONProtocol.h>
-#include <thrift/protocol/TDenseProtocol.h>
-#include <thrift/protocol/TCompactProtocol.h>
 #include <thrift/transport/TFDTransport.h>
-#include <thrift/transport/TFileTransport.h>
 #include <thrift/transport/TBufferTransports.h>
-#include <thrift/transport/TZlibTransport.h>
-#include <thrift/transport/TSimpleFileTransport.h>
-#include <thrift/transport/TBufferTransports.h>
-
 
 #include <boost/shared_ptr.hpp>
 
@@ -22,7 +14,7 @@
 class WikiLinkFile {
 
   public:
-    WikiLinkFile(std::string filename): filename(filename), started(false), finished(false) {
+    WikiLinkFile(std::string filename): filename(filename), thetmpname(""), started(false), finished(false) {
       init();
     }
 
@@ -36,6 +28,7 @@ class WikiLinkFile {
   
   private:
     std::string filename;
+    std::string thetmpname;
     WikiLinkItem current;
     WikiLinkItem nextItem;
     bool started;
