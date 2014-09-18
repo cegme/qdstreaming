@@ -9,7 +9,7 @@
 #define MIN(a,b) ( ((a) < (b)) ? (a) : (b) )
 
 // This only works for C
-const char *  currentTime () {
+const char *  cgrant_currentTime () {
   time_t rawtime;
   struct tm * timeinfo;
 
@@ -23,7 +23,7 @@ const char *  currentTime () {
 
 #define clean_errno() (errno == 0 ? "None" : strerror(errno))
 
-#define DATE_STRING currentTime()
+#define DATE_STRING cgrant_currentTime()
 
 #define logInfo(M) std::cerr << DATE_STRING << "[INFO] (" << __FILE__ << ":" << __LINE__ << ") | " << M  << "\n"
 
