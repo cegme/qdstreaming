@@ -101,45 +101,6 @@ struct point {
 
 };
 
-/**
-  * Use this stats data structure to get online variance calculation.
-  */
-struct Stats {
-  unsigned int n; 
-  long double mean;
-  long double M2;
-  long double _sum;
-  
-  Stats (): n(0), mean(0.0), M2(0.0), _sum(0.0) { } 
-
-  void reset (void) { n = 0; mean = 0.0; M2 = 0.0; _sum = 0.0; }
-
-  void add(long double x) {
-    _sum += x;
-    ++n;
-    auto delta = x - mean;
-    mean += (delta / n);
-    M2 = M2 + delta * (x - mean);
-  }
-
-  double variance (void) {
-    if (n > 2) 
-      return M2 / (n-1);
-    else
-      return 0.0;
-  } 
-  double std_err (void) {
-    return sqrt(variance()/n);
-  }
-  /** If we know the population size we can get the error
-    * with finite population control (fpc).
-    */
-  double std_err(unsigned int N) {
-    return sqrt(variance()/n)*fpc(N,n);
-  }
-  double sum (void) const { return _sum; }
-
-};
 
 /**
   * Welford's method for computing variance.

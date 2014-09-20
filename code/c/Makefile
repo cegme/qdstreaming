@@ -37,9 +37,6 @@ wikilink_types.o:
 WikiLinkFile.o: WikiLinkFile.cpp
 	$(CPP) -c WikiLinkFile.cpp $(EXTRAS)
 	
-Util.o: Util.cpp
-	$(CPP) -c Util.cpp $(EXTRAS)
-
 Entity.o: Util.cpp
 	$(CPP) -c Entity.cpp $(EXTRAS)
 
@@ -47,11 +44,14 @@ Entity.o: Util.cpp
 
 # Cluster test
 
-clustertest: Random.o
-	$(CPP) -o clustertest clustertest.cpp Random.o $(EXTRAS)
+clustertest: Random.o Util.o
+	$(CPP) -o clustertest clustertest.cpp Random.o Util.o $(EXTRAS)
 
 Random.o: Random.cc
 	$(CPP) -c Random.cc
+
+Util.o: Util.cpp
+	$(CPP) -c Util.cpp $(EXTRAS)
 
 clean:
 	rm -rf gen-cpp *.o
