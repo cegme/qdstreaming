@@ -1,3 +1,7 @@
+#include <fcntl.h>
+
+
+#include <cstdlib>
 
 #include "Util.h"
 #include "WikiLinkFile.h"
@@ -10,18 +14,28 @@ void WikiLinkFile::init() {
   char cmd[512+L_tmpnam+L_tmpnam]; // The command to decrypt 
   char fname [512+L_tmpnam]; // the tmp file name
   char fullpath [512+L_tmpnam]; // The full path of the file name 
- 
-  snprintf(fname, 512+L_tmpnam, "%s_tmp_XXXXXX", filename.c_str());
-  int fd = mkstemp(fname);
+  int fd, good;
 
-  snprintf(cmd, L_tmpnam+512, "gunzip --stdout %s > %s", filename.c_str(), fname);
-  thetmpname = std::string(fname);
-  log_info("Performing command: %s", cmd);
-  
-  auto good = system(cmd);
-  if(good == -1) { log_err("Error copying the command: '%s'", cmd); throw "Could not copy command"; }
-  log_info("Command comlpete!");
-  
+  if (compressed) {  
+
+    snprintf(fname, 512+L_tmpnam, "%s_tmp_XXXXXX", filename.c_str());
+    fd = mkstemp(fname);
+
+    snprintf(cmd, L_tmpnam+512, "gunzip --stdout %s > %s", filename.c_str(), fname);
+    thetmpname = std::string(fname);
+    log_info("Performing command: %s", cmd);
+    
+    good = system(cmd);
+    if(good == -1) { log_err("Error copying the command: '%s'", cmd); throw "Could not copy command"; }
+    log_info("Command complete!");
+  }
+  else {
+
+    log_info("No compression, opening the file %s", filename.c_str());
+    
+    fd = open(filename.c_str(), O_RDONLY);
+  }
+    
   transportInput = shared_ptr<TFDTransport>(new TFDTransport(fd, TFDTransport::ClosePolicy::CLOSE_ON_DESTROY));
   buffTransportInput = shared_ptr<TBufferedTransport>(new TBufferedTransport(transportInput));
   protocolInput = shared_ptr<TBinaryProtocol>(new TBinaryProtocol(buffTransportInput));
@@ -52,6 +66,7 @@ void WikiLinkFile::loadNext() {
   try{
 
     nextItem.read(protocolInput.get()); 
+
   }
   catch (TTransportException &e) {
     bool eof = false;
@@ -73,10 +88,10 @@ void WikiLinkFile::loadNext() {
     log_err("Protocol has a negative size");
     finished = true;
   }
-  if (finished == true)  {
+  if (finished == true && compressed)  {
     // Delete the file
     char cmd[512+L_tmpnam+L_tmpnam];
-    snprintf(cmd, L_tmpnam+25, "rm %s &", thetmpname.c_str());
+    snprintf(cmd, 512+L_tmpnam+L_tmpnam, "rm %s &", thetmpname.c_str());
     system(cmd);
   }
 

@@ -1,5 +1,5 @@
 
-GPP = g++ --std=c++11 -march=native -w -O3 
+GPP = g++ --std=c++11 -march=native -w -O3
 DEBUG = -g -pg 
 
 #THRIFT = -I/usr/local/include/thrift
@@ -39,6 +39,9 @@ WikiLinkFile.o: WikiLinkFile.cpp
 	
 Util.o: Util.cpp
 	$(CPP) -c Util.cpp $(EXTRAS)
+
+Entity.o: Util.cpp
+	$(CPP) -c Entity.cpp $(EXTRAS)
 
 
 

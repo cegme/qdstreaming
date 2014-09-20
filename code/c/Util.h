@@ -42,6 +42,37 @@ static const char *  currentTime () {
 #define log_timer(tic, toc, M, ...) fprintf(stderr, "%s [INFO] (%s:%d) | " M " (%lf msecs) \n", DATE_STRING,  __FILE__, __LINE__, ##__VA_ARGS__, 1000.0*(toc-tic)/CLOCKS_PER_SEC)
 
 
+// Finite population control to reduce the sampling variation of the mean.
+#define fpc(N,n) sqrt((N-n)/(N-1))
+struct Stats {
+  unsigned int n; 
+  long double mean;
+  long double M2;
+  long double _sum;
+  
+  Stats (): n(0), mean(0.0), M2(0.0), _sum(0.0) { } 
+
+  void reset (void);
+
+  void inc();
+
+  void add(long double x);
+
+  double variance (void) const ;
+  double std_err (void) const;  
+
+  /** If we know the population size we can get the error
+    * with finite population control (fpc).
+    */
+  double std_err(unsigned int N) const ;
+
+  double sum (void) const;
+
+  const char * to_string() const;
+
+};
+
+
 
 #endif  // UTIL_H
 
