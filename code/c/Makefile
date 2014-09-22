@@ -7,12 +7,13 @@ DEBUG = -g -pg
 #THRIFT = -L/usr/local/lib -lthrift -lthriftnb -lthrift_c_glib -lthriftz  -lz
 #THRIFT = -L/usr/local/lib -lz -lthriftnb -lthrift -lthrift_c_glib -levent -fPIC
 THRIFT = -L/usr/local/lib -L/home/cgrant/scratch/thrift/lib -L/usr/local/include/thrift -lz -lthriftz -lthriftnb -lthrift -lthrift_c_glib -levent -fPIC
+SQLITE = -lsqlite3
 
 CPP = $(GPP) $(DEBUG)
 
 BOOST = -lboost_date_time -lboost_program_options -lboost_system -lboost_filesystem -lboost_regex -lboost_iostreams -lboost_thread
 
-EXTRAS = -lfl -lssl -lcrypto -lrt -lpthread -DHAVE_NETINET_IN_H -DHAVE_INTTYPES_H $(BOOST) $(THRIFT)
+EXTRAS = -lfl -lssl -lcrypto -lrt -lpthread -DHAVE_NETINET_IN_H -DHAVE_INTTYPES_H $(BOOST) $(THRIFT) $(SQLITE)
 
 
 all: wikilinkstats

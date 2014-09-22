@@ -9,18 +9,25 @@
 
 
 void Entity::remove (WikiLinkItem *wli) {
-  /*MentionChain *m = chains[mention_idx];
-  chains.erase(chains.begin()+mention_idx);
-  init();
-  return m;*/
+  if (state == EntityState::NORMAL) {
+    remove_norrmal(wli);
+  }
+  else if (state == EntityState::LARGE) {
+    // TODO
+  }
 }
 
-unsigned long Entity::remove_last() {
-  /*MentionChain *m = chains[chains.size()-1];
-  chains.erase(chains.end()-1);
+void Entity::remove_normal (unsigned mention_idx) {
+  mentions[mention_idx] = mentions[count];
+  --count;
   init();
-  return m;*/
-  return 0L;
+}
+
+
+unsigned long Entity::remove_last() {
+  --count;
+  init();
+  return 1;
 }
 
 void Entity::init() {
@@ -30,21 +37,23 @@ void Entity::init() {
   std::uniform_int_distribution<size_t> chain_distribution(0, size()-1);
   random_mention = std::bind(chain_distribution, generator);
 
-  // TODO check the current size, if it is larger than 
+  // TODO check the current size, if it is larger than X switch to LARGE
 
 }
 
 void Entity::add(WikiLinkItem *wli) {
   if (state == EntityState::NORMAL) {
-
-    // TODO
-    //mentions.push_back(m); 
-    init();
+    add_norrmal(wli);
   }
   else if (state == EntityState::LARGE) {
     // TODO implement insertion to the compressed map
-    init();
   }
+}
+
+
+void Entity::add_normal (WikiLinkItem *wli) {
+  mentions.push_back(m); 
+  init();
 }
 
 

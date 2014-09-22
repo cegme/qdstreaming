@@ -32,7 +32,7 @@ The y-axsis is the number of clock ticks on a log scale.
 
 \begin{figure}
 \centering
-\includegraphics[width=\columnwidth, clip=true,trim=0cm 0cm 0cm 1cm]{media/clustering-v-early-stopping.png}
+\includegraphics[width=\columnwidth, clip=true,trim=0cm 0cm 0cm 1.2cm]{media/clustering-v-early-stopping.png}
 \caption{Comparison of baseline verses early stopping methods.}
 \label{fig:clustering-v-early-stopping}
 \end{figure}
@@ -40,20 +40,28 @@ The y-axsis is the number of clock ticks on a log scale.
 We observe that for proposals with less than 100 and 1000 source and
 destination mentions, the performance of the baseline proposer is better than
 or almost equal to that of the more sorted early stopping method.
-For proposals that contain an entity cluster with more than 10000 mentions
+For proposals that contain an entity cluster with 10000 mentions
 the early stopping method performs significantly better than the baseline method.
 
+Surprisingly, the baseline proposals for for entities clusters containing $100 K$ mentions
+performed over an order of magniture better than the early stopping method.
+
 The optimization found in predictable code paths make simple implementations
-like the baseline method attactive for small cluster sizes.
+like the baseline method attactive for small cluster sizes and very large clusters sizes.
 In addtion, $82\%$ of the entities in the truthed Wiki-Links data sets are less
 that 1000 mentions in size and $45\%$ of the entities contain less than 100
 mentions.
 
-The results of the microbenchmark suggests that different proposal estimation techniques are useful at different times.
-
+The results of the microbenchmark suggests that different proposal estimation
+techniques are useful at different times.
 
 
 
 \subsection{Wiki Link Corpus}
 
+The Wikilinks corpus is the largest fully labeled cross-document coreference resolution data set to date~\cite{singh12:wiki-links}.
+When downloaded, the data set contains 40 million mentions and almost three million entities --- it is a compressed 180 GBs of data.
+The wikilink corpus was created by crawling pages across the web and extracting anchor tags that referenced wikipedia articles.
+Each page contains multiple multiple mentions of different types.
+The wikipedia articles act as the truth for each mention.
 

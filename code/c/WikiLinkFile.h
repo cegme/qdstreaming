@@ -18,14 +18,20 @@
 class WikiLinkFile {
 
   public:
-    WikiLinkFile(std::string filename): WikiLinkFile(filename, compressed) { }
-    WikiLinkFile(std::string filename, bool compressed): filename(filename), thetmpname(""), started(false), finished(false), compressed(compressed) {
+    WikiLinkFile(std::string filename): WikiLinkFile(filename, true) { }
+    WikiLinkFile(std::string _filename, bool _compressed): filename(_filename), thetmpname(""), started(false), finished(false), compressed(_compressed) {
       init();
     }
 
     bool empty() const { return finished; }
     bool hasNext() const { return !empty(); }
     WikiLinkItem next();
+
+    // Looks forward for the next item with this docid
+    WikiLinkItem* nextDocID(int docid);
+
+    // Looks forward for this docid and the indexed Mentions
+    Mention* nextDocIDMentionIndex(int docid, int mention_idx);
 
   private:
     // Performs the file copy and initializes the pointer

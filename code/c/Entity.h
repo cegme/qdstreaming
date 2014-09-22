@@ -53,6 +53,7 @@ class Entity {
     // A function for random mentions
     std::function<size_t()> random_mention;
 
+    void add_normal(WikiLinkItem *wli);
 
 };
 

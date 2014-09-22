@@ -98,8 +98,30 @@ void WikiLinkFile::loadNext() {
 }
 
 
+WikiLinkItem* WikiLinkFile::nextDocID(int docid) {
+
+  do {
+    if (current.doc_id == docid) 
+      return &current;
+    else 
+      next();
+  } while (hasNext());
+
+  return (WikiLinkItem*)-1;
+}
 
 
+Mention* WikiLinkFile::nextDocIDMentionIndex(int docid, int mention_idx) {
+  WikiLinkItem* w = nextDocID(docid);
+
+  if (w == (WikiLinkItem*)-1) {
+    return (Mention*)-1;
+  }
+  else {
+    return &w->mentions[mention_idx];
+  }
+
+}
 
 
 
