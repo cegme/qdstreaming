@@ -164,9 +164,9 @@ void loaddb_file (std::string dbfile, std::string dbName, std::string newDBFile)
   sqlite3_stmt* stmt2;
   sqlite3_prepare_v2(db, sql2.c_str(), -1, &stmt2, NULL);
   
-  log_info("Reading the file: %s", dbfile.c_str());
+  log_info("Reading the file: %s", newDBFile.c_str());
 
-  WikiLinkFile wlf(dbfile.c_str(), true);
+  WikiLinkFile wlf(newDBFile.c_str(), true);
   while (wlf.hasNext()) {
     auto wli = wlf.next();
 
