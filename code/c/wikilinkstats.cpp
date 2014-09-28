@@ -3,6 +3,7 @@
 #include "WikiLinkFile.h"
 
 #include <fstream>
+#include <future>
 #include <unordered_map>
 
 #include <boost/program_options.hpp>
@@ -137,7 +138,74 @@ void createdb(std::string dbfile) {
   sqlite3_close(db);
 }
 
-void loaddb(std::string dbfile) {
+
+/**
+  * Takes the zip file, dbname, and the new name
+  */
+void loaddb_file (std::string dbfile, std::string dbName, std::string newDBFile) {
+  sqlite3 *db;
+  char *zErrMsg = 0;
+  int rc;
+  std::string sql, sql2;
+
+  rc = sqlite3_open(newDBFile.c_str(), &db); 
+  if (rc) {
+    log_err("Cannon open the database: %s", sqlite3_errmsg(db));
+  }
+  else {
+    log_info("Database opened at %s", newDBFile.c_str());
+  }
+
+  sql = "INSERT INTO wikilink VALUES (?1, ?2, ?3, ?4)";
+  sql2 = "INSERT INTO wikilink_filemap VALUES (?1, ?2)";
+
+  sqlite3_stmt* stmt;
+  sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
+  sqlite3_stmt* stmt2;
+  sqlite3_prepare_v2(db, sql2.c_str(), -1, &stmt2, NULL);
+  
+  log_info("Reading the file: %s", dbfile.c_str());
+
+  WikiLinkFile wlf(dbfile.c_str(), true);
+  while (wlf.hasNext()) {
+    auto wli = wlf.next();
+
+    // Insert file map
+    sqlite3_bind_int(stmt2,1,wli.doc_id);
+    sqlite3_bind_text(stmt2,2,dbName.c_str(),-1,SQLITE_TRANSIENT); 
+    if (sqlite3_step(stmt2) != SQLITE_DONE) {
+      log_err("Error inserting to wikilink_filemap: (%d, %s)", wli.doc_id, dbName.c_str());
+      sqlite3_reset(stmt2);
+      sqlite3_close(db);
+      return;
+    }
+    sqlite3_reset(stmt2);
+
+    int mcounter = 0; // The mention index
+    for (auto& m : wli.mentions) {
+
+      // Insert the mentions
+      sqlite3_bind_int(stmt,1,wli.doc_id);
+      sqlite3_bind_text(stmt,2,m.anchor_text.c_str(),-1,SQLITE_TRANSIENT); 
+      sqlite3_bind_int(stmt,3,mcounter);
+      sqlite3_bind_text(stmt,4,m.wiki_url.c_str(),-1,SQLITE_TRANSIENT);
+
+      if (sqlite3_step(stmt) != SQLITE_DONE) {
+        log_err("Error executing the prepared statement");
+        sqlite3_reset(stmt);
+        sqlite3_close(db);
+        return;
+      }
+
+      ++mcounter;
+      sqlite3_reset(stmt);
+    }
+  }
+  sqlite3_close(db);
+}
+
+
+void loaddb (std::string dbfile) {
   sqlite3 *db;
   char *zErrMsg = 0;
   int rc;
@@ -160,16 +228,7 @@ void loaddb(std::string dbfile) {
   sqlite3_prepare_v2(db, sql2.c_str(), -1, &stmt2, NULL);
   
   // Test
-  /*auto res = sqlite3_bind_int(stmt,1, 511); // docid
-    if (res != SQLITE_OK) log_err("Error executing the prepared statement");
-  res = sqlite3_bind_text(stmt,2,"my mention text",-1,SQLITE_TRANSIENT); 
-    if (res != SQLITE_OK) log_err("Error executing the prepared statement");
-  res = sqlite3_bind_int(stmt,3, 2047); // mention ids 
-    if (res != SQLITE_OK) log_err("Error executing the prepared statement");
-  res = sqlite3_bind_text(stmt,4,"http://wikiurl.com",-1,SQLITE_TRANSIENT);
-    if (res != SQLITE_OK) log_err("Error executing the prepared statement");
-*/
- 
+
   char file[50], fName[8];
   const char* filePath = "/data/wikilinks/context-only/%03d.gz";
   const char* fileName = "%03d.gz";
@@ -215,8 +274,6 @@ void loaddb(std::string dbfile) {
       }
     }
   }
-
-
   sqlite3_close(db);
 }
 
@@ -256,6 +313,48 @@ void dropdb(std::string dbfile) {
 
 
 
+void parallel_loaddb(std::string dbdir) {
+
+  auto create_and_load = [] (const std::string& dbfile, const std::string& dbName, const std::string& newDBFile) {
+    createdb (newDBFile); // Create the sqllite file
+    loaddb_file (dbfile, dbName, newDBFile);
+
+  };
+
+  // Iterate over all the files and add a parallel call to create the database file
+
+
+  std::vector<std::future<void>> futures;
+
+  // TODO fix the loading files
+
+  char file[50], fName[8],dbfName[50];
+  const char* filePath = "/data/wikilinks/context-only/%03d.gz";
+  const char* fileName = "%03d.gz";
+  const char* dbFileName = "/data/wikilinks/context-only/%03d.db";
+  
+  for (int i = 1; i < 110; ++i) {
+    snprintf (file, 50, filePath, i);
+    snprintf (fName, 8, fileName, i);
+    snprintf (dbfName, 50, dbFileName, i);
+
+    futures.push_back(
+      std::async (std::launch::async|std::launch::deferred,
+                  create_and_load, filePath, fName, dbFileName));
+  }
+
+  int counter = 0;
+  for (auto &f: futures) {
+    f.get();
+    log_info("Running number: %d", counter++);
+  }
+
+  log_info("Finished all %d!!", counter);
+
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////
 // main
 ////////////////////////////////////////////////////////////////////////
@@ -270,6 +369,7 @@ int main (int argc, char** argv) {
   bool opt_createdb = false;
   bool opt_loaddb = false;
   bool opt_dropdb = false;
+  bool opt_parallel_load = false;
   std::string dbfile = "/data/wikilinks/wikilinks.db";
   
   boost::program_options::options_description desc("Using the wikilink data set.");
@@ -285,6 +385,8 @@ int main (int argc, char** argv) {
       "Loads wikilink data into the database file (-f).")
     ("dropdb", value<bool>(&opt_dropdb)->zero_tokens(),
       "Drops the wikilink database file (-f). It is performed first so it can be used with other commands.")
+    ("parload,p", value<bool>(&opt_parallel_load)->zero_tokens(),
+      "Loads the db files in separate files in parallel.")
     ("dbfile,f", value<std::string>(&dbfile)->default_value("/data/wikilinks/wikilinks.db"),
       "The file of the wikilink database.");
   
@@ -319,6 +421,9 @@ int main (int argc, char** argv) {
 
   if (opt_loaddb)
     loaddb(dbfile);
+
+  if (opt_parallel_load)
+    parallel_loaddb(dbfile);
 
 
   return 0;
