@@ -313,7 +313,7 @@ void dropdb(std::string dbfile) {
 
 
 
-void parallel_loaddb(std::string dbdir) {
+void parallel_loaddb() {
 
   auto create_and_load = [] (const std::string& dbfile, const std::string& dbName, const std::string& newDBFile) {
     createdb (newDBFile); // Create the sqllite file
@@ -340,7 +340,7 @@ void parallel_loaddb(std::string dbdir) {
 
     futures.push_back(
       std::async (std::launch::async|std::launch::deferred,
-                  create_and_load, filePath, fName, dbFileName));
+                  create_and_load, filePath, fName, dbfName));
   }
 
   int counter = 0;
@@ -423,7 +423,7 @@ int main (int argc, char** argv) {
     loaddb(dbfile);
 
   if (opt_parallel_load)
-    parallel_loaddb(dbfile);
+    parallel_loaddb();
 
 
   return 0;
