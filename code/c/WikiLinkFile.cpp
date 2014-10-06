@@ -27,7 +27,7 @@ void WikiLinkFile::init() {
     
     good = system(cmd);
     if(good == -1) { log_err("Error copying the command: '%s'", cmd); throw "Could not copy command"; }
-    log_info("Command complete!");
+    log_info("Command complete! [%s]", filename.c_str());
   }
   else {
 

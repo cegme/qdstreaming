@@ -1,9 +1,10 @@
 
-#ifndef Entity_H
-#define Entity_H
+#ifndef ENTITY_H
+#define ENTITY_H
 
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "gen-cpp/wikilink_constants.h"
@@ -12,54 +13,56 @@
 
 enum EntityState { NORMAL = 0, LARGE = 0 }; 
 
-class Entity {
+namespace dsr {
+  class Entity {
 
-  public:
-    Entity(): mentions(vector<int>), 
-                EntityState(EntityState::NORMAL)
-                count(0), 
-                unordered_map(std::unordered_map<const char*, unsigned long>) { }
+    public:
+      Entity(): mentions(std::vector<unsigned long>()), 
+                  state(EntityState::NORMAL),
+                  count(0L),
+                  stringmap(std::unordered_map<std::string, unsigned long>()) {}
+    
+      // Add a new mention to the data set
+      void add (unsigned long mentionid);
+      void remove (unsigned long mentionid);
+      unsigned long remove_last();
 
-    // Add a new mention to the data set
-    void add (WikiLinkItem *wli);
-    void remove (WikiLinkItem *wli);
-    unsigned long remove_last();
+      // Return the index of a random mention chain 
+      size_t rand();
 
-    // Return the index of a random mention chain 
-    size_t rand();
+      // Return the number of Mentions 
+      unsigned long size() const { return count; } ;
 
-    // Return the number of Mentions 
-    unsigned long size() const { return count; } ;
+      virtual std::string to_string() const = 0;
 
-    // TODO 
-    virtual std::string to_string() const = 0;
+    protected: 
+      // Initialize the random number generaators 
+      void init();
 
-  protected: 
-    // Initialize the random number generaators 
-    void init();
+    private:
+      unsigned long count;
 
-  private:
-    unsigned long count;
+      // The mentions
+      std::vector<unsigned long> mentions;
 
-    // The mentions
-    std::vector<unsigned long> mentions;
+      // Use this when the number of mentions becomes too large
+      // Store the ids of exact token duplicates
+      std::unordered_map<std::string, unsigned long> stringmap;
 
-    // Use this when the number of mentions becomes too large
-    // Store the ids of exact token duplicates
-    std::unordered_map<const char*, unsigned long>;
+      EntityState state;
 
-    EntityState state;
+      // A function for random mentions
+      std::function<size_t()> random_mention;
 
-    // A function for random mentions
-    std::function<size_t()> random_mention;
+      void add_normal(unsigned long);
+      void remove_normal(unsigned long);
 
-    void add_normal(WikiLinkItem *wli);
-
-};
-
-
-
-
+  };
+}
 
 
-#endif  // Entity_H
+
+
+
+
+#endif  // ENTITY_H

@@ -8,17 +8,17 @@
 
 
 
-void Entity::remove (WikiLinkItem *wli) {
+void Entity::remove (unsigned long mentionid) {
   if (state == EntityState::NORMAL) {
-    remove_norrmal(wli);
+    remove_normal(mentionid);
   }
   else if (state == EntityState::LARGE) {
     // TODO
   }
 }
 
-void Entity::remove_normal (unsigned mention_idx) {
-  mentions[mention_idx] = mentions[count];
+void Entity::remove_normal (unsigned long mention_idx) {
+  mentions[mention_idx] = mentions[count]; // Put the last one in this ones place
   --count;
   init();
 }
@@ -41,9 +41,9 @@ void Entity::init() {
 
 }
 
-void Entity::add(WikiLinkItem *wli) {
+void Entity::add(unsigned long mentionid) {
   if (state == EntityState::NORMAL) {
-    add_norrmal(wli);
+    add_normal(mentionid);
   }
   else if (state == EntityState::LARGE) {
     // TODO implement insertion to the compressed map
@@ -51,8 +51,13 @@ void Entity::add(WikiLinkItem *wli) {
 }
 
 
-void Entity::add_normal (WikiLinkItem *wli) {
-  mentions.push_back(m); 
+void Entity::add_normal (unsigned long mentionid) {
+  if (count < mentions.size())
+    mentions[count] = mentionid;
+  else 
+    mentions.push_back(mentionid); 
+
+  ++count;
   init();
 }
 
@@ -63,7 +68,7 @@ unsigned long Entity::rand() {
     return random_mention();
   }
   else {
-    throw "Unimplemente Random function"; //TODO
+    throw "Unimplemented Random function"; //TODO
   }
 }
 

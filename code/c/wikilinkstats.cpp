@@ -83,7 +83,7 @@ void hello_world () {
 
 }
 
-void createdb(std::string dbfile) {
+void createdb(const std::string& dbfile) {
 
   // Creates the sqlite datebase file
   sqlite3 *db;
@@ -101,9 +101,11 @@ void createdb(std::string dbfile) {
 
   sql = "CREATE TABLE wikilink (" \
         "docid INT, " \
-        "mention char(100)," \
-        "mentionidx INT," \
-        "wikiurl char(100));";
+        "mention char(100), " \
+        "mentionidx INT, " \
+        "wikiurl char(100), " \
+        "left char(200), " \
+        "right char(200));";
 
   rc = sqlite3_exec(db, sql.c_str(), 
     [&] (void *params, int argc, char**Argv, char **AzColName ) -> int {
@@ -142,7 +144,7 @@ void createdb(std::string dbfile) {
 /**
   * Takes the zip file, dbname, and the new name
   */
-void loaddb_file (std::string dbfile, std::string dbName, std::string newDBFile) {
+void loaddb_file (const std::string& dbfile, const std::string& dbName, const std::string& newDBFile) {
   sqlite3 *db;
   char *zErrMsg = 0;
   int rc;
@@ -156,7 +158,7 @@ void loaddb_file (std::string dbfile, std::string dbName, std::string newDBFile)
     log_info("Database opened at %s", newDBFile.c_str());
   }
 
-  sql = "INSERT INTO wikilink VALUES (?1, ?2, ?3, ?4)";
+  sql = "INSERT INTO wikilink VALUES (?1, ?2, ?3, ?4, ?5, ?6)";
   sql2 = "INSERT INTO wikilink_filemap VALUES (?1, ?2)";
 
   sqlite3_stmt* stmt;
@@ -167,6 +169,8 @@ void loaddb_file (std::string dbfile, std::string dbName, std::string newDBFile)
   log_info("Reading the file: %s", dbfile.c_str());
 
   WikiLinkFile wlf(dbfile.c_str(), true);
+  sqlite3_exec(db, "PRAGMA synchronous = OFF", NULL, NULL, &zErrMsg); // Improve speed #YOLO
+  sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &zErrMsg);
   while (wlf.hasNext()) {
     auto wli = wlf.next();
 
@@ -174,7 +178,7 @@ void loaddb_file (std::string dbfile, std::string dbName, std::string newDBFile)
     sqlite3_bind_int(stmt2,1,wli.doc_id);
     sqlite3_bind_text(stmt2,2,dbName.c_str(),-1,SQLITE_TRANSIENT); 
     if (sqlite3_step(stmt2) != SQLITE_DONE) {
-      log_err("Error inserting to wikilink_filemap: (%d, %s)", wli.doc_id, dbName.c_str());
+      log_info("Error inserting to wikilink_filemap: (%d, %s)", wli.doc_id, dbName.c_str());
       sqlite3_reset(stmt2);
       sqlite3_close(db);
       return;
@@ -189,6 +193,8 @@ void loaddb_file (std::string dbfile, std::string dbName, std::string newDBFile)
       sqlite3_bind_text(stmt,2,m.anchor_text.c_str(),-1,SQLITE_TRANSIENT); 
       sqlite3_bind_int(stmt,3,mcounter);
       sqlite3_bind_text(stmt,4,m.wiki_url.c_str(),-1,SQLITE_TRANSIENT);
+      sqlite3_bind_text(stmt,5,m.context.left.c_str(),-1,SQLITE_TRANSIENT);
+      sqlite3_bind_text(stmt,6,m.context.right.c_str(),-1,SQLITE_TRANSIENT);
 
       if (sqlite3_step(stmt) != SQLITE_DONE) {
         log_err("Error executing the prepared statement");
@@ -201,11 +207,12 @@ void loaddb_file (std::string dbfile, std::string dbName, std::string newDBFile)
       sqlite3_reset(stmt);
     }
   }
+  sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &zErrMsg);
   sqlite3_close(db);
 }
 
 
-void loaddb (std::string dbfile) {
+void loaddb (const std::string& dbfile) {
   sqlite3 *db;
   char *zErrMsg = 0;
   int rc;
@@ -232,7 +239,9 @@ void loaddb (std::string dbfile) {
   char file[50], fName[8];
   const char* filePath = "/data/wikilinks/context-only/%03d.gz";
   const char* fileName = "%03d.gz";
-  
+
+
+  sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &zErrMsg);
   for (int i = 1; i < 110; ++i) {
     snprintf (file, 50, filePath, i);
     snprintf (fName, 8, fileName, i);
@@ -274,10 +283,11 @@ void loaddb (std::string dbfile) {
       }
     }
   }
+  sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &zErrMsg);
   sqlite3_close(db);
 }
 
-void dropdb(std::string dbfile) {
+void dropdb(const std::string& dbfile) {
 
   // Creates the sqllite datebase file
   sqlite3 *db;
@@ -315,18 +325,16 @@ void dropdb(std::string dbfile) {
 
 void parallel_loaddb() {
 
-  auto create_and_load = [] (const std::string& dbfile, const std::string& dbName, const std::string& newDBFile) {
+  auto create_and_load = [] (const std::string& dbfile, const std::string& dbName, const std::string& newDBFile) -> int {
+    log_info ("create_and_load (%s,%s,%s)", dbfile.c_str(), dbName.c_str(), newDBFile.c_str());
     createdb (newDBFile); // Create the sqllite file
     loaddb_file (dbfile, dbName, newDBFile);
-
+    log_info ("Created and loaded!! (%s,%s,%s)", dbfile.c_str(), dbName.c_str(), newDBFile.c_str());
+    return 1;
   };
 
   // Iterate over all the files and add a parallel call to create the database file
-
-
-  std::vector<std::future<void>> futures;
-
-  // TODO fix the loading files
+  std::vector<std::future<int>> futures;
 
   char file[50], fName[8],dbfName[50];
   const char* filePath = "/data/wikilinks/context-only/%03d.gz";
@@ -339,17 +347,19 @@ void parallel_loaddb() {
     snprintf (dbfName, 50, dbFileName, i);
 
     futures.push_back(
-      std::async (std::launch::async|std::launch::deferred,
-                  create_and_load, file, fName, dbfName));
+      //std::async (std::launch::async|std::launch::deferred,
+      std::async (std::launch::async, create_and_load, std::string(file), std::string(fName), std::string(dbfName)));
+
+    // Each one takes about an hour so wait
+    // Don't wait on the last one
+    if (i % 12 == 0 && i != 108) { 
+      log_info("Sleeping on iteration: %d", i);
+      std::this_thread::sleep_for (std::chrono::hours(3));
+    }
+
+    log_info("Looping: %d", i);
   }
 
-  int counter = 0;
-  for (auto &f: futures) {
-    f.get();
-    log_info("Running number: %d", counter++);
-  }
-
-  log_info("Finished all %d!!", counter);
 
 }
 
