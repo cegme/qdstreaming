@@ -19,11 +19,21 @@ namespace dsr {
 
     std::deque<unsigned long> tokens;
     // TODO store the left and right context
+
+    unsigned long bytes() {
+      unsigned long counter = 0L;
+      counter += sizeof(*this);
+      for (auto&t:tokens) counter += sizeof(t);
+      return counter;
+    }
   };
 
   class ER {
 
     std::vector<Entity> wikilinkEntities(std::string dbfile);
+
+  public:
+
 
   private:
     std::hash<std::string> hash_fn;

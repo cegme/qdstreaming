@@ -322,6 +322,11 @@ void dropdb(const std::string& dbfile) {
 }
 
 
+void all_onedb () {
+
+}
+
+
 
 void parallel_loaddb() {
 

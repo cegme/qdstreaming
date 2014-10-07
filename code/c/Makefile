@@ -19,8 +19,8 @@ EXTRAS = -lfl -lssl -lcrypto -lrt -lpthread -DHAVE_NETINET_IN_H -DHAVE_INTTYPES_
 all: wikilinkstats
 
 # ER
-er: ER.o Util.o
-	$(CPP) -o er ER.o Util.o $(EXTRAS)
+er: ER.o Util.o Entity.o
+	$(CPP) -o er ER.o Entity.o Util.o $(EXTRAS)
 
 ER.o: ER.cpp
 	$(CPP) -c ER.cpp $(EXTRAS)

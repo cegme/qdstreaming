@@ -8,7 +8,7 @@
 
 
 
-void Entity::remove (unsigned long mentionid) {
+void dsr::Entity::remove (unsigned long mentionid) {
   if (state == EntityState::NORMAL) {
     remove_normal(mentionid);
   }
@@ -17,20 +17,20 @@ void Entity::remove (unsigned long mentionid) {
   }
 }
 
-void Entity::remove_normal (unsigned long mention_idx) {
+void dsr::Entity::remove_normal (unsigned long mention_idx) {
   mentions[mention_idx] = mentions[count]; // Put the last one in this ones place
   --count;
   init();
 }
 
 
-unsigned long Entity::remove_last() {
+unsigned long dsr::Entity::remove_last() {
   --count;
   init();
   return 1;
 }
 
-void Entity::init() {
+void dsr::Entity::init() {
 
   // Initialize the random number generator for selecting mention chains
   std::default_random_engine generator(42L);
@@ -41,7 +41,7 @@ void Entity::init() {
 
 }
 
-void Entity::add(unsigned long mentionid) {
+void dsr::Entity::add(unsigned long mentionid) {
   if (state == EntityState::NORMAL) {
     add_normal(mentionid);
   }
@@ -51,7 +51,7 @@ void Entity::add(unsigned long mentionid) {
 }
 
 
-void Entity::add_normal (unsigned long mentionid) {
+void dsr::Entity::add_normal (unsigned long mentionid) {
   if (count < mentions.size())
     mentions[count] = mentionid;
   else 
@@ -62,7 +62,7 @@ void Entity::add_normal (unsigned long mentionid) {
 }
 
 
-unsigned long Entity::rand() {
+unsigned long dsr::Entity::rand() {
   // TODO need a new method if it is in the large state
   if (state == EntityState::NORMAL) {
     return random_mention();
@@ -71,4 +71,8 @@ unsigned long Entity::rand() {
     throw "Unimplemented Random function"; //TODO
   }
 }
+
+
+
+
 
