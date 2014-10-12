@@ -17,27 +17,27 @@ namespace dsr {
   class Entity {
 
     public:
-      Entity(): mentions(std::vector<unsigned long>()), 
-                  state(EntityState::NORMAL),
-                  count(0L)//,
-                  //stringmap(std::unordered_map<std::string, unsigned long>()) 
+      Entity(): mentions(std::vector<unsigned int>()), 
+                  //state(EntityState::NORMAL),
+                  state(EntityState::LARGE),
+                  count(0)//,
       {}
     
       // Add a new mention to the data set
-      void add (unsigned long mentionid);
-      void remove (unsigned long mentionid);
-      unsigned long remove_last();
+      void add (unsigned int mentionid);
+      void remove (unsigned int mentionid);
+      unsigned int remove_last();
 
       // Return the index of a random mention chain 
-      size_t rand();
+      unsigned int rand();
 
       // Return the number of Mentions 
-      unsigned long size() const { return count; };
+      unsigned int size() const { return count; };
 
       //virtual std::string to_string() const = 0;
 
-      unsigned long bytes() {
-        unsigned long counter = 0L;
+      unsigned int bytes() {
+        unsigned int counter = 0L;
         counter += sizeof(*this); 
         //counter += sizeof(mentions) * mentions.size();
         counter += sizeof(mentions) ;
@@ -51,22 +51,24 @@ namespace dsr {
       void init();
 
     private:
-      unsigned long count;
+      unsigned int count;
 
       // Contains the indexes of the mentions.
-      std::vector<unsigned long> mentions;
+      std::vector<unsigned int> mentions;
 
       // Use this when the number of mentions becomes too large
       // Store the ids of exact token duplicates
-      std::unordered_map<std::string, unsigned long> stringmap;
+      std::unordered_map<std::string, unsigned int> stringmap;
 
       EntityState state;
 
       // A function for random mentions
       std::function<size_t()> random_mention;
 
-      void add_normal(unsigned long);
-      void remove_normal(unsigned long);
+      void add_normal(unsigned int);
+      void remove_normal(unsigned int);
+
+      void add_unique(unsigned int);
 
   };
 }

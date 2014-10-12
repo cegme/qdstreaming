@@ -45,24 +45,31 @@ void buildEntityStructures (const std::string& dbfile) {
   std::string sql;
 
   sqlite3_initialize();
-  sqlite3_open_v2(dbfile.c_str(), &db, SQLITE_OPEN_READONLY, NULL); 
+  rc = sqlite3_open_v2(dbfile.c_str(), &db, SQLITE_OPEN_READONLY, NULL); 
   //rc = sqlite3_open(dbfile.c_str(), &db); 
   if (rc) {
-    log_err("Cannon open the database: %s", sqlite3_errmsg(db));
+    log_err("Cannon open the database: %s, %s", sqlite3_errmsg(db), dbfile.c_str());
+    exit(-1);
   }
   else {
     log_info("Database opened at %s", dbfile.c_str());
   }
 
-  sql = "SELECT * FROM wikilink ORDER BY mention LIMIT 1;";
+  sql = "SELECT docid, mention, mentionidx, wikiurl FROM wikilink ORDER BY mention;";
+  //sql = "SELECT docid, mention, mentionidx, wikiurl FROM wikilink ORDER BY mention LIMIT 100000;";
   //sql = "SELECT * FROM wikilink ORDER BY mention LIMIT 100000;";
 
   sqlite3_stmt* stmt;
+  sqlite3_exec(db, "PRAGMA cache_size = 200000;", NULL, NULL, &zErrMsg);
   sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
   if (rc != SQLITE_OK) {log_err(" Query error"); exit(-1); }
+  log_info("prepared query...");
 
-  dsr::Entity *e = NULL;
+  dsr::Entity *e = nullptr;
 
+  std::cout << "mentions,entities,mention (bytes),entity (bytes)\n";
+  std::cout << "data = []\n";
+  unsigned int row_counter = 0;
   std::deque<std::string> temp_tokens;
   while (sqlite3_step(stmt) == SQLITE_ROW) {
     dsr::Mention m;
@@ -77,18 +84,44 @@ void buildEntityStructures (const std::string& dbfile) {
     temp_tokens.clear();
 
     // Add this to the mentions list
+    auto midx = mentions.size();
     mentions.push_back(m);
 
-    if (e == NULL || mentions.size() > 1
+    if (e == nullptr || mentions.size() > 1
       && !std::equal(mentions.back().tokens.begin(), mentions.back().tokens.end(), mentions[mentions.size()-2].tokens.begin()) ) {
       e = new dsr::Entity();
-      e->add(mentions.size()-1);
+      e->add(midx);
       entities.push_back(e);
 
     }
     else {
-      e->add(mentions.size()-1);
+      e->add(midx);
     }
+    
+    if (row_counter++ == 0
+        || row_counter == 10
+        || row_counter == 100
+        || row_counter == 1000
+        || row_counter == 10000
+        || row_counter == 100000
+        || row_counter == 1000000 
+        || row_counter == 10000000) {
+
+      std::cout << "data += [";
+      std::cout << mentions.size() << "," << entities.size() << ",";
+      
+      unsigned int mcounter = 0L;
+      for (auto& m: mentions) mcounter += m.bytes();
+      std::cout << mcounter << ",";
+      unsigned int ecounter = 0L;  
+      for (auto& e: entities) ecounter += e->bytes();
+      std::cout << ecounter << "]" << std::endl;
+      log_info("Check the time.");
+    }
+
+    if (row_counter % 100000 == 0) log_info("%u", row_counter);
+
+
   }
 
   sqlite3_reset (stmt);
@@ -96,17 +129,35 @@ void buildEntityStructures (const std::string& dbfile) {
   sqlite3_close(db);
   sqlite3_shutdown();
 
-  unsigned long mcounter = 0L;  
+/*
+  log_info("counting mentions...");
+  unsigned int mcounter = 0L;
   for (auto& m: mentions) mcounter += m.bytes();
-  unsigned long ecounter = 0L;  
+
+  log_info("counting entities...");
+  unsigned int ecounter = 0L;  
   for (auto& e: entities) ecounter += e->bytes();
 
-  std::cerr << "Mention size: " << mcounter << "\n";
-  std::cerr << "Entitie size: " << ecounter << "\n";
+  std::cerr << "Mention size: " << mentions.size() << "\n";
+  std::cerr << "Entitie size: " << entities.size() << "\n";
+  std::cerr << "Mention bytes: " << mcounter << "\n";
+  std::cerr << "Entitie bytes: " << ecounter << "\n";
   std::cerr << "unsigned long: " << sizeof(unsigned long) << "\n";
+  std::cerr << "unsigned int: " << sizeof(unsigned int) << "\n";
   std::cerr << "dsr::Mention: " << sizeof (dsr::Mention) << "\n";
   std::cerr << "dsr::Entity: " << sizeof (dsr::Entity) << "\n";
   //std::cerr << "unsigned long" << << "\n";
+*/
+      
+  std::cout << "data = []\n";
+  std::cout << "data += [";
+  std::cout << mentions.size() << "," << entities.size() << ",";
+  unsigned int mcounter = 0L;
+  for (auto& m: mentions) mcounter += m.bytes();
+  std::cout << mcounter << ",";
+  unsigned int ecounter = 0L;  
+  for (auto& e: entities) ecounter += e->bytes();
+  std::cout << ecounter << "]\n";
 
 }
 
@@ -131,13 +182,14 @@ void vectorizeMentions (const std::string& dbfile) {
     log_info("Database opened at %s", dbfile.c_str());
   }
 
-  sql = "SELECT * FROM wikilink ORDER BY mention LIMIT 1000;";
+  sql = "SELECT * FROM wikilink ORDER BY mention LIMIT 100000;";
 
   sqlite3_stmt* stmt;
   sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
   if (rc != SQLITE_OK) {log_err(" Query error"); exit(-1); }
 
   std::deque<std::string> temp_tokens;
+  unsigned int thecounter = 0;
   while (sqlite3_step(stmt) == SQLITE_ROW) {
     dsr::Mention m;
     m.docid = sqlite3_column_int(stmt, 0);
@@ -160,6 +212,8 @@ void vectorizeMentions (const std::string& dbfile) {
       << ")\n\n";
 
     temp_tokens.clear();
+    if(++thecounter % 100000 == 0) std::cerr << ".";
+  
   }
 
   sqlite3_reset (stmt);
@@ -186,6 +240,7 @@ void selectMentions (const std::string& dbfile) {
   }
 
   sql = "SELECT * FROM wikilink ORDER BY mention LIMIT 10;";
+    sqlite3_exec(db, "PRAGMA cache_size = 200000", NULL, NULL, &zErrMsg);
 
   sqlite3_stmt* stmt;
   sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
@@ -213,7 +268,8 @@ void selectMentions (const std::string& dbfile) {
 int main (int argc, char **argv) {
   //selectMentions("/data/wikilinks/context-only/063.db");
   //vectorizeMentions("/data/wikilinks/context-only/063.db");
-  buildEntityStructures("/data/wikilinks/context-only/063.db");
+  //buildEntityStructures("/data/wikilinks/context-only/wikilinks.db");
+  buildEntityStructures("wikilinks.db");
 
   return 0;
 }

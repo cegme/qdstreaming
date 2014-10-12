@@ -226,7 +226,7 @@ void loaddb (const std::string& dbfile) {
     log_info("Database opened at %s", dbfile.c_str());
   }
 
-  sql = "INSERT INTO wikilink VALUES (?1, ?2, ?3, ?4)";
+  sql = "INSERT INTO wikilink VALUES (?1, ?2, ?3, ?4, ?5, ?6)";
   sql2 = "INSERT INTO wikilink_filemap VALUES (?1, ?2)";
 
   sqlite3_stmt* stmt;
@@ -241,6 +241,7 @@ void loaddb (const std::string& dbfile) {
   const char* fileName = "%03d.gz";
 
 
+  sqlite3_exec(db, "PRAGMA synchronous = OFF", NULL, NULL, &zErrMsg); // Improve speed #YOLO
   sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &zErrMsg);
   for (int i = 1; i < 110; ++i) {
     snprintf (file, 50, filePath, i);
@@ -270,6 +271,8 @@ void loaddb (const std::string& dbfile) {
         sqlite3_bind_text(stmt,2,m.anchor_text.c_str(),-1,SQLITE_TRANSIENT); 
         sqlite3_bind_int(stmt,3,mcounter);
         sqlite3_bind_text(stmt,4,m.wiki_url.c_str(),-1,SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt,5,m.context.left.c_str(),-1,SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt,6,m.context.right.c_str(),-1,SQLITE_TRANSIENT);
 
         if (sqlite3_step(stmt) != SQLITE_DONE) {
           log_err("Error executing the prepared statement");
@@ -322,11 +325,6 @@ void dropdb(const std::string& dbfile) {
 }
 
 
-void all_onedb () {
-
-}
-
-
 
 void parallel_loaddb() {
 
@@ -364,8 +362,6 @@ void parallel_loaddb() {
 
     log_info("Looping: %d", i);
   }
-
-
 }
 
 

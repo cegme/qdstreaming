@@ -13,11 +13,11 @@
 namespace dsr {
   class Mention {
   public:
-    unsigned long docid; // Key
+    unsigned int docid; // Key
     int mentionidx; // Key
-    unsigned long entityid; // ground truth
+    unsigned int entityid; // ground truth
 
-    std::deque<unsigned long> tokens;
+    std::deque<unsigned int> tokens;
     // TODO store the left and right context
 
     unsigned long bytes() {

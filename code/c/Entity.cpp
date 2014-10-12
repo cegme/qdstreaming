@@ -8,7 +8,7 @@
 
 
 
-void dsr::Entity::remove (unsigned long mentionid) {
+void dsr::Entity::remove (unsigned int mentionid) {
   if (state == EntityState::NORMAL) {
     remove_normal(mentionid);
   }
@@ -17,14 +17,14 @@ void dsr::Entity::remove (unsigned long mentionid) {
   }
 }
 
-void dsr::Entity::remove_normal (unsigned long mention_idx) {
+void dsr::Entity::remove_normal (unsigned int mention_idx) {
   mentions[mention_idx] = mentions[count]; // Put the last one in this ones place
   --count;
   init();
 }
 
 
-unsigned long dsr::Entity::remove_last() {
+unsigned int dsr::Entity::remove_last() {
   --count;
   init();
   return 1;
@@ -33,25 +33,27 @@ unsigned long dsr::Entity::remove_last() {
 void dsr::Entity::init() {
 
   // Initialize the random number generator for selecting mention chains
-  std::default_random_engine generator(42L);
-  std::uniform_int_distribution<size_t> chain_distribution(0, size()-1);
-  random_mention = std::bind(chain_distribution, generator);
+  //std::default_random_engine generator(42L);
+  //std::uniform_int_distribution<size_t> chain_distribution(0, size()-1);
+  //random_mention = std::bind(chain_distribution, generator);
 
   // TODO check the current size, if it is larger than X switch to LARGE
 
 }
 
-void dsr::Entity::add(unsigned long mentionid) {
+void dsr::Entity::add(unsigned int mentionid) {
   if (state == EntityState::NORMAL) {
     add_normal(mentionid);
   }
   else if (state == EntityState::LARGE) {
     // TODO implement insertion to the compressed map
+    add_unique(mentionid);
   }
+
 }
 
 
-void dsr::Entity::add_normal (unsigned long mentionid) {
+void dsr::Entity::add_normal (unsigned int mentionid) {
   if (count < mentions.size())
     mentions[count] = mentionid;
   else 
@@ -61,8 +63,17 @@ void dsr::Entity::add_normal (unsigned long mentionid) {
   init();
 }
 
+void dsr::Entity::add_unique (unsigned int mentionid) {
+  
+  // FIXME is this index correct?
+  if (mentionid != mentions[count-1])
+    add_normal(mentionid);
 
-unsigned long dsr::Entity::rand() {
+}
+
+
+
+unsigned int dsr::Entity::rand() {
   // TODO need a new method if it is in the large state
   if (state == EntityState::NORMAL) {
     return random_mention();
