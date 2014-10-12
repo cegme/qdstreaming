@@ -12,7 +12,15 @@ from the compressed structure.
 Third, how can we iterate over or sample from the
 compressed data structure to perform uncompression.
 
+The total entity size entity is 
 
+$$ \sum_i C + (sizeof(int) * |m_i|) $$  
+
+The smallest compression we can do per entitiy is to only unique entity tokens.
+
+The compressed total entity size size is
+
+$$ \sum_i c + (sizeof(int) * \#(m_i) ) $$ 
 
 
 Show Distribution of Entity sizes in the data set
