@@ -5,7 +5,7 @@
 Factor graphs are a pairwise formalism for expressing arbitrarily complex
 relationships between random variables.
 A factor graph $\mathcal{F}$, will contain a set of random variables, $r$
-and a set of factors $f$. Random variables are connected to eachother
+and a set of factors $f$. Random variables are connected to each other
 through factors. Factors represent a mapping of the relationship to a 
 real valued number.
 
@@ -32,11 +32,15 @@ to generalize the mathematically for other operations.
 
 The distribution of entity sizes
 In large text corpora, the sizes of entities follows the power law~\cite{singh12:wiki-links}.
-For examples, Figure~\ref{fig:entity-distribution} is a generated data set containing
+For example, Figure~\ref{fig:entity-distribution} is a generated data set containing
 40 million mentions and 3 million entities over 11 million web pages.
 
-In this data set XX percent of mentions are smaller that 100 mentions in size.
-Additionally, YY percent of entities contain more than 1000 mentions.
+The mentions on disk can be represented as a large array of identifiers.
+Entities are a collection of mentions and  can be represented as such.
+In the worst case there is an equal number of entities and mentions.
+This means each mention is its own individual entity.
+In the other extreme, all the mentions may be a part of the same entity.
+
 
 Doing pairwise comparison over clusters is $O(n^2)$.
 For clusters larger than 1000 mentions calculating scores of the model
