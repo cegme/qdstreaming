@@ -1,6 +1,7 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include <climits>
 #include <cstring>
 #include <errno.h>
 #include <time.h>
@@ -49,8 +50,10 @@ struct Stats {
   long double mean;
   long double M2;
   long double _sum;
+  long double themax;
+  long double themin;
   
-  Stats (): n(0), mean(0.0), M2(0.0), _sum(0.0) { } 
+  Stats (): n(0), mean(0.0), M2(0.0), _sum(0.0), themin(LONG_MAX), themax(LONG_MIN) { } 
 
   void reset (void);
 

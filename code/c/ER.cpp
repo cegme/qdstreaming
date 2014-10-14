@@ -32,6 +32,101 @@ std::vector<Entity> ER::wikilinkEntities(std::string dbfile) {
 
 //------------------ Test functions ----------
 
+
+/*
+** This function computes the cardinality of each mention.
+*/
+void computeUniqueMention (const std::string& dbfile) {
+
+  std::hash<std::string> hash_fn;
+
+  std::string currentWikiUrl = "";
+  std::string lastMention = "";
+  std::vector<unsigned int> uniques;
+
+  sqlite3 *db;
+  char *zErrMsg = 0;
+  int rc;
+  std::string sql;
+
+  sqlite3_initialize();
+  rc = sqlite3_open_v2(dbfile.c_str(), &db, SQLITE_OPEN_READONLY, NULL); 
+  //rc = sqlite3_open(dbfile.c_str(), &db); 
+  if (rc) {
+    log_err("Cannon open the database: %s, %s", sqlite3_errmsg(db), dbfile.c_str());
+    exit(-1);
+  }
+  else {
+    log_info("Database opened at %s", dbfile.c_str());
+  }
+
+  sql = "SELECT docid, mention, mentionidx, wikiurl FROM wikilink_mention;";
+
+  sqlite3_stmt* stmt;
+  sqlite3_exec(db, "PRAGMA cache_size = 200000;", NULL, NULL, &zErrMsg);
+  sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
+  if (rc != SQLITE_OK) {log_err(" Query error"); exit(-1); }
+
+
+  unsigned int row_counter = 0;
+  std::deque<std::string> temp_tokens;
+  while (sqlite3_step(stmt) == SQLITE_ROW) {
+    dsr::Mention m;
+    m.docid = sqlite3_column_int(stmt, 0);
+    m.mentionidx = sqlite3_column_int64(stmt, 2);
+    m.entityid = hash_fn((const char*)sqlite3_column_text(stmt, 3));
+    
+    std::string tokens = (char *) sqlite3_column_text(stmt, 1);
+    boost::trim_if(tokens, boost::is_any_of("\t "));
+    boost::split(temp_tokens, tokens, boost::is_any_of("\t "), boost::token_compress_on);
+    for(auto& t: temp_tokens) m.tokens.push_back(hash_fn(t));
+    temp_tokens.clear();
+
+    std::string wikiurl = (const char *)sqlite3_column_text(stmt, 3);
+    if (currentWikiUrl == "" || currentWikiUrl != wikiurl) {
+      // New mentions
+      uniques.push_back(1); 
+      currentWikiUrl = wikiurl;
+      lastMention = tokens;
+    }
+    else if (currentWikiUrl == wikiurl && lastMention == tokens) {
+      // A duplicate!
+      
+    } 
+    else if (currentWikiUrl == wikiurl && lastMention != tokens) {
+      // A non duplicate, cadrinality++
+      ++uniques.back(); 
+    }
+    else {
+      // This case does not happen
+    }
+    
+    ++row_counter;
+  }
+
+  sqlite3_reset (stmt);
+  sqlite3_finalize(stmt);
+  sqlite3_close(db);
+  sqlite3_shutdown();
+
+
+  Stats s;
+  for (const auto &v: uniques) {
+    s.add(v);
+  }
+
+  log_info("row_counter: %u", row_counter);
+  log_info("sum: %lf", s.sum());
+  log_info("std_err: %lf", s.std_err());
+  log_info("variance: %lf", s.variance());
+  log_info("N: %u", s.n);
+  log_info("%s", s.to_string());
+  
+
+}
+
+
+
 void buildEntityStructures (const std::string& dbfile) {
 
   std::hash<std::string> hash_fn;
@@ -55,9 +150,8 @@ void buildEntityStructures (const std::string& dbfile) {
     log_info("Database opened at %s", dbfile.c_str());
   }
 
-  sql = "SELECT docid, mention, mentionidx, wikiurl FROM wikilink ORDER BY mention;";
+  sql = "SELECT docid, mention, mentionidx, wikiurl FROM wikilink_mention;";
   //sql = "SELECT docid, mention, mentionidx, wikiurl FROM wikilink ORDER BY mention LIMIT 100000;";
-  //sql = "SELECT * FROM wikilink ORDER BY mention LIMIT 100000;";
 
   sqlite3_stmt* stmt;
   sqlite3_exec(db, "PRAGMA cache_size = 200000;", NULL, NULL, &zErrMsg);
@@ -269,7 +363,8 @@ int main (int argc, char **argv) {
   //selectMentions("/data/wikilinks/context-only/063.db");
   //vectorizeMentions("/data/wikilinks/context-only/063.db");
   //buildEntityStructures("/data/wikilinks/context-only/wikilinks.db");
-  buildEntityStructures("wikilinks.db");
+  //buildEntityStructures("wikilinks.db");
+  computeUniqueMention("wikilinks.db");
 
   return 0;
 }

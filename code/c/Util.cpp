@@ -4,11 +4,12 @@
 #include <string>
 #include <sstream>
 
-void Stats::reset (void) { n = 0; mean = 0.0; M2 = 0.0; _sum = 0.0; }
+void Stats::reset (void) { n = 0; mean = 0.0; M2 = 0.0; _sum = 0.0; themax=LONG_MIN; themin=LONG_MAX; }
 
 void Stats::inc() { add(1.0); }
 
 void Stats::add(long double x) {
+  themax = MAX(themax,x); themin = MIN(themin,x);
   _sum += x;
   ++n;
   auto delta = x - mean;
@@ -43,7 +44,9 @@ const char * Stats::to_string() const {
   ss << "sum(" << sum() << "), ";
   ss << "mean(" << mean << "), ";
   ss << "var(" << variance( ) << "), ";
-  ss << "std_err(" << std_err() << ")";
+  ss << "std_err(" << std_err() << "), ";
+  ss << "min(" << themin << "), ";
+  ss << "max(" << themax << ")";
   ss << ")";
   return ss.str().c_str();
   

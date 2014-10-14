@@ -1,5 +1,5 @@
 
-GPP = g++ --std=c++11 -march=native -w #-O3
+GPP = g++ --std=c++11 -march=native -w -O3
 DEBUG = -g -pg 
 
 #THRIFT = -I/usr/local/include/thrift
@@ -19,8 +19,8 @@ EXTRAS = -lfl -lssl -lcrypto -lrt -lpthread -DHAVE_NETINET_IN_H -DHAVE_INTTYPES_
 all: wikilinkstats
 
 # ER
-er: wikilink ER.o Util.o Entity.o
-	$(CPP) -o er ER.o Util.o Entity.o $(EXTRAS)
+er: wikilink_constants.o ER.o Util.o Entity.o
+	$(CPP) -o er wikilink_constants.o ER.o Util.o Entity.o $(EXTRAS)
 
 ER.o: ER.cpp
 	$(CPP) -c ER.cpp $(EXTRAS)
@@ -32,10 +32,10 @@ wikilinkstats: wikilink wikilinkstats.o wikilink_types.o wikilink_constants.o Wi
 wikilinkstats.o: wikilinkstats.cpp
 	$(CPP) -c wikilinkstats.cpp $(EXTRAS)
 
-wikilink:	
+wikilink:
 	thrift -r --gen cpp wikilink.thrift
 
-wikilink_constants.o:	
+wikilink_constants.o: wikilink
 	$(CPP) -c gen-cpp/wikilink_constants.cpp -o wikilink_constants.o $(EXTRAS)
 
 wikilink_types.o:	
