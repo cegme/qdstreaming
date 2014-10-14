@@ -1,0 +1,45 @@
+
+\section{Example}
+
+In this section we discuss define the acceleration in MCMC-MH sampling for entity resolution.
+We then motivate how we believe gains can be achieved given using compression, sampling acceleration methods and optimizers.
+
+The issues we are investigating are as follows.
+First, Given an Entity $e_i$ how can we create a structure with \textit{minimal total size}.
+%Second, How can we incrementally add and remove items 
+%from the compressed structure.
+Next, how can we compute the features over a source and destination entity ($e_s$, $e_d$) 
+in the \textit{smallest amount of time}.
+Lastly, how do we \textit{decide} when to use each technique.
+
+
+The total size of all entities in the traditional representation is:
+
+\begin{equation}
+  \text{sizeof}(\mathcal{E}) =  \sum_i c + (\text{sizeof}(\text{int}) * |e_i|),
+\end{equation}
+where $sizeof$ is an abstract function to compute the size of the containing object,
+$c$ is a class constant and $|e_i|$ is number of mentions in the entity.
+
+There are many compression techniques, one being we only keep the mentions an entity
+that have a unique representation.
+That is, if any mention token is a duplicate, we remove it.
+This compressed total entity size size is:
+
+\begin{equation}
+  \text{sizeof}(\mathcal{E_\text{compressed}}) = \sum_i c + (\text{sizeof}(int) * \#(e_i) ),
+\end{equation}
+where $\#(e_i)$ is the cardinality of the mention tokens in entity $e_i$.
+We note that when the $\#(e_i) \ll |e_i|$ it may be worth compressing this entity.
+
+
+In the example data set in Figure~\ref{fig:entity-distribution} we note that
+45\% percent of mentions are smaller that 100 mentions in size.
+Additionally, 82\% percent of entities contain less than 1000 mentions.
+These number suggest that at times we 
+we can take advantage of the redundancy within
+large entities and compress the entities.
+(We investigate the WikiLinks corpus further in Section~\ref{sec:microbenchmark}). 
+
+
+
