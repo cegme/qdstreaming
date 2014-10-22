@@ -14,7 +14,7 @@ namespace dsr {
   class Mention {
   public:
     unsigned int docid; // Key
-    int mentionidx; // Key
+    unsigned int mentionidx; // Key
     unsigned int entityid; // ground truth
 
     std::deque<unsigned int> tokens;

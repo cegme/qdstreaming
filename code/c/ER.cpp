@@ -36,8 +36,9 @@ std::vector<Entity> ER::wikilinkEntities(std::string dbfile) {
 /*
 ** This function computes the cardinality of each mention.
 */
-void computeUniqueMention (const std::string& dbfile) {
+void computeUniqueMention (const std::string& dbfile, bool _wikiurl = false) {
 
+  std::map<unsigned int, unsigned int> hist;
   std::hash<std::string> hash_fn;
 
   std::string currentWikiUrl = "";
@@ -60,7 +61,12 @@ void computeUniqueMention (const std::string& dbfile) {
     log_info("Database opened at %s", dbfile.c_str());
   }
 
-  sql = "SELECT docid, mention, mentionidx, wikiurl FROM wikilink_mention;";
+  if (!_wikiurl) {
+    sql = "SELECT docid, mention, mentionidx, wikiurl FROM wikilink_mention;";
+  }
+  else {
+    sql = "SELECT docid, mention, mentionidx, wikiurl FROM wikilink_wikiurl;";
+  }
 
   sqlite3_stmt* stmt;
   sqlite3_exec(db, "PRAGMA cache_size = 200000;", NULL, NULL, &zErrMsg);
@@ -83,22 +89,39 @@ void computeUniqueMention (const std::string& dbfile) {
     temp_tokens.clear();
 
     std::string wikiurl = (const char *)sqlite3_column_text(stmt, 3);
-    if (currentWikiUrl == "" || currentWikiUrl != wikiurl) {
-      // New mentions
-      uniques.push_back(1); 
-      currentWikiUrl = wikiurl;
-      lastMention = tokens;
-    }
-    else if (currentWikiUrl == wikiurl && lastMention == tokens) {
-      // A duplicate!
-      
-    } 
-    else if (currentWikiUrl == wikiurl && lastMention != tokens) {
-      // A non duplicate, cadrinality++
-      ++uniques.back(); 
+    if (!_wikiurl) {
+      if (currentWikiUrl == "" || currentWikiUrl != wikiurl) {
+        // New mentions
+        uniques.push_back(1); 
+        currentWikiUrl = wikiurl;
+        lastMention = tokens;
+      }
+      else if (currentWikiUrl == wikiurl && lastMention == tokens) {
+        // A duplicate!
+        
+      } 
+      else if (currentWikiUrl == wikiurl && lastMention != tokens) {
+        // A non duplicate, cadrinality++
+        ++uniques.back();
+      }
+      else {
+        // This case does not happen
+        log_err("Logic err... %u %u %u", m.docid, m.mentionidx, m.entityid);
+      }
     }
     else {
-      // This case does not happen
+      if (currentWikiUrl == wikiurl) {
+        ++uniques.back();
+      }
+      else if (currentWikiUrl == "" || currentWikiUrl != wikiurl ) {
+        uniques.push_back(1);
+        currentWikiUrl = wikiurl;
+      }
+      else {
+        log_err("Logic err... %u %u %u", m.docid, m.mentionidx, m.entityid);
+      }
+    
+
     }
     
     ++row_counter;
@@ -121,6 +144,36 @@ void computeUniqueMention (const std::string& dbfile) {
   log_info("variance: %lf", s.variance());
   log_info("N: %u", s.n);
   log_info("%s", s.to_string());
+  
+
+  // Count how many ones, twos, threes, fours and fives
+  unsigned int ones = 0, twos = 0, threes = 0, fours = 0, fives = 0; 
+  for (const auto &u: uniques) {
+    if (u == 1) ++ones;
+    else if (u == 2) ++twos;
+    else if (u == 3) ++threes;
+    else if (u == 4) ++fours;
+    else if (u == 5) ++fives;
+  }
+
+  // Print out the histogram 
+  log_info("ones %u, twos: %u, threes: %u, fours: %u, fives %u",
+    ones, twos, threes, fours, fives);
+  
+  std::sort(uniques.begin(), uniques.end());
+
+  // Create histograms
+  for(const auto &u: uniques) {
+    if (hist.find(u) == hist.end())
+      hist[u] = 1;
+    else
+      ++hist[u];
+  }
+
+  std::cout << "Number,Frequency\n";
+  for (const auto &h: hist) {
+    std::cout << h.first << "," << h.second << "\n";
+  }
   
 
 }
@@ -364,7 +417,8 @@ int main (int argc, char **argv) {
   //vectorizeMentions("/data/wikilinks/context-only/063.db");
   //buildEntityStructures("/data/wikilinks/context-only/wikilinks.db");
   //buildEntityStructures("wikilinks.db");
-  computeUniqueMention("wikilinks.db");
+  //computeUniqueMention("wikilinks.db"); // Default histogram (mention_uniques.log)
+  computeUniqueMention("wikilinks.db", true); // True histogramp (wikiurl_uniques.log)
 
   return 0;
 }

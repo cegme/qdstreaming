@@ -43,3 +43,12 @@ large entities and compress the entities.
 
 
 
+In addition, Figure~\ref{fig:entity-distribution} show that there is about an
+order of magnitude difference between the sizes of initial entities and the
+true entity sizes. This suggest that there are several unique representations
+of entities that during entity resolution entities sizes can expect to increase
+by an order of magnitude in size and smaller entities will decrease.
+This is to be expected but we can use this property to track the grow and
+change of entity sizes over time to understand which camp a particular entity
+cluster belongs. Either it will grow or it will probably shrink.
+

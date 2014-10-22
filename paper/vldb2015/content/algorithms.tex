@@ -25,7 +25,7 @@ comparisons inside each block. Blocks are formed arbitrarily and are of fixed
 size. In database terms this method is a \emph{block nested loop} comparison.
 
 \textbf{Blocked Subsample Iterator.} This performs a block nested loop
-comparisom but it performes book keeping to only perform pairwise sampling
+comparison but it performs book keeping to only perform pairwise sampling
 until we reach a confidence threshold of 0.95.
 
 \textbf{Blocked Top-k Iterator.} This method performs a block nested loop
@@ -46,11 +46,11 @@ Average pairwise score between mentions.
 Maximum pairwise score between mentions.
 Minimum pairwise score between mentions.
 Variance of the pairwise score between mentions.
-Mention Token tfidf scores.
+Mention Token tf-idf scores.
 Cardinality of tokens in both entities.
-\ceg{Generailze the feature explaination and move it to the implementation section}
+\ceg{Generalize the feature explanation and move it to the implementation section}
 
-Using this information we train a decision tree classsifier to minimize the 
+Using this information we train a decision tree classifier to minimize the 
 pairwise comparisons in the score function.
 The classifier is also constrained by the accuracy of the decision tree as 
 approximate methods are less accurate.
@@ -60,7 +60,7 @@ The result of this classifier is two-fold.
 First, we have a classifier to choose the optimal algorithm for each proposal.
 Second, we have an active learning feed-back loop for algorithms with 
 thresholds.
-We emperically study both of these outcomes.
+We empirically study both of these outcomes.
 
 \begin{tabular}{l c c c}
 \textbf{Technique} & \textbf{Reduces size} & \textbf{Lossless} & \textbf{location} \\
@@ -68,6 +68,41 @@ Full pairwise & No & Yes & Feature\\
 Early Stopping~\cite{singh2012monte} & No & No & Feature\\
 Run-Length Encoding & Yes & Yes & Storage\\
 \end{tabular}
+
+
+
+\section{Optimizer}
+
+When before calculating the MCMC-MH proposal there are several decision we can make
+that will affect the runtime and accuracy of the algorithm.
+We could
+(1) Update the entity structure to or from a compressed format;
+(2) Select a new way of calculating the pairwise features;
+(3) Skip the calculation of the proposal and directly accept or reject.
+
+These decision are made by observing several features of a source entity,
+destination entity and a source mention.
+These features include the source and destination size, the source and
+destination cardinality, the number of samples the algorithm has made.
+
+
+At each proposal step the decision made should maximize the \textit{utility}.
+Utility of the decision is a numeric score to represent the gain performing
+the proposal calculation. The utility value is a real number ranged from $( \inf, \int)$.
+
+
+A formal model for utility is as follows:
+\begin{equation}
+U = C_\text{Entity trend} +  % Is this an entity that will lose its members or gain its members
+    C_\text{pw calculation} +  % Estimated time it takes to do the pairwise calculation
+    C_\text{Entity update} + % The cost of updating the entity structure to a compressed one., (Good value if it is already compressed)
+    C_\text{Undoing the change} % Undoing the mention change (the certainty/assurity that this is correct)
+\end{equation}
+
+
+You should only update the entity structure if it will improve the pairwise feature calculation cost enough.
+
+
 
 
 
