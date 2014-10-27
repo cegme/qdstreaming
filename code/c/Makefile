@@ -6,21 +6,32 @@ DEBUG = -g -pg
 #THRIFT = -L/usr/local/lib/libthriftnb.a -L/usr/local/lib/libthrift.a -L/usr/local/lib/libthriftz -lthrift -lthriftnb
 #THRIFT = -L/usr/local/lib -lthrift -lthriftnb -lthrift_c_glib -lthriftz  -lz
 #THRIFT = -L/usr/local/lib -lz -lthriftnb -lthrift -lthrift_c_glib -levent -fPIC
-THRIFT = -L/usr/local/lib -L/home/cgrant/scratch/thrift/lib -L/usr/local/include/thrift -lz -lthriftz -lthriftnb -lthrift -lthrift_c_glib -levent -fPIC
+#THRIFT = -L/usr/local/lib -L/home/cgrant/scratch/thrift/lib -L/usr/local/include/thrift -lz -lthriftz -lthriftnb -lthrift -lthrift_c_glib -levent -fPIC
+THRIFT = -L/usr/local/lib -lz -lthriftz -lthriftnb -lthrift -lthrift_c_glib -levent -fPIC
 SQLITE = -lsqlite3
 
 CPP = $(GPP) $(DEBUG)
 
 BOOST = -lboost_date_time -lboost_program_options -lboost_system -lboost_filesystem -lboost_regex -lboost_iostreams -lboost_thread
 
-EXTRAS = -lfl -lssl -lcrypto -lrt -lpthread -DHAVE_NETINET_IN_H -DHAVE_INTTYPES_H $(BOOST) $(THRIFT) $(SQLITE)
+
+DLIB = -I/home/cgrant/projects/dlib/ -I/home/cgrant/projects/dlib/dlib/all/source.cpp
+
+EXTRAS = -lX11 -lfl -lssl -lcrypto -lrt -lpthread -DHAVE_NETINET_IN_H -DHAVE_INTTYPES_H $(BOOST) $(THRIFT) $(SQLITE) $(DLIB)
 
 
 all: wikilinkstats
 
+opttest: Optimizer.o
+	$(CPP) -o opttest Optimizer.o $(EXTRAS)
+
+
 # ER
 er: wikilink_constants.o ER.o Util.o Entity.o
 	$(CPP) -o er wikilink_constants.o ER.o Util.o Entity.o $(EXTRAS)
+
+Optimizer.o: Optimizer.cpp
+	$(CPP) -c Optimizer.cpp $(EXTRAS)
 
 ER.o: ER.cpp
 	$(CPP) -c ER.cpp $(EXTRAS)
@@ -52,8 +63,11 @@ Entity.o: Entity.cpp
 
 # Cluster test
 
-clustertest: Random.o Util.o
-	$(CPP) -o clustertest clustertest.cpp Random.o Util.o $(EXTRAS)
+clustertest: clustertest.o Random.o Util.o
+	$(CPP) -o clustertest clustertest.o Random.o Util.o $(EXTRAS)
+
+clustertest.o: clustertest.cpp
+	$(CPP) -c clustertest.cpp
 
 Random.o: Random.cc
 	$(CPP) -c Random.cc
