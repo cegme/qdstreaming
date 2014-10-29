@@ -132,8 +132,6 @@ long baseline_method (const std::vector<point> &a,
               const std::vector<point> &b,
               std::vector<int> qn,
               std::vector<bool> & accept) {
-  // TODO pass vectors by reference, don't make a copy
-  // TODO make another version of this that does triangle parsing instead of the full n^2
   size_t asize = a.size();
   size_t bsize = b.size();
   int qnsize = qn.size();
@@ -560,7 +558,6 @@ long blocking_method(const std::vector<point> &_a,
 int main (int argc, char** argv) {
   namespace po = boost::program_options;
 
-  //int sizes[5] = { 10, 100, 1000, 10000/*, 1000000, 10000000*/ };
   std::pair<int,int>  absizes[25] = {std::make_pair(10,10), std::make_pair(10,100), std::make_pair(100,10), std::make_pair(100,100), 
                                   std::make_pair(1000,10), std::make_pair(10,1000), std::make_pair(1000,100), std::make_pair(100,1000), std::make_pair(1000,1000),
                                   std::make_pair(10000,10), std::make_pair(10,10000), std::make_pair(10000,100), std::make_pair(100,10000), std::make_pair(10000,1000), std::make_pair(1000,10000), std::make_pair(10000,10000),
@@ -611,7 +608,6 @@ int main (int argc, char** argv) {
 
   // Run the test 
   int thesizes = (sizeof(absizes)/sizeof(*absizes));
-  //for (int a = 0; a < thesizes; ++a) {
   for (auto ab : absizes) { 
     int a = ab.first;
 
