@@ -67,7 +67,7 @@ clustertest: clustertest.o Random.o Util.o
 	$(CPP) -o clustertest clustertest.o Random.o Util.o $(EXTRAS)
 
 clustertest.o: clustertest.cpp
-	$(CPP) -c clustertest.cpp
+	$(CPP) -c clustertest.cpp $(EXTRAS)
 
 Random.o: Random.cc
 	$(CPP) -c Random.cc

@@ -12,6 +12,12 @@
 
 #include <boost/program_options.hpp>
 
+#include <dlib/svm.h>
+
+
+typedef dlib::matrix<double,2,1> sample_type;
+typedef dlib::radial_basis_kernel<sample_type> kernel_type;
+
 // Finite population control to reduce the sampling variation of the mean.
 #define fpc(N,n) sqrt((N-n)/(N-1))
 // Size of the upper triangle n*n matrix
@@ -128,10 +134,13 @@ void create_cluster(std::vector<point>& a, int size, int dimensions) {
 }
 
 
+
 long baseline_method (const std::vector<point> &a,
               const std::vector<point> &b,
               std::vector<int> qn,
-              std::vector<bool> & accept) {
+              std::vector<bool> & accept,
+              dlib::krls<kernel_type>  &test) {
+
   size_t asize = a.size();
   size_t bsize = b.size();
   int qnsize = qn.size();
@@ -181,7 +190,8 @@ long baseline_method (const std::vector<point> &a,
 long baseline_triangle_method (const std::vector<point> &a,
               const std::vector<point> &b,
               std::vector<int> qn,
-              std::vector<bool> & accept) {
+              std::vector<bool> & accept,
+              dlib::krls<kernel_type> & test) {
 
   size_t asize = a.size();
   size_t bsize = b.size();
@@ -233,7 +243,8 @@ long sorted_triangle_method(const std::vector<point> &_a,
               const std::vector<point> &_b,
               const std::vector<int> &qn,
               double conf,
-              std::vector<bool> & accept) {
+              std::vector<bool> & accept,
+              dlib::krls<kernel_type> & test) {
 
   int debug_iter = 0;
 
@@ -320,7 +331,8 @@ long sorted_method(const std::vector<point> &_a,
               const std::vector<point> &_b,
               const std::vector<int> &qn,
               double conf,
-              std::vector<bool> & accept) {
+              std::vector<bool> & accept,
+              dlib::krls<kernel_type> & test) {
 
   int debug_iter = 0;
 
@@ -402,11 +414,12 @@ long sorted_method(const std::vector<point> &_a,
   return (double)(toc - tic);
 }
 
-long blocking_method(const std::vector<point> &_a,
+long blocking_method (const std::vector<point> &_a,
               const std::vector<point> &_b,
               const std::vector<int> &qn,
               double conf,
-              std::vector<bool> & accept) {
+              std::vector<bool> & accept,
+              dlib::krls<kernel_type> & test) {
 
   size_t asize = _a.size();
   size_t bsize = _b.size();
@@ -568,8 +581,11 @@ int main (int argc, char** argv) {
   int iterations;
   double conf;
   
-  std::unordered_map<std::string, std::vector<long> > timer_map;
+  std::unordered_map<std::string, std::vector<long>> timer_map;
   std::unordered_map<std::string, std::vector<std::vector<bool>>> accuracy_map;
+
+  std::string svm_file = "svm_model";
+  std::unordered_map<std::string, dlib::krls<kernel_type>*> svm_map;
 
   boost::program_options::options_description desc("Cluster Improvement test.");
   desc.add_options()
@@ -581,7 +597,8 @@ int main (int argc, char** argv) {
     ("querynodes,q", po::value<int>(&querynodes)->default_value(1),
       "The number of query nodes to test for each set")
     ("conf,c", po::value<double>(&conf)->default_value(0.95), "The confidence interval for early stopping")
-    ("iterations,i", po::value<int>(&iterations)->default_value(100), "Iterations for each algo");
+    ("iterations,i", po::value<int>(&iterations)->default_value(100), "Iterations for each algo")
+    ("svmfileprefix,s", po::value<std::string>(&svm_file)->default_value("svm_model"), "The file prefix for each svm model that is created");
 
   boost::program_options::variables_map vm;
   try {
@@ -608,7 +625,7 @@ int main (int argc, char** argv) {
 
   // Run the test 
   int thesizes = (sizeof(absizes)/sizeof(*absizes));
-  for (auto ab : absizes) { 
+  for (auto ab : absizes) {
     int a = ab.first;
 
     // Create cluster a
@@ -637,10 +654,12 @@ int main (int argc, char** argv) {
         case BASELINE: {
           std::vector<bool> baseaccept; 
           std::string key("BASELINE");
+          svm_map[key] = new dlib::krls<kernel_type>(kernel_type(0.1), 1.0);
           timer_map[key] = std::vector<long>();
           accuracy_map[key] = std::vector<std::vector<bool>>();
+          
           for (int i = 0; i < iterations; ++i) {
-            long time = baseline_method(ca, cb, qn, baseaccept);
+            long time = baseline_method(ca, cb, qn, baseaccept, *svm_map[key]);
             timer_map[key].push_back(time);
             accuracy_map[key].push_back(baseaccept);
           }
@@ -649,10 +668,11 @@ int main (int argc, char** argv) {
         case BASELINE_TRIANGLE: {
           std::vector<bool> baseaccept; 
           std::string key("BASELINE_TRIANGLE");
+          svm_map[key] = new dlib::krls<kernel_type>(kernel_type(0.1), 1.0);
           timer_map[key] = std::vector<long>();
           accuracy_map[key] = std::vector<std::vector<bool>>();
           for (int i = 0; i < iterations; ++i) {
-            long time = baseline_triangle_method(ca, cb, qn, baseaccept);
+            long time = baseline_triangle_method(ca, cb, qn, baseaccept, *svm_map[key]);
             timer_map[key].push_back(time);
             accuracy_map[key].push_back(baseaccept);
           }
@@ -662,10 +682,11 @@ int main (int argc, char** argv) {
         case SORTED: {
           std::string key("SORTED");
           std::vector<bool> thisaccept; 
+          svm_map[key] = new dlib::krls<kernel_type>(kernel_type(0.1), 1.0);
           timer_map[key] = std::vector<long>();
           accuracy_map[key] = std::vector<std::vector<bool>>();
           for (int i = 0; i < iterations; ++i) {
-            long time = sorted_method(ca, cb, qn, conf, thisaccept);
+            long time = sorted_method(ca, cb, qn, conf, thisaccept, *svm_map[key]);
             timer_map[key].push_back(time);
             accuracy_map[key].push_back(thisaccept);
           }
@@ -674,11 +695,12 @@ int main (int argc, char** argv) {
 
         case SORTED_TRIANGLE: {
           std::string key("SORTED_TRIANGLE");
+          svm_map[key] = new dlib::krls<kernel_type>(kernel_type(0.1), 1.0);
           std::vector<bool> thisaccept; 
           timer_map[key] = std::vector<long>();
           accuracy_map[key] = std::vector<std::vector<bool>>();
           for (int i = 0; i < iterations; ++i) {
-            long time = sorted_triangle_method(ca, cb, qn, conf, thisaccept);
+            long time = sorted_triangle_method(ca, cb, qn, conf, thisaccept, *svm_map[key]);
             timer_map[key].push_back(time);
             accuracy_map[key].push_back(thisaccept);
           }
@@ -687,10 +709,11 @@ int main (int argc, char** argv) {
         case BLOCKING: {
           std::string key("BLOCKING");
           std::vector<bool> thisaccept; 
+          svm_map[key] = new dlib::krls<kernel_type>(kernel_type(0.1), 1.0);
           timer_map[key] = std::vector<long>();
           accuracy_map[key] = std::vector<std::vector<bool>>();
           for (int i = 0; i < iterations; ++i) {
-            long time = blocking_method(ca, cb, qn, conf, thisaccept);
+            long time = blocking_method (ca, cb, qn, conf, thisaccept, *svm_map[key]);
             timer_map[key].push_back(time);
             accuracy_map[key].push_back(thisaccept);
           }
