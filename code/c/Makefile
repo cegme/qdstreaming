@@ -1,5 +1,5 @@
 
-GPP = g++ --std=c++11 -march=native -w -O3
+GPP = g++ --std=c++11 -march=native -w  -O3
 DEBUG = -g -pg 
 
 #THRIFT = -I/usr/local/include/thrift

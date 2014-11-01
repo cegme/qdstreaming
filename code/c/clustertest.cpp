@@ -131,6 +131,7 @@ void create_cluster(std::vector<point>& a, int size, int dimensions) {
     // Call the random constructor
     a.push_back(point(dimensions));
   }
+  assert(a.size() == size);
 }
 
 
@@ -183,6 +184,10 @@ long baseline_method (const std::vector<point> &a,
   }
   
   clock_t toc = clock();
+  sample_type m;
+  m(0) = asize;
+  m(1) = bsize;
+  test.train(m, (double) toc - tic);
   return (double)(toc - tic);
 }
 
@@ -235,6 +240,10 @@ long baseline_triangle_method (const std::vector<point> &a,
     accept.push_back(score_with < score_without);
   }
   clock_t toc = clock();
+  sample_type m;
+  m(0) = asize;
+  m(1) = bsize;
+  test.train(m, (double) toc - tic);
   return (double)(toc - tic);
 }
 
@@ -323,6 +332,10 @@ long sorted_triangle_method(const std::vector<point> &_a,
   }
   
   clock_t toc = clock();
+  sample_type m;
+  m(0) = asize;
+  m(1) = bsize;
+  test.train(m, (double) toc - tic);
   return (double)(toc - tic);
 }
 
@@ -411,6 +424,10 @@ long sorted_method(const std::vector<point> &_a,
   }
   
   clock_t toc = clock();
+  sample_type m;
+  m(0) = asize;
+  m(1) = bsize;
+  test.train(m, (double) toc - tic);
   return (double)(toc - tic);
 }
 
@@ -564,6 +581,10 @@ long blocking_method (const std::vector<point> &_a,
   }
 
   clock_t toc = clock();
+  sample_type m;
+  m(0) = asize;
+  m(1) = bsize;
+  test.train(m, (double) toc - tic);
   return (double)(toc - tic);
 }
 
@@ -571,10 +592,10 @@ long blocking_method (const std::vector<point> &_a,
 int main (int argc, char** argv) {
   namespace po = boost::program_options;
 
-  std::pair<int,int>  absizes[25] = {std::make_pair(10,10), std::make_pair(10,100), std::make_pair(100,10), std::make_pair(100,100), 
+  std::pair<int,int>  absizes[16] = {std::make_pair(10,10), std::make_pair(10,100), std::make_pair(100,10), std::make_pair(100,100), 
                                   std::make_pair(1000,10), std::make_pair(10,1000), std::make_pair(1000,100), std::make_pair(100,1000), std::make_pair(1000,1000),
-                                  std::make_pair(10000,10), std::make_pair(10,10000), std::make_pair(10000,100), std::make_pair(100,10000), std::make_pair(10000,1000), std::make_pair(1000,10000), std::make_pair(10000,10000),
-                                  std::make_pair(100000,10), std::make_pair(10,100000), std::make_pair(100000,100), std::make_pair(100,100000), std::make_pair(100000,1000), std::make_pair(1000,100000), std::make_pair(100000,10000), std::make_pair(10000,100000), std::make_pair(100000,100000)};
+                                  std::make_pair(10000,10), std::make_pair(10,10000), std::make_pair(10000,100), std::make_pair(100,10000), std::make_pair(10000,1000), std::make_pair(1000,10000), std::make_pair(10000,10000)};//,
+                                  //std::make_pair(100000,10), std::make_pair(10,100000), std::make_pair(100000,100), std::make_pair(100,100000), std::make_pair(100000,1000), std::make_pair(1000,100000), std::make_pair(100000,10000), std::make_pair(10000,100000), std::make_pair(100000,100000)};
   int dimensions;
   int algo; 
   int querynodes;
@@ -624,23 +645,24 @@ int main (int argc, char** argv) {
   std::cout << "Method," << "Samples," << "A Cluster Size," << "B Cluster Size," << "Time," << "Variance," << "Accuracy," << "Conf\n";
 
   // Run the test 
-  int thesizes = (sizeof(absizes)/sizeof(*absizes));
   for (auto ab : absizes) {
     int a = ab.first;
 
     // Create cluster a
     std::vector<point> ca;
     create_cluster(ca, a, dimensions);
+    assert(ca.size() != 0);
 
     // Get $querynode querynodes
     auto qn = [&ca,querynodes] () -> std::vector<int> {
       std::vector<int> qn;
       // Do sampling with replacement. We'll allow duplicate nodes
       for (int i = 0; i < querynodes; ++i) { 
+        assert(ca.size() != 0);
         qn.push_back(RandInt() % ca.size());
       }
       return qn;
-    }();
+    } ();
 
     int b = ab.second;
     // Create cluster b
@@ -749,6 +771,12 @@ int main (int argc, char** argv) {
         << std::endl;
     }
     timer_map.clear();
+  }
+
+  // Write the svm models todisk
+  for (auto& m: svm_map) {
+    std::string fileName = svm_file + "_" + m.first;
+    dlib::serialize(fileName) << m.second;
   }
 
   return 0;
