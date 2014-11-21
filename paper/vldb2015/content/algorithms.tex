@@ -75,34 +75,45 @@ Run-Length Encoding & Yes & Yes & Storage\\
 
 When before calculating the MCMC-MH proposal there are several decision we can make
 that will affect the runtime and accuracy of the algorithm.
-We could
-(1) Update the entity structure to or from a compressed format;
-(2) Select a new way of calculating the pairwise features;
-(3) Skip the calculation of the proposal and directly accept or reject.
-
-These decision are made by observing several features of a source entity,
+At each step we may:
+  (1) Update an entity structure to a compressed format;
+  (2) Select a new way of calculating the pairwise features;
+  (3) Skip the calculation of the proposal and directly accept or reject.
+These decisions can be made by observing several features of a source entity,
 destination entity and a source mention.
-These features include the source and destination size, the source and
-destination cardinality, the number of samples the algorithm has made.
+%These features include the source and destination size, the source and
+%destination cardinality, the number of samples the algorithm has made.
+We enumerate a small set of features that can yield information to
+help us decide how the entity structure should be changed.
+
+\paragraph{Compressing an entity} The decision to compress an entity takes
+four main points into consideration. First, the time it takes to compress
+the entity ($ C_\text{time}$).
+For example, if the time it takes to compress an entity is the same as the time it takes to
+reach an answer in the uncompressed format, then compression is superfluous.
+Secondly, it is important to consider the spaced saved in memory and the amount of 
+additional entities that do not have to be fetched from disk and can now fit in memory ($C_\text{space}$).
+Third, we need to know how active an entity has been ($C_\text{active}$).
+That is, how many additions or subtractions this entity has seen over a long period of time.
+This information is helpful in understanding the likelihood this entity will be requested
+for another addition or subtractions.
+Last, we retain the activity of an entity over a recent, short period of time ($C_\text{velocity}$). This information lets us know whether it is smart for this entity to take the time out to
+for compression while other mentions may be attempting an insertion or removal.
+
+  At each proposal step the decision made should maximize the \textit{utility}.
+  Utility of the decision is a numeric score to represent the gain performing
+  the proposal calculation. The utility value is a real number ranged from $( \inf, \int)$.
 
 
-At each proposal step the decision made should maximize the \textit{utility}.
-Utility of the decision is a numeric score to represent the gain performing
-the proposal calculation. The utility value is a real number ranged from $( \inf, \int)$.
-
-
-A formal model for utility is as follows:
-\begin{equation}
-U = C_\text{Entity trend} +  % Is this an entity that will lose its members or gain its members
-    C_\text{pw calculation} +  % Estimated time it takes to do the pairwise calculation
-    C_\text{Entity update} + % The cost of updating the entity structure to a compressed one., (Good value if it is already compressed)
-    C_\text{Undoing the change} % Undoing the mention change (the certainty/assurity that this is correct)
-\end{equation}
-
-
-You should only update the entity structure if it will improve the pairwise feature calculation cost enough.
-
-
+  A formal model for utility is as follows:
+  \begin{equation}
+    \begin{array}{ll}
+  U = & C_\text{time} +\\ 
+      & C_\text{space} +\\
+      & C_\text{active} +\\ % The cost of updating the entity structure to a compressed one., (Good value if it is already compressed)
+      & C_\text{velocity} % Undoing the mention change (the certainty/assurity that this is correct)
+      \end{array}
+  \end{equation}
 
 
 
