@@ -595,7 +595,7 @@ int main (int argc, char** argv) {
   std::pair<int,int>  absizes[16] = {std::make_pair(10,10), std::make_pair(10,100), std::make_pair(100,10), std::make_pair(100,100), 
                                   std::make_pair(1000,10), std::make_pair(10,1000), std::make_pair(1000,100), std::make_pair(100,1000), std::make_pair(1000,1000),
                                   std::make_pair(10000,10), std::make_pair(10,10000), std::make_pair(10000,100), std::make_pair(100,10000), std::make_pair(10000,1000), std::make_pair(1000,10000), std::make_pair(10000,10000)};//,
-                                  //std::make_pair(100000,10), std::make_pair(10,100000), std::make_pair(100000,100), std::make_pair(100,100000), std::make_pair(100000,1000), std::make_pair(1000,100000), std::make_pair(100000,10000), std::make_pair(10000,100000), std::make_pair(100000,100000)};
+                                  //std::make_pair(100000,10), std::make_pair(10,100000), std::make_pair(100000,100), std::make_pair(100,100000), std::make_pair(100000,1000), std::make_pair(1000,100000), std::make_pair(100000,10000), std::make_pair(10000,100000), std::make_pair(100000,100000);
   int dimensions;
   int algo; 
   int querynodes;

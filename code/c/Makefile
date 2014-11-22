@@ -22,6 +22,8 @@ EXTRAS = -lX11 -lfl -lssl -lcrypto -lrt -lpthread -DHAVE_NETINET_IN_H -DHAVE_INT
 
 all: wikilinkstats
 
+
+
 opttest: Optimizer.o
 	$(CPP) -o opttest Optimizer.o $(EXTRAS)
 
@@ -29,6 +31,9 @@ opttest: Optimizer.o
 # ER
 er: wikilink_constants.o ER.o Util.o Entity.o
 	$(CPP) -o er wikilink_constants.o ER.o Util.o Entity.o $(EXTRAS)
+
+compression_test: wikilink_constants.o compression_test.o Entity.o Random.o
+	$(CPP) -o compression_test wikilink_constants.o compression_test.o Entity.o Random.o hyperloglog.hpp $(EXTRAS)
 
 Optimizer.o: Optimizer.cpp
 	$(CPP) -c Optimizer.cpp $(EXTRAS)
@@ -58,7 +63,11 @@ WikiLinkFile.o: WikiLinkFile.cpp
 Entity.o: Entity.cpp
 	$(CPP) -c Entity.cpp $(EXTRAS)
 
+compression_test.o: compression_test.cpp 
+	$(CPP) -c compression_test.cpp $(EXTRAS)
 
+hyperloglog.o: hyperloglog.hpp
+	$(CPP) -c hyperloglog.hpp $(EXTRAS)
 
 
 # Cluster test
@@ -70,7 +79,7 @@ clustertest.o: clustertest.cpp
 	$(CPP) -c clustertest.cpp $(EXTRAS)
 
 Random.o: Random.cc
-	$(CPP) -c Random.cc
+	$(CPP) -c Random.cc $(EXTRA)
 
 Util.o: Util.cpp
 	$(CPP) -c Util.cpp $(EXTRAS)
