@@ -30,7 +30,7 @@ int main (int argc, char** argv) {
   namespace po = boost::program_options;
 
   // An array with sizes increasing to 100K
-  std::vector<unsigned int> entity_sizes = {10, 100, 5000, 10000, 50000, 100000, 500000, 1000000};
+  std::vector<unsigned int> entity_sizes = {10, 100, 5000, 7000, 10000, 50000, 70000, 100000, 500000, 700000, 1000000};
   std::vector<float> cardinality_percentage = {0.2, 0.4, 0.6, 0.8};
 
   unsigned int insertions = 1000;
