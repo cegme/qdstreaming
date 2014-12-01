@@ -20,6 +20,10 @@
   * (1) compress, decompress
   * (2) insert, remove  (on both compressed and decompressed data)
   *
+  *
+  *
+  * Usage: make compression_test
+  *       ./compression_test | tee compression_test.csv
   */
 
 
@@ -33,10 +37,10 @@ int main (int argc, char** argv) {
   std::vector<unsigned int> entity_sizes = {10, 100, 5000, 7000, 10000, 50000, 70000, 100000, 500000, 700000, 1000000};
   std::vector<float> cardinality_percentage = {0.2, 0.4, 0.6, 0.8};
 
-  unsigned int insertions = 1000;
+  unsigned int insertions = 100000;
 
   clock_t tic, toc;
-  std::cout << "Entity Size,Cardinality,Insertion time(1000),"
+  std::cout << "Entity Size,Cardinality,Insertion time("<< insertions << "),"
             << "Compression Time,Size Uncompressed (bytes),Size Compressed (bytes)\n";
 
   for (auto &es: entity_sizes) {
