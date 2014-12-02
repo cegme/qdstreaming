@@ -12,6 +12,29 @@
 #include <dlib/svm.h>
 
 
+
+
+bool earlyStop (const dsr::Entity* es, const dsr::Entity* et) {
+
+  // TODO
+  return false;
+}
+
+
+
+bool doCompression (const dsr::Entity* es, const dsr::Entity* et) {
+  // TODO 
+  return false;
+}
+
+void loadModel() {
+
+  log_info("Loading model from %s", model_path.c_str());
+  dlib::deserialize(model_path) >> model;
+}
+
+
+
 /**
   * Using info from: http://dlib.net/krls_ex.cpp.html
   */
@@ -107,8 +130,5 @@ int main (int argc, char ** argv) {
   dlib::deserialize("saved_rbf_function.dat") >> test2;
   std::cerr << "m(0)=1000000; m(1)=1000000; --> " << test2(m) << "\n";
   
-  
-  
-
   return 0;
 }
