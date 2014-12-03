@@ -249,6 +249,21 @@ public:
       return (0 == table_size_);
    }
 
+
+  unsigned int cardinality () const {
+
+    // From section 5.1 http://www.l3s.de/~papapetrou/publications/Bloomfilters-DAPD.pdf
+
+    // Get Bloom filter length
+    // Get the number of hash functions
+
+    // Estimate the number of true bits
+
+    // Estimate the number of items 
+
+    return inserted_element_count_;
+  }
+
    inline void clear()
    {
       std::fill_n(bit_table_,raw_table_size_,0x00);

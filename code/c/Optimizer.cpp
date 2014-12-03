@@ -16,15 +16,53 @@
 
 bool earlyStop (const dsr::Entity* es, const dsr::Entity* et) {
 
-  // TODO
-  return false;
+  // Get Features 
+  int es_count = es->count; 
+  int et_count = et->count; 
+
+  // FIXME is this line correct??
+  return model(es_count, et_count) > 0: true:false;
 }
 
 
 
-bool doCompression (const dsr::Entity* es, const dsr::Entity* et) {
-  // TODO 
-  return false;
+bool doCompression (const dsr::Entity* et) {
+
+  bool doIt = false;
+
+  // Get Features
+  unsigned int et_count = et->count; 
+  unsigned int et_cardinality = et->cardinality();
+  unsigned int et_insertions = et->total_insertions;
+  unsigned int et_deletions = et->total_deletions;
+
+
+  float cardinality_ratio = et_cardinality / et_count;
+
+  // Only compress if it has been at least a little bit active
+  if (et->velocity.size() == et->max_velocity) {
+    doIt = false;
+  }
+
+  // If active do not compress
+  if (et->total_insertions > et->total_deletions &&
+      et->velocity.size() / et->max_velocity < 0.5) {
+    doIt = true;
+  }
+
+  // If large and not active compress
+
+  // If large and low velocity, compress
+
+  // If high cardinality and not active, compress 
+
+
+  if (cardinality_ratio > .25) {
+    // If this is very diverse, do not do it
+    doIt = false;
+  }
+
+  return doIT;
 }
 
 void loadModel() {

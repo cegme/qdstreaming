@@ -12,42 +12,47 @@
 
 
 void dsr::Entity::remove (unsigned int mentionid) {
-  /*if (state == EntityState::NORMAL) {
-    mentions[mention_idx] = mentions[count]; // Put the last one in this ones place
+  update_velocity(false);
+  if (state == EntityState::NORMAL) {
+    // Find where this mention is 
+    auto ele = std::find(mentions.begin(), mentions.begin()+count, mentionid);
+    //mentions[mention_idx] = mentions[count]; // Put the last one in this ones place
+    *ele = mentions[count];
     --count;
     init();
   }
   else if (state == EntityState::COMPRESSED) {
-    if (stringmap.find(m) != stringmap.end()) {
-      if (stringmap[m] == 0) {
-        stringmap.erase();
+    if (stringmap.find(mentionid) != stringmap.end()) {
+      if (stringmap[mentionid] == 0) {
+        stringmap.erase(mentionid);
       }
       else {
         stringmap[m] -= 1;
       }
     }
-    else {
-      stringmap[m] = 1;
-    }
   }
   else if (state == EntityState::SORTED) {
     // TODO 
-  }*/
+  }
+  ++total_deletions;
+  --count;
 }
 
 
 void dsr::Entity::init() {
 
   // Initialize the random number generator for selecting mention chains
-  //std::default_random_engine generator(42L);
-  //std::uniform_int_distribution<size_t> chain_distribution(0, size()-1);
-  //random_mention = std::bind(chain_distribution, generator);
+  std::default_random_engine generator(42L);
+  std::uniform_int_distribution<size_t> chain_distribution(0, size()-1);
+  random_mention = std::bind(chain_distribution, generator);
 
   // TODO check the current size, if it is larger than X switch to LARGE
 
 }
 
 void dsr::Entity::add(unsigned int mentionid) {
+  update_velocity(true);
+
   if (state == EntityState::NORMAL) {
     if (count < mentions.size()) {
       mentions[count] = mentionid;
@@ -60,6 +65,7 @@ void dsr::Entity::add(unsigned int mentionid) {
     add_to_hll(mentionid);
 
     ++count;
+    ++total_insertions;
     init();
   }
   else if (state == EntityState::COMPRESSED) {

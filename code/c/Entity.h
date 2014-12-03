@@ -25,6 +25,9 @@ namespace dsr {
                   //state(EntityState::NORMAL),
                   state(EntityState::NORMAL),
                   count(0),
+                  total_insertions(0),
+                  total_deletions(0),
+                  max_velocity(500),
                   stringmap(std::unordered_map<unsigned int, unsigned int>())
       {
         bloom_parameters parameters;
@@ -72,8 +75,15 @@ namespace dsr {
       // Initialize the random number generaators 
       void init();
 
+      unsigned int total_insertions;
+      unsigned int total_deletions;
     private:
       unsigned int count;
+
+      // This keep trac of the updates.
+      // If there is a removal reset the velovity.
+      unsigned int max_velocity;
+      std::list<bool> velocity;
 
       // Contains the indexes of the mentions.
       std::vector<unsigned int> mentions;
@@ -93,7 +103,19 @@ namespace dsr {
 
       void add_to_hll(unsigned int val);
 
-      void remove_normal(unsigned int);
+      void update_velocity(bool isAdd) {
+
+        if (isAdd) {
+          velocity.push_back(isAdd);
+          if (velocity.size() > max_velocity) {
+            velocity.pop_front();
+          }
+        }
+        else {
+          // For now, clear if it is false
+          velocity.clear();
+        }
+      }
 
   };
 }
