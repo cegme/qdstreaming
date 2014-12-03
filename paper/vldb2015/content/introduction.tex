@@ -11,7 +11,7 @@ a data set that correspond the same real world entity.
 
 % Why is the problem hard
 Entity resolution is a notoriously computationally difficult problem.
-Several efforts in different domains have made outstanding progress~\cite{}.
+Several efforts in different domains have made outstanding progress.
 The main issues still affecting runtimes of ER systems are
 twofold, first, the computation of large entities and second, excessive
 computation spent resolving unambiguous entities.
@@ -19,24 +19,32 @@ Optimization that touches these critical portions is wholly understudied.
 We argue that compression and approximation 
 techniques can efficiently decrease the runtimes of traditional ER systems.
 
-There is not one size fits all techniques even inside sampling algorithms~\cite{sculley2006compression}.
 
 % What are the technical challenges and validation
 Some recently, researchers have suggest methods of compressing entities.
-Wick et al Heirchical \ldots
+Wick et al.\ present an entity resolution system that uses a tree structure
+to organize related entities to reduce the amount of work performed in each step~\cite{wick2013discriminative}.
+This tree structure can be categorizes as a type of compression.
 
-Singh et all efficient factoring % http://people.cs.umass.edu/~sameer/files/mcmcmc-emnlp12-ppt.pdf
+Singh et al.\ present a method of efficiently sampling factors to reduce the amount of work performed when computing features~\cite{singh2012monte}.
+The observe that many factors are redundant and do not need to be computed when computing the feature score.
+This approach can be categorized as early stopping for feature computation.
+% http://people.cs.umass.edu/~sameer/files/mcmcmc-emnlp12-ppt.pdf
 
-Each of these methods has drawbacks \ldots
+There is no one size fits all for these sampling algorithms~\cite{sculley2006compression};
+Each of these methods above has drawbacks.
+Compression may slow down insertion speed and requires extra book keeping to keep to organize the data structure.
+Early stopping is not always precise and adding an extra condition in a metropolis hastings looping structure may slow down computation.
+However, applying each technique at appropriate time will accelerate the entity resolution process.
 
 % How we differ
-In this paper, we train a multi-class classifier to optimize the decision of
-the sampling inference technique to apply.
-
+In this paper, we design an optimizer that modifies the metropolis hastings process to improve sampling performance.
+We train a classifier to decide when the sampling process should use early stopping.
+Additionally, we use training data to decide when is the best time for an entity to be compressed.
+This is done with negligible book keeping and a small over head.
 
 % Our contributions
 We make the following contributions
-
 \begin{itemize}
 \item We identify several techniques to speed up sampling past the baseline~\ref{}.
 \item We create an optimizer to choose parameters and methods at run time~\ref{}.

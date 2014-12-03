@@ -1,23 +1,23 @@
 
 \section{Implementation}
 
-In this section we first present a microbenchmark to validate our invsitgation of entity approximation and compression.
+In this section we first present a micro benchmark to validate our investigation of entity approximation and compression.
 We then discuss the implementation of the compression and approximation techniques over a large real-world
 cross-document coreference corpus.
 
 \subsection{Microbenchmark}
 \label{sec:microbenchmark}
 To increase our intuition of early stopping techniques we simulated the MCMC proposal processes. 
-We hypothesis that there was bould a clear range values where performing the
+We hypothesis that there is a clear range values where performing the
 baseline cluster sampling would be faster when compared to early stopping methods.
 We arrange entity clusters of increasing time and we compute the time (in clock ticks)
 each proposal takes to compute the arrangement of the clusters.
-The data in the clusters are disctributed uniformly and for this experiment each cluster point
+The data in the clusters are distributed uniformly and for this experiment each cluster point
 was 5 dimensional.
 For the baseline cluster score computation we used a pairwise calculated of the average cosine distance
 with and without the mention.
 To compute early stopping we set a confidence threshold to $0.8$ and the early
-stopping code stopped computation when the error predition was under $20\%$.
+stopping code stopped computation when the error predation was under $20\%$.
 There was no difference in the proposal choices between the baseline and the early sorting method. 
 
 The simulations were developped in \texttt{GNU C++11} and compiled with \texttt{g++ -O3}. 
