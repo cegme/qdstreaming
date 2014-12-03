@@ -25,23 +25,35 @@
   *
 */
 
+#include "Util.h"
+#include "Entity.h"
+
+#include <dlib/svm.h>
+
+typedef dlib::matrix<double,3,1> sample_type;
+typedef dlib::radial_basis_kernel<sample_type> kernel_type;
+
 
 class Optimizer {
 
   public:
-    Optimizer (std:string model_path, 
+    Optimizer (std::string model_path, 
                     double ctime,
                     double cspace,
                     double cactive,
-                    double cvelocity):
-      ctime(0.0), cspace(0.0), cactive(0.0), cvelocity(0.0) {
+                    double cvelocity) {
+      ctime=0.0;
+      cspace=0.0; 
+      cactive=0.0;
+      cvelocity=0.0;
       
       model_path = "saved_rbf_function.dat";
-      model = dlib::krls<kernel_type>(kernel_type(0.1), 1.0);
+      //model = dlib::krls<kernel_type>(kernel_type(0.1), 1.0);
       loadModel();
 
     } 
 
+    std::string model_path;
     double ctime;
     double cspace;
     double cactive;
@@ -49,14 +61,11 @@ class Optimizer {
 
     
     bool earlyStop (const dsr::Entity* es, const dsr::Entity* et);
-    bool doCompression (const dsr::Entity* es, const dsr::Entity* et);
+    bool doCompression (const dsr::Entity* et);
 
   private:
     
-    typedef dlib::matrix<double,3,1> sample_type;
-    typedef dlib::radial_basis_kernel<sample_type> kernel_type;
-    
-    dlib::krls<kernel_type> model;
+    //dlib::krls<kernel_type> model;//(kernel_type(0.1), 1.0);
 
     void loadModel();
 

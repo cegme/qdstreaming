@@ -9,24 +9,30 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include <dlib/svm.h>
 
+bool Optimizer::earlyStop (const dsr::Entity* es, const dsr::Entity* et) {
 
-
-
-bool earlyStop (const dsr::Entity* es, const dsr::Entity* et) {
+  bool doIt = false;
 
   // Get Features 
   int es_count = es->count; 
   int et_count = et->count; 
 
   // FIXME is this line correct??
-  return model(es_count, et_count) > 0: true:false;
+  /*sample_type m;
+  m(0) = es_count;
+  m(1) = et_count;
+  return ((double)model(m)) > 0.0: true:false;*/
+  
+  if (es->count > 1e5 && es->count < 1e6) doIt = true;
+  if (et->count > 1e5 && et->count < 1e6) doIt = true;
+
+  return doIt;
 }
 
 
 
-bool doCompression (const dsr::Entity* et) {
+bool Optimizer::doCompression (const dsr::Entity* et) {
 
   bool doIt = false;
 
@@ -62,13 +68,13 @@ bool doCompression (const dsr::Entity* et) {
     doIt = false;
   }
 
-  return doIT;
+  return doIt;
 }
 
-void loadModel() {
+void Optimizer::loadModel() {
 
-  log_info("Loading model from %s", model_path.c_str());
-  dlib::deserialize(model_path) >> model;
+  //log_info("Loading model from %s", model_path.c_str());
+  //dlib::deserialize(model_path) >> model;
 }
 
 

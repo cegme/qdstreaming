@@ -71,13 +71,13 @@ namespace dsr {
 
       void compress();
 
-    protected: 
+    //protected: 
       // Initialize the random number generaators 
       void init();
 
       unsigned int total_insertions;
       unsigned int total_deletions;
-    private:
+    //private:
       unsigned int count;
 
       // This keep trac of the updates.
@@ -95,6 +95,9 @@ namespace dsr {
       EntityState state;
 
       bloom_filter bf;
+      unsigned int cardinality() const {
+        bf.cardinality();
+      }
 
       //xhll::HyperLogLog h;
 
