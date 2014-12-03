@@ -2,8 +2,6 @@
 #include "sqlite3.h"
 #include <boost/algorithm/string.hpp>
 
-
-
 #include <iostream>
 
 #include "ER.h"

@@ -89,7 +89,11 @@ void dsr::Entity::add(unsigned int mentionid) {
 unsigned int dsr::Entity::rand() {
   // TODO need a new method if it is in the large state
   if (state == EntityState::NORMAL) {
-    return random_mention();
+    return mentions[RandInt() % count];
+  }
+  else if (state == EntityState::COMPRESSED) {
+    unsigned int b = RandInt() % stringmap.bucket_count();
+    return stringmap.begin(b)->first;
   }
   else {
     throw "Unimplemented Random function"; //TODO
