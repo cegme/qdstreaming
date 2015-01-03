@@ -33,12 +33,17 @@ namespace dsr {
     std::vector<Entity> wikilinkEntities(std::string dbfile);
 
   public:
+    ER(std::vector<Entity>* e): entities(e) {}
+
+
+  void mcmc (unsigned int iterations);
+
 
 
   private:
     std::hash<std::string> hash_fn;
     //std::unordered_map<std::string, bool>  
-    std::vector<Entity> entities;
+    std::vector<Entity>* entities;
   };
 }
 

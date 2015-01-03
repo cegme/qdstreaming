@@ -27,7 +27,7 @@ void dsr::Entity::remove (unsigned int mentionid) {
         stringmap.erase(mentionid);
       }
       else {
-        stringmap[m] -= 1;
+        stringmap[mentionid] -= 1;
       }
     }
   }
@@ -54,15 +54,15 @@ void dsr::Entity::add(unsigned int mentionid) {
   update_velocity(true);
 
   if (state == EntityState::NORMAL) {
-    if (count < mentions.size()) {
-      mentions[count] = mentionid;
-    }
-    else {
+    //if (count < mentions.size()) {
+    //  mentions[count] = mentionid;
+    //}
+    //else {
       mentions.push_back(mentionid);
-    }
+    //}
 
-    bf.insert(mentionid);
-    add_to_hll(mentionid);
+    //bf.insert(mentionid);
+    //add_to_hll(mentionid);
 
     ++count;
     ++total_insertions;

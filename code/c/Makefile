@@ -1,5 +1,5 @@
 
-GPP = g++ --std=c++11 -march=native -w  -O3
+GPP = g++ --std=c++11 -march=native -w -O3
 DEBUG = -g -pg 
 
 #THRIFT = -I/usr/local/include/thrift
@@ -23,6 +23,16 @@ EXTRAS = -lX11 -lfl -lssl -lcrypto -lrt -lpthread -DHAVE_NETINET_IN_H -DHAVE_INT
 all: wikilinkstats
 
 
+experiment_bsa2015: wikilink experiment_bsa2015.o Util.o Entity.o Random.o WikiLinkUtil.o wikilinkstats
+	$(CPP) -o experiment_bsa2015 experiment_bsa2015.cpp Util.o Entity.o Random.o $(EXTRAS)
+
+
+experiment_bsa2015.o: experiment_bsa2015.cpp
+	$(CPP) -c experiment_bsa2015.cpp $(EXTRAS)
+
+
+WikiLinkUtil.o: WikiLinkUtil.hpp
+	$(CPP) -c WikiLinkUtil.hpp $(EXTRAS)
 
 opttest: Optimizer.o
 	$(CPP) -o opttest Optimizer.o $(EXTRAS)
@@ -79,7 +89,7 @@ clustertest.o: clustertest.cpp
 	$(CPP) -c clustertest.cpp $(EXTRAS)
 
 Random.o: Random.cc
-	$(CPP) -c Random.cc $(EXTRA)
+	$(CPP) -c Random.cc $(EXTRAS)
 
 Util.o: Util.cpp
 	$(CPP) -c Util.cpp $(EXTRAS)
@@ -105,3 +115,4 @@ cp2tmp:
 	cp Makefile /tmp/
 	cp matrixtest.sh /tmp/
 	cp Util.h /tmp/
+

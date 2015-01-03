@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "ER.h"
+#include "Random.h"
 #include "Util.h"
 
 using namespace dsr;
@@ -407,6 +408,39 @@ void selectMentions (const std::string& dbfile) {
   sqlite3_finalize(stmt);
   sqlite3_close(db);
   sqlite3_shutdown();
+}
+
+void ER::mcmc (unsigned int iterations) {
+ 
+  unsigned int e_src, e_dst, m_src;
+  while (--iterations > 0) {
+    
+    // Get source mention
+    e_src = RandInt() % entities->size();
+    if (entities->operator[](e_src).size() == 0) {
+      iterations++;
+      continue;
+    }
+    m_src = entities->operator[](e_src).rand();
+    
+
+    // destination 
+    do {
+      e_dst = RandInt() % entities->size();
+    } while (e_dst != e_src);
+
+  
+    //double score1 = entities->operatir[](e_src).score();
+    //double score2 = entities->operatir[](e_src).score();
+  
+    // percentage I will accept and do the merge anayways
+
+    // TODO do the merge
+    
+
+
+  }
+ 
 }
 
 

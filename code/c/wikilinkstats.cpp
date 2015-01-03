@@ -135,8 +135,6 @@ void createdb(const std::string& dbfile) {
     log_info("[wikilink_filemap] Table created successfully at %s", dbfile.c_str());
   }
 
-
-
   sqlite3_close(db);
 }
 

@@ -97,6 +97,66 @@ struct point {
 };
 
 
+long baseline_triangle_method (const dsr::Entity * a,
+              const dsr::Entity * b,
+              unsigned int m) {
+
+  size_t asize = a->size();
+  size_t bsize = b->size();
+
+  clock_t tic = clock();
+
+    double ascore_with = 0.0, ascore_without = 0.0;
+
+  if (a->state == EntityState::NORMAL) {
+    // Compute a with and without q
+    for (size_t i = 0; i < asize; ++i) {
+      for (size_t j = i+1; j < asize; ++j) {
+        // compare the two vectors
+        double score = point::doCompare(a[i],a[j]);
+        if (i == qn[q] || j == qn[q]) ascore_with += score;
+        else ascore_without += score;
+      } 
+    }
+    // Get exact score width
+    ascore_with += ascore_without;
+  }
+
+    double bscore_with = 0.0, bscore_without = 0.0;
+    // Compute b with and without q
+    for (size_t i = 0; i < bsize; ++i) {
+      for (size_t j = i+1; j < bsize; ++j) {
+        // compare the two vectors
+        double score = point::doCompare(b[i],b[j]);
+        bscore_without += score;
+      } 
+      double score = point::doCompare(b[i], a[qn[q]]);
+      bscore_with += score;
+      score = point::doCompare(a[qn[q]], b[i]);
+      bscore_with += score;
+    }
+    bscore_with += point::doCompare(a[qn[q]], a[qn[q]]);
+
+    double score_with = (ascore_with/TRISIZE(asize)) + (bscore_without/TRISIZE(bsize));
+    double score_without = (ascore_without/TRISIZE(asize-1)) + (bscore_with/TRISIZE(bsize+1));
+    accept.push_back(score_with < score_without);
+  
+  clock_t toc = clock();
+  sample_type m;
+  m(0) = asize;
+  m(1) = bsize;
+  test.train(m, (double) toc - tic);
+  return (double)(toc - tic);
+}
+
+
+
+
+
+
+
+
+
 
 int main (int argc, char **argv) {
 
@@ -113,8 +173,8 @@ int main (int argc, char **argv) {
 
 
   // A map to map mention locatioms to entity locations
-  // If an item is not in the map it is a default mapping
-  std::unordered_map<unsigned int, unsigned int>memap();
+  // If an item is -1 it is a default mapping
+  std::vector<unsigned int>memap(max_mentions, -1);
 
   // Initialize mentions and entities
   for (int i = 0; i < max_mentions; ++i) {
@@ -145,10 +205,11 @@ int main (int argc, char **argv) {
     m = RandInt() % max_mentions;
     // Score a merge
 
-
+    
     // Keep or accept with a small probability
 
-
+    // TODO if successful
+    //  memap[e] = et;
   } 
 
 

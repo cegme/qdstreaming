@@ -37,8 +37,8 @@ namespace dsr {
         parameters.compute_optimal_parameters();
  
         // Instantiate Bloom Filter
-        bloom_filter _bf(parameters);
-        bf = _bf;
+        //bloom_filter _bf(parameters);
+        //this->bf = _bf;
 
        //xhll::HyperLogLog _h(4);
        //xh = _h;
@@ -52,7 +52,7 @@ namespace dsr {
       unsigned int rand();
 
       // Return the number of Mentions 
-      unsigned int size() const { return count; };
+      unsigned int size() const { return mentions.size(); };
 
       //virtual std::string to_string() const = 0;
 
@@ -94,9 +94,9 @@ namespace dsr {
 
       EntityState state;
 
-      bloom_filter bf;
+      //bloom_filter bf;
       unsigned int cardinality() const {
-        bf.cardinality();
+        //bf.cardinality();
       }
 
       //xhll::HyperLogLog h;
@@ -122,9 +122,6 @@ namespace dsr {
 
   };
 }
-
-
-
 
 
 

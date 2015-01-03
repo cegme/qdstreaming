@@ -20,14 +20,21 @@
 
 if [ ! -z "$1" ]; then
   echo "$1" | sshfs -C -o idmap=user,follow_symlinks -o uid=1000 -o gid=1000 -o allow_other -o password_stdin cgrant@sm321-01.cise.ufl.edu:/data/d01 /data/d01
+  echo "Mounted /data/d01"
   echo "$1" | sshfs -C -o idmap=user,follow_symlinks -o uid=1000 -o gid=1000 -o allow_other -o password_stdin cgrant@sm321-01.cise.ufl.edu:/data/d02 /data/d02
+  echo "Mounted /data/d02"
   echo "$1" | sshfs -C -o idmap=user,follow_symlinks -o uid=1000 -o gid=1000 -o allow_other -o password_stdin cgrant@sm321-01.cise.ufl.edu:/data/d03 /data/d03
+  echo "Mounted /data/d03"
   echo "$1" | sshfs -C -o idmap=user,follow_symlinks -o uid=1000 -o gid=1000 -o allow_other -o password_stdin cgrant@sm321-01.cise.ufl.edu:/data/d04 /data/d04
+  echo "Mounted /data/d04"
   echo "$1" | sshfs -C -o idmap=user,follow_symlinks -o uid=1000 -o gid=1000 -o allow_other -o password_stdin cgrant@sm321-01.cise.ufl.edu:/data/d05 /data/d05
+  echo "Mounted /data/d05"
   echo "$1" | sshfs -C -o idmap=user,follow_symlinks -o uid=1000 -o gid=1000 -o allow_other -o password_stdin cgrant@sm321-01.cise.ufl.edu:/data/d06 /data/d06
+  echo "Mounted /data/d06"
   echo "$1" | sshfs -C -o idmap=user,follow_symlinks -o uid=1000 -o gid=1000 -o allow_other -o password_stdin cgrant@sm321-01.cise.ufl.edu:/data/d07 /data/d07
+  echo "Mounted /data/d07"
   echo "$1" | sshfs -C -o idmap=user,follow_symlinks -o uid=1000 -o gid=1000 -o allow_other -o password_stdin cgrant@sm321-01.cise.ufl.edu:/data/d08 /data/d08
-  echo "Mounted /data/d0*"
+  echo "Mounted /data/d08"
 fi
 
 if [ ! -z "$2" ]; then
