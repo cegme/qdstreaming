@@ -37,16 +37,18 @@ int main (int argc, char** argv) {
   namespace po = boost::program_options;
 
   // Create the Ground Truth
-  CreateGroundTruthFile ("WikiLinkTruth.data.bin"); // From WikiLinkUtil.hpp
-  CreateStartFile ("WikiLinkStart.data.bin"); // From WikiLinkUtil.hpp
+  //CreateGroundTruthFile ("WikiLinkTruth.data.bin"); // From WikiLinkUtil.hpp
+  //CreateStartFile ("WikiLinkStart.data.bin"); // From WikiLinkUtil.hpp
  
   {
     log_info("ReadEntityFile");
     auto entities1 = ReadEntityFile("WikiLinkTruth.data.bin");
     //auto entities1 = ReadEntityFile("WikiLinkTruth.data.bin", true);
     log_info("ComputeStats");
-    auto trueStats = ComputeStats(entities1, "WikiLinkTruth.data.bin");
+    MyStats trueStats = ComputeStats(entities1, "WikiLinkTruth.data.bin");
+    log_info("[True] %s", trueStats.tostring().c_str());
     log_info("[True] Precision: %f, Recall: %f, F1: %f", trueStats.pairPrecision(), trueStats.pairRecall(), trueStats.pairF1());
+    log_info("[True] %s", trueStats.tostring().c_str());
   }
 
   {
@@ -54,8 +56,10 @@ int main (int argc, char** argv) {
     auto entities2 = ReadEntityFile("WikiLinkStart.data.bin");
     //auto entities2 = ReadEntityFile("WikiLinkStart.data.bin", true);
     log_info("ComputeStats");
-    auto startStats = ComputeStats(entities2, "WikiLinkStart.data.bin");
+    MyStats startStats = ComputeStats(entities2, "WikiLinkStart.data.bin");
+    log_info("[Start] %s", startStats.tostring().c_str());
     log_info("[Start] Precision: %f, Recall: %f, F1: %f", startStats.pairPrecision(), startStats.pairRecall(), startStats.pairF1());
+    log_info("[Start] %s", startStats.tostring().c_str());
   }
 
 

@@ -4,6 +4,7 @@
 #define WIKILINKUTIL_H
 
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -205,18 +206,18 @@ std::vector<dsr::Entity> ReadEntityFile (std::string fileName, bool limit = fals
 
 struct MyStats {
 
-  long unsigned int tp;
-  long unsigned int fp;
-  long unsigned int tn;
-  long unsigned int fn;
+  unsigned int tp;
+  unsigned int fp;
+  unsigned int tn;
+  unsigned int fn;
 
-  long unsigned int total_pairs;
-  static long unsigned int total_true_pairs;
+  unsigned int total_pairs;
+  unsigned int total_true_pairs;
 
-  MyStats () : tp(0), fp(0), tn(0), fn(0), total_pairs(0) {
-    if (total_true_pairs == 0 || total_true_pairs != MyStats::total_true_pairs) {
+  MyStats () : tp(0), fp(0), tn(0), fn(0), total_pairs(0), total_true_pairs(0) {
+    //if (total_true_pairs == 0 || total_true_pairs != MyStats::total_true_pairs) {
       init();
-    }
+    //}
     log_info("total_true_pairs: %u", MyStats::total_true_pairs);
   }
 
@@ -242,14 +243,24 @@ struct MyStats {
     if (k * 2 > n) k = n-k;
     if (k == 0) return 1;
 
-    int result = n;
+    unsigned int result = n;
     for( int i = 2; i <= k; ++i ) {
       result *= (n-i+1);
       result /= i;
     }
     return result;
   }
-
+  
+  std::string tostring() {
+    std::stringstream ss;
+    ss << "MyStats(tp:" << tp 
+      << ", fp:" << fp 
+      << ", total_pairs:" << total_pairs 
+      << ", total_true_pairs:" << total_true_pairs
+      << ")\n";
+    return ss.str(); 
+  }
+  
   // Initialize true count
   void init () {
     log_info("Initializing the total_true_pairs value from %u", total_true_pairs);
@@ -283,15 +294,16 @@ struct MyStats {
 
 };
 //unsigned int MyStats::total_true_pairs = 0;
-long unsigned int MyStats::total_true_pairs = 2616530327; 
+//const long unsigned int MyStats::total_true_pairs = 2616530327; 
 
 
-MyStats ComputeStats (const std::vector<dsr::Entity>& entities, std::string trueFile) {
+MyStats ComputeStats (const std::vector<dsr::Entity>& entities, const std::string& trueFile) {
   MyStats s; 
   //s.init();
+  log_info(">>> %s", s.tostring().c_str());
 
   // Compute the total number of pairs
-  long unsigned int total_pairs = 0;
+  unsigned int total_pairs = 0;
   for(unsigned i = 0; i < entities.size(); ++i) {
     total_pairs +=  MyStats::nChoosek(entities[i].size(), 2);
   }
@@ -323,7 +335,6 @@ MyStats ComputeStats (const std::vector<dsr::Entity>& entities, std::string true
     std::vector<std::string> truths;
 
     for (unsigned int m: entities[e].mentions) {
-
       sqlite3_bind_int(stmt, 1, m);
 
       rc = sqlite3_step(stmt);
@@ -332,7 +343,6 @@ MyStats ComputeStats (const std::vector<dsr::Entity>& entities, std::string true
         truths.push_back(men);
       }
       sqlite3_reset(stmt);
-      //sqlite3_clear_bindings(stmt);
     }
 
     // Check each pairwise combination to see if they will be 
@@ -340,9 +350,12 @@ MyStats ComputeStats (const std::vector<dsr::Entity>& entities, std::string true
 
     for (auto i = 0; i < sz - 1; ++i) {
       for (auto j = i+1; j < sz; ++j) {
-        if (truths[i] == truths[j]) s.tp += 1;
-        //else if (truths[i] != truths[j]) s.fp += 1;
-        else s.fp += 1;
+        if (truths[i] == truths[j]) {
+          s.tp += 1;
+        }
+        else {
+           s.fp += 1;
+        }
       }
     }
 
