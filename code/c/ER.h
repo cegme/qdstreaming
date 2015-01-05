@@ -19,6 +19,8 @@ namespace dsr {
 
     std::deque<unsigned int> tokens;
     // TODO store the left and right context
+    
+    //static double doCompare (Mention m1, Mention m2);
 
     unsigned long bytes() {
       unsigned long counter = 0L;
@@ -35,10 +37,7 @@ namespace dsr {
   public:
     ER(std::vector<Entity>* e): entities(e) {}
 
-
-  void mcmc (unsigned int iterations);
-
-
+    void mcmc (unsigned int iterations);
 
   private:
     std::hash<std::string> hash_fn;

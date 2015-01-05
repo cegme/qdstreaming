@@ -10,8 +10,20 @@
 
 //#include "hyperloglog.hpp" //https://github.com/hideo55/cpp-HyperLogLog/blob/master/include/hyperloglog.hpp
 
+// This is static
+double dsr::Entity::doCompare(unsigned long int m1, unsigned long int m2) {
 
-void dsr::Entity::remove (unsigned int mentionid) {
+  // Use the DB to compute the comparison
+  // Maybe do exact match and a cosine it available in sqllite
+  // Also compare string lengths
+  // Also starting characters
+
+  return 0;
+}
+
+
+
+void dsr::Entity::remove (unsigned long int mentionid) {
   update_velocity(false);
   if (state == EntityState::NORMAL) {
     // Find where this mention is 
@@ -50,7 +62,7 @@ void dsr::Entity::init() {
 
 }
 
-void dsr::Entity::add(unsigned int mentionid) {
+void dsr::Entity::add(unsigned long int mentionid) {
   update_velocity(true);
 
   if (state == EntityState::NORMAL) {
@@ -86,13 +98,13 @@ void dsr::Entity::add(unsigned int mentionid) {
 
 
 
-unsigned int dsr::Entity::rand() {
+unsigned long int dsr::Entity::rand() {
   // TODO need a new method if it is in the large state
   if (state == EntityState::NORMAL) {
     return mentions[RandInt() % count];
   }
   else if (state == EntityState::COMPRESSED) {
-    unsigned int b = RandInt() % stringmap.bucket_count();
+    unsigned long int b = RandInt() % stringmap.bucket_count();
     return stringmap.begin(b)->first;
   }
   else {
@@ -100,7 +112,7 @@ unsigned int dsr::Entity::rand() {
   }
 }
 
-dsr::Entity dsr::Entity::buildEntity(unsigned int size, int cardinality) {
+dsr::Entity dsr::Entity::buildEntity(unsigned long int size, int cardinality) {
 
   dsr::Entity e;
 
@@ -162,7 +174,7 @@ void dsr::Entity::compress() {
   mentions.clear();
 }
 
-void dsr::Entity::add_to_hll(unsigned int val) {
+void dsr::Entity::add_to_hll(unsigned long int val) {
   auto s = std::to_string(val);
   //xh.add(s.c_str(), s.size());
 }

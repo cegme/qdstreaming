@@ -21,14 +21,14 @@ namespace dsr {
   class Entity {
 
     public:
-      Entity(): mentions(std::vector<unsigned int>()), 
+      Entity(): mentions(std::vector<unsigned long int>()), 
                   //state(EntityState::NORMAL),
                   state(EntityState::NORMAL),
                   count(0),
                   total_insertions(0),
                   total_deletions(0),
                   max_velocity(500),
-                  stringmap(std::unordered_map<unsigned int, unsigned int>())
+                  stringmap(std::unordered_map<unsigned long int, unsigned long int>())
       {
         bloom_parameters parameters;
         parameters.projected_element_count = 10000;
@@ -43,22 +43,23 @@ namespace dsr {
        //xhll::HyperLogLog _h(4);
        //xh = _h;
       }
+
+      // Compare two mentions with the given ids
+      static double doCompare(unsigned long int m1, unsigned long int m2);
     
       // Add a new mention to the data set
-      void add (unsigned int mentionid);
-      void remove (unsigned int mentionid);
+      void add (unsigned long int mentionid);
+      void remove (unsigned long int mentionid);
 
       // Return the index of a random mention chain 
-      unsigned int rand();
+      unsigned long int rand();
 
       // Return the number of Mentions 
-      unsigned int size() const { return mentions.size(); };
+      unsigned long int size() const { return mentions.size(); };
 
-      //virtual std::string to_string() const = 0;
-
-      unsigned int bytes() {
+      unsigned long int bytes() {
         // FIXME this needs to work for both compressed and uncompressed 
-        unsigned int counter = 0L;
+        unsigned long int counter = 0L;
         counter += sizeof(*this); 
         //counter += sizeof(mentions) * mentions.size();
         counter += sizeof(mentions) ;
@@ -67,7 +68,7 @@ namespace dsr {
         return counter;
       }
  
-      static dsr::Entity buildEntity(unsigned int size, int cardinality);
+      static dsr::Entity buildEntity(unsigned long int size, int cardinality);
 
       void compress();
 
@@ -75,27 +76,27 @@ namespace dsr {
       // Initialize the random number generaators 
       void init();
 
-      unsigned int total_insertions;
-      unsigned int total_deletions;
+      unsigned long int total_insertions;
+      unsigned long int total_deletions;
     //private:
-      unsigned int count;
+      unsigned long int count;
 
       // This keep trac of the updates.
       // If there is a removal reset the velovity.
-      unsigned int max_velocity;
+      unsigned long int max_velocity;
       std::list<bool> velocity;
 
       // Contains the indexes of the mentions.
-      std::vector<unsigned int> mentions;
+      std::vector<unsigned long int> mentions;
 
       // Use this when the number of mentions becomes too large
       // Store the ids of exact token duplicates
-      std::unordered_map<unsigned int, unsigned int> stringmap;
+      std::unordered_map<unsigned long int, unsigned long int> stringmap;
 
       EntityState state;
 
       //bloom_filter bf;
-      unsigned int cardinality() const {
+      unsigned long int cardinality() const {
         //bf.cardinality();
       }
 
@@ -104,7 +105,7 @@ namespace dsr {
       // A function for random mentions
       std::function<size_t()> random_mention;
 
-      void add_to_hll(unsigned int val);
+      void add_to_hll(unsigned long int val);
 
       void update_velocity(bool isAdd) {
 

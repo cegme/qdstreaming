@@ -37,8 +37,8 @@ int main (int argc, char** argv) {
   namespace po = boost::program_options;
 
   // Create the Ground Truth
-  //CreateGroundTruthFile ("WikiLinkTruth.data.bin"); // From WikiLinkUtil.hpp
-  //CreateStartFile ("WikiLinkStart.data.bin"); // From WikiLinkUtil.hpp
+  CreateGroundTruthFile ("WikiLinkTruth.data.bin"); // From WikiLinkUtil.hpp
+  CreateStartFile ("WikiLinkStart.data.bin"); // From WikiLinkUtil.hpp
  
   {
     log_info("ReadEntityFile");
