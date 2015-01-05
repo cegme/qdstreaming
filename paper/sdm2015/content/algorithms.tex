@@ -1,0 +1,163 @@
+
+
+\section{Algorithms}
+
+In this section, we will describe a simple algorithm for entity sampling and
+another simple compression technique.
+After introducing the compression and approximation techniques we discuss how
+an optimizer can be designed to improve the overall sampling time.
+
+The baseline method performs pairwise comparisons by 
+iterating over the mentions using the order on disk.
+The mentions ids are used to extract the contextual information of each mention from a database.
+This is the traditional method of computing the pairwise similarity of two clusters. 
+This method results in simple code so modern compilers are able to perform extreme
+optimizations such as loop unrolling.
+
+The confidence-base scoring method performs uniform samples of the
+mentions from the source and destination entities clusters. This method
+measures the confidence of the calculated pairwise samples and stops when the
+confidence of a score exceeds a threshold of 0.95.
+This is a simplified version of the sampling uniform sampling method described by Singh et al.~\cite{singh2012monte}.
+
+The code to collect statistics is shown in Algorithm~\ref{algo:stats}.
+The \texttt{add} function shows how and what statistics are recorded when each new mention is added.
+Notice \texttt{themax} and \texttt{themin} are variables in the Stats class that
+store the current maximum and minimum.
+The current sum, running mean are also updated with each new value added.
+The current implementation assumes the values from the pairwise factors follow a Gaussian distribution;
+the model in Singh et al.\ make the same assumption.
+
+\begin{figure}
+\centering
+\begin{lstlisting}[language=c++,breaklines=true,keywordstyle=\color{blue},stringstyle=\color{red},commentstyle=\color{green}]
+void Stats::add(long double x) {
+  themax = MAX(themax,x);
+  themin = MIN(themin,x);
+  _sum += x;                   
+  ++n;
+  auto delta = x - mean;       
+  mean += (delta / n);         
+  M2 = M2 + delta * (x - mean);
+} 
+
+double Stats::variance (void) const {
+  if (n > 2)  
+  return M2 / (n-1);
+  else
+  return 0.0;
+} 
+
+\end{lstlisting}
+\caption{Sample code from the stats showing how running statistics are recorded and how the variance can be computed.}
+\label{algo:stats}
+\end{figure}
+
+
+As entity sizes grow, we can expect to see many repeats of the same or very similar mentions.
+Reducing the entity size will shrink the effective memory footprint of entities.
+This is important for long running collection of entities.
+Run-length encoding is the simplest method for compressing entities.
+This method compresses the near duplicate mentions.
+%The mentions in the compressed entity using a counter map and recording the number of exact duplicate values.
+A canonical mention is chosen along each exact duplicate and a counter map records the number of duplicates that are represented.
+For mention clusters with many duplicate the compression rates become large.
+
+
+\eat{%
+We collect the following statistics from each training run:
+
+Success and failure
+Data set size.
+Number of uniques tokens.
+Average pairwise score between mentions.
+Maximum pairwise score between mentions.
+Minimum pairwise score between mentions.
+Variance of the pairwise score between mentions.
+Mention Token tf-idf scores.
+Cardinality of tokens in both entities.
+
+
+
+Using this information we train a decision tree classifier to minimize the 
+pairwise comparisons in the score function.
+The classifier is also constrained by the accuracy of the decision tree as 
+approximate methods are less accurate.
+More formally \ldots
+
+The result of this classifier is two-fold.
+First, we have a classifier to choose the optimal algorithm for each proposal.
+Second, we have an active learning feed-back loop for algorithms with 
+thresholds.
+We empirically study both of these outcomes.
+}
+
+
+\begin{table*}[t]
+\centering
+\begin{tabular}{l| c c c}
+\textbf{Technique} &
+\textbf{Compression} &
+\textbf{Early Stopping} &
+\textbf{Overhead}\\
+\hline
+Baseline & No & No & None \\
+Confidence-based~\cite{singh2012monte} & No & Yes & Medium\\
+Discriminative Tree~\cite{wick2013discriminative} & Yes & No & Large\\
+Run-Length Encoding & Yes & No & Small\\
+\end{tabular}
+\caption{A table of the techniques to improve the sampling process and each is classified by how they affect sampling.}
+\label{tab:acceleration-approach}
+\end{table*}
+
+
+\section{Optimizer}
+
+When before calculating the MCMC-MH proposal there are several decision we can make
+that will affect the runtime and accuracy of the algorithm.
+At each step we may:
+  (1) approximate the calculation of the entity states;
+  (2) update an entity structure to a compressed format;
+  (3) skip the calculation of the proposal and directly accept or reject.
+These decisions can be made by observing several features of a source entity,
+destination entity and a source mention.
+%These features include the source and destination size, the source and
+%destination cardinality, the number of samples the algorithm has made.
+We enumerate a small set of features that can yield information to
+help us decide how the entity structure should be changed.
+
+The decision to compress an entity takes
+four main points into consideration. First, the time it takes to compress
+the entity ($ C_\text{time}$).
+For example, if the time it takes to compress an entity is the same as the time it takes to
+reach an answer in the uncompressed format, then compression is superfluous.
+Second, it is important to consider the spaced saved in memory and the amount of 
+additional entities that do not have to be fetched from disk and can now fit in memory ($C_\text{space}$).
+Third, we need to know how active an entity has been ($C_\text{activity}$).
+That is, how many additions or subtractions this entity has seen over a long period of time.
+This information is helpful in understanding the likelihood this entity will be requested
+for another addition or subtractions.
+Last, we retain the activity of an entity over a recent, short period of time
+($C_\text{velocity}$). This information lets us know whether it is smart for
+this entity to take the time out to for compression while other mentions may be
+attempting an insertion or removal.
+
+At each proposal step the decision made should maximize the \textit{utility}.
+Utility of the decision is a numeric score to represent the gain performing
+the proposal calculation. The utility value is a real number ranged from $( -\infty, \infty)$.
+A formal model for utility is as follows:
+\[
+U = C_\text{time} + C_\text{space} + C_\text{activity} + C_\text{velocity}
+\]
+
+Collecting statistics to measure utility is can incur a significant overhead.
+Not every decision in the optimizer needs to be decided automatically.
+We can use some simple principles to estimate the utility at each point.
+In the next section we, examine an entity resolution data set and get some
+intuition for the development of the optimizer.
+%The goal of this work is to create an optimizer using these statistics.
+
+
+
+
+
