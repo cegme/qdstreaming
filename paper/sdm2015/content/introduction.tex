@@ -1,0 +1,72 @@
+
+\section{Introduction}
+
+% Why is the problem hard
+Entity resolution across text corpora is the task of identifying mentions 
+within the documents that correspond to the same real-world entities.
+To construct knowledge bases or extract accurate information, entity resolution (ER) is a
+required step.
+This task is a notoriously computationally difficult problem.
+Sampling-based er techniques, most using Markov Chain Monte Carlo techniques, trade some raw performance for a flexible representation 
+and guaranteed convergence~\cite{mccallum03towardconditional,singh2011large,wick2013discriminative}.
+%Several efforts in different domains have made outstanding progress.
+Processing streaming text documents exacerbates two of the core difficulties of ER.\@
+First, the computation of large entities and second, excessive
+computation spent resolving unambiguous entities.
+Optimization that touches these critical portions is wholly understudied.
+In this paper, we argue that compression and approximation 
+techniques can efficiently decrease the runtime of traditional ER systems.
+
+In sampling-based entity resolution, entities are represented as clusters of mentions.
+A random proposal is made to move a mention from a source entity of a destination entity.
+The state of the proposed state is score and if it improves the state, the new state is accepted.
+This process is repeated until the state converges.
+The process of scoring the state of the entity cluster, through pairwise feature computation of the mention in a cluster,  is $O(n^2)$.
+For entity clusters larger than 1000 mentions, calculating the score for each proposal can become prohibitively expensive.
+%Performing overly sophisticated techniques over many small clusters could also 
+%add extra overhead.
+
+% What are the technical challenges and validation
+Wick et al.\ present an entity resolution system that uses a tree structure
+to organize related entities to reduce the amount of work performed in each step~\cite{wick2013discriminative}.
+During each proposal, this approach avoids the pairwise comparison by restricting model calculation to the top nodes of the hierarchy.
+This approach can avoid massive amounts of computation with only a small book keeping cost.
+This tree structure is a type of \textit{compression}.
+
+Singh et al.\ present a method of efficiently sampling factors to reduce the
+amount of work performed when computing features~\cite{singh2012monte}.
+They observe that many factors are redundant and do not need to be computed when
+computing the feature score.
+The use statistical techniques to guess the computed feature scores with a user-specified confidence.
+This approach can be categorized as early stopping for feature computation.
+% http://people.cs.umass.edu/~sameer/files/mcmcmc-emnlp12-ppt.pdf
+
+There is no one size fits all for these sampling algorithms~\cite{sculley2006compression};
+Each of these methods above has drawbacks.
+Compression may slow down insertion speed and requires extra book keeping to keep to organize the data structure.
+Early stopping is not always precise and adding an extra conditions in the sampling metropolis hastings looping structure may slow down computation.
+However, applying each technique at appropriate time will accelerate the entity resolution process.
+
+% How we differ
+In this paper, we discuss our initial work towards the design an optimizer that modifies the
+sampling-based entity resolution process to improve sampling performance.
+The optimizer, in the spirit of a database query optimizer, examines the
+current state of each proposal and choose an execution plan.
+We trained classifier to decide when the sampling process should use early stopping.
+Additionally, we use training data to decide when is the best time for a particular entity to be compressed.
+This is done with negligible book keeping and a small over head.
+We make the following contributions
+\begin{itemize}
+\item We identify several techniques to speed up sampling past a natural baseline.
+\item We create rules and techniques for an optimizer to choose parameters and methods at run time.
+\item We empirically evaluate these methods over a large data set.
+\end{itemize}
+
+The outline of the paper is as follows.
+TODO
+
+
+% Links to people who used vectorization
+% http://citusdata.github.io/cstore_fdw/
+% http://www.drdobbs.com/parallel/parallel-in-place-merge-sort/240169094?pgno=2
+

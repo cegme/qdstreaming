@@ -1,0 +1,21 @@
+
+\begin{abstract}
+\small\baselineskip=9pt
+Sampling-based entity resolution is used to identify mentions in
+large text corpora.
+Sampling with MCMC techniques guarantees converges and can jump out of any
+local optimum.
+When performing sampling-based entity resolution over streams of data, two main issues arise.
+First, because the sampling process is random, many samples are waisted trying to resolve
+unambiguous entities.
+Second, the quadratic runtime for scoring entities makes sampling the largest
+entities prohibitive.
+In this paper, we discuss the creation a proposal optimizer, in the spirit of a
+database optimizers.
+We motivate the use of compression techniques to reduce the amount of processing when scoring large entities. We also discuss statistical early-stopping techniques for scoring entities.
+We describe our initial progress over a large entity resolution data set and
+how an optimizer can improve performance when processing entity resolution
+streams.
+
+
+\end{abstract}

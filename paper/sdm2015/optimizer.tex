@@ -1,0 +1,80 @@
+
+\documentclass[twoside,leqno,twocolumn]{article}
+\usepackage{ltexpprt} 
+
+\usepackage{algorithmic}
+\usepackage{algorithm}
+%\usepackage{algorithmicx}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{xspace}
+\usepackage{graphicx}
+\usepackage{caption}
+\DeclareCaptionType{copyrightbox} % Temporary hack to use the caption package
+\usepackage{subcaption}
+\usepackage{alltt}
+\usepackage{balance}
+\usepackage{hyperref}
+\usepackage{paralist}
+%\usepackage[top=0.75in, bottom=1in, left = 0.68in, right=0.68in]{geometry}
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{url}
+
+
+\newcommand{\ceg}[1]{{\textcolor{green}{#1 --- CEG}}}
+\newcommand{\dzw}[1]{{\textcolor{magenta}{#1 --- CEG}}}
+\newcommand{\eat}[1]{}
+\newcommand{\qgram}{$q$-gram\xspace}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\newcommand{\added}[1]{\textcolor{blue}{#1}}
+\newcommand{\changed}[1]{\textcolor{red}{#1}}
+\newcommand{\removed}[1]{\textcolor{gray}{#1}}
+
+
+
+
+
+
+
+
+
+\begin{document}
+
+\title{A Proposal Optimizer for Sampling-Based Entity Resolution}
+
+\author{%
+Christan Earl Grant\thanks{Datascience Research Lab, University of Florida; \url{cgrant@cise.ufl.edu}} 
+\and 
+Daisy Zhe Wang\thanks{Datascience Research Lab, University of Florida; \url{daisyw@cise.ufl.edu}}}
+
+\date{}
+
+\maketitle
+
+
+
+\input{content/abstract.tex}
+
+\input{content/introduction.tex}
+
+\input{content/relatedwork.tex}
+
+\input{content/problemstatement.tex}
+
+\input{content/algorithms.tex}
+
+\input{content/implementation.tex}
+
+\input{content/evaluation.tex}
+
+\input{content/conclusion.tex}
+
+
+% TODO --- add the bibliography
+
+\bibliographystyle{abbrv}
+\bibliography{citations}
+
+\end{document}
+
