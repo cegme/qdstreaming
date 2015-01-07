@@ -30,11 +30,11 @@ namespace dsr {
                   max_velocity(500),
                   stringmap(std::unordered_map<unsigned long int, unsigned long int>())
       {
-        bloom_parameters parameters;
+        /*bloom_parameters parameters;
         parameters.projected_element_count = 10000;
         parameters.false_positive_probability = 0.0001;
         // parameters.random_seet = ??
-        parameters.compute_optimal_parameters();
+        parameters.compute_optimal_parameters();*/
  
         // Instantiate Bloom Filter
         //bloom_filter _bf(parameters);
@@ -107,7 +107,6 @@ namespace dsr {
       //xhll::HyperLogLog h;
 
       // A function for random mentions
-      std::function<size_t()> random_mention;
 
       void add_to_hll(unsigned long int val);
 

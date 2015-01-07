@@ -178,8 +178,9 @@ std::vector<dsr::Entity> ReadEntityFile (std::string fileName, bool limit = fals
   unsigned long int total_count = 0;
 
   gzread(pFile, &total_count, sizeof(unsigned long int));
+  entities.reserve(total_count);
 
-  log_info("Loading %u entities into an entity vector.", total_count);
+  log_info("Loading %lu entities into an entity vector.", total_count);
   for (unsigned long int i = 0; i < total_count && (!limit || i < 1000)  ; ++i) {
 
     unsigned long int mention_size;
@@ -192,14 +193,16 @@ std::vector<dsr::Entity> ReadEntityFile (std::string fileName, bool limit = fals
       e.add(mention);
     }
     entities.push_back(e); 
+    //entities[i] = e;
+    //entities.at(i) = e;
     
     if (i == 100000 || i % 500000 == 0) {
-      log_info("Read %u entities", i);
+      log_info("Read %lu entities", i);
     }
   }
   gzclose (pFile);
 
-  log_info("Read all %u", total_count);
+  log_info("Read all %lu", total_count);
   return entities;
 }
 
@@ -349,9 +352,9 @@ struct MyStats {
       // Check each pairwise combination to see if they will be 
       auto sz = entities[e].mentions.size();
 
-      for (auto i = 0; i < sz - 1; ++i) {
+      for (auto i = 0; i < sz; ++i) {
         for (auto j = i+1; j < sz; ++j) {
-          if (truths[i] == truths[j]) {
+          if (truths[i].compare(truths[j]) == 0) {
             this->tp += 1;
           }
           else {
