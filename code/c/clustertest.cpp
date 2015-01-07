@@ -231,7 +231,7 @@ long baseline_triangle_method (const std::vector<point> &a,
       double score = point::doCompare(b[i], a[qn[q]]);
       bscore_with += score;
       score = point::doCompare(a[qn[q]], b[i]);
-      bscore_with += score;
+      ascore_with += score;
     }
     bscore_with += point::doCompare(a[qn[q]], a[qn[q]]);
 

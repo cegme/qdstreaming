@@ -8,17 +8,112 @@
 #include "Random.h"
 #include "Util.h"
 
+#include <sqlite3.h> 
+
 //#include "hyperloglog.hpp" //https://github.com/hideo55/cpp-HyperLogLog/blob/master/include/hyperloglog.hpp
 
+std::pair<double,double> dsr::Entity::score (unsigned long int mention, bool isAdd) {
+  // This is the baseline_triangle method
+
+  double score_with = 0.0, score_without = 0.0;
+
+  auto sz = size();
+
+  if (isAdd) {
+    // New mention is not currently in this entity
+
+    double temp_score = 0.0;
+    for (int i = 0; i < sz; ++i) {
+      for (int j = i+1; j < sz; ++j) {
+        temp_score += doCompare(mentions[i], mentions[j]);
+        score_without += temp_score;
+        score_with += temp_score;
+      }
+      if (i != mention) score_with += doCompare(mentions[i], mention);
+      
+    }
+  }
+  else {
+    // New mention is currently in this entity
+
+    double temp_score = 0.0;
+    for (int i = 0; i < sz; ++i) {
+      for (int j = i+1; j < sz; ++j) {
+        temp_score += doCompare(mentions[i], mentions[j]);
+        score_with += temp_score;
+        if (i != mention && j != mention) score_without += temp_score;
+      }
+    }
+  }
+
+  //return std::make_pair(score_with, score_without);
+  return {score_with, score_without};
+}
+
+
+
 // This is static
+static const char * doCompareQuery = "SELECT mention FROM wikilink WHERE rowid = ?";
 double dsr::Entity::doCompare(unsigned long int m1, unsigned long int m2) {
 
-  // Use the DB to compute the comparison
-  // Maybe do exact match and a cosine it available in sqllite
-  // Also compare string lengths
-  // Also starting characters
+  sqlite3 *db;
+  char *zErrMsg = 0;
+  int rc;
 
-  return 0;
+  rc = sqlite3_open_v2("wikilinks.db", &db, SQLITE_OPEN_READONLY, NULL); 
+  if (rc) log_err("Cannot open the database: %s", sqlite3_errmsg(db));
+
+  sqlite3_stmt* stmt;
+  sqlite3_prepare_v2(db, doCompareQuery, -1, &stmt, NULL);
+
+  sqlite3_bind_int(stmt, 1, m1);
+
+  rc = sqlite3_step(stmt);
+  if (rc != SQLITE_ROW) log_err("Error geting mention: %s", sqlite3_errmsg(db));
+  std::string mention1 = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+
+  // Get Mention 2
+  sqlite3_reset(stmt);
+  sqlite3_bind_int(stmt, 1, m2);
+
+  rc = sqlite3_step(stmt);
+  if (rc != SQLITE_ROW) log_err("Error geting mention: %s", sqlite3_errmsg(db));
+  std::string mention2 = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+
+  sqlite3_reset(stmt);
+
+  double score = 0.0;
+  
+  // Same string
+  if (mention1 == mention2)
+    score += 50.0;
+  
+  // Same size
+  if (mention1.size() == mention2.size())
+    score += 5.0;
+
+
+  // Overlapping tokens separated by spaces
+  for (unsigned i = 0; i < mention1.size(); i = mention1.find(' ', i)) {
+    if (i !=0) ++i; // skip the space
+
+    // Find next space, stop at the boundary
+    unsigned int end = MIN(mention1.size(), mention1.find(' ', i+1)); 
+
+    for (unsigned j = 0; j < mention2.size(); j = mention2.find(' ', j)) {
+      if (j !=0) ++j; 
+
+      // Find matching tokens
+      if (std::equal(mention1.begin()+i,mention1.begin()+end, mention2.begin()+j)) {
+        score += (end - i) * 10;
+      }
+    }
+  }
+
+  sqlite3_finalize(stmt);
+  sqlite3_close_v2(db);
+
+  return score;
 }
 
 
@@ -29,8 +124,9 @@ void dsr::Entity::remove (unsigned long int mentionid) {
     // Find where this mention is 
     auto ele = std::find(mentions.begin(), mentions.begin()+count, mentionid);
     //mentions[mention_idx] = mentions[count]; // Put the last one in this ones place
-    *ele = mentions[count];
-    --count;
+    //*ele = mentions[count];
+    mentions[ele-mentions.begin()] = mentions[count];
+    mentions.pop_back();
     init();
   }
   else if (state == EntityState::COMPRESSED) {

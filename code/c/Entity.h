@@ -44,6 +44,10 @@ namespace dsr {
        //xh = _h;
       }
 
+      /* If isAdd this is a proposal to insert. */ 
+      std::pair<double,double> score (unsigned long int mention, bool isAdd) ;
+      
+
       // Compare two mentions with the given ids
       static double doCompare(unsigned long int m1, unsigned long int m2);
     

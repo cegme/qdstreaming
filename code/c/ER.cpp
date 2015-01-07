@@ -2,6 +2,7 @@
 #include "sqlite3.h"
 #include <boost/algorithm/string.hpp>
 
+#include <cmath>
 #include <iostream>
 
 #include "ER.h"
@@ -410,9 +411,9 @@ void selectMentions (const std::string& dbfile) {
   sqlite3_shutdown();
 }
 
-void ER::mcmc (unsigned int iterations) {
+void ER::mcmc (long unsigned int iterations) {
  
-  unsigned int e_src, e_dst, m_src;
+  long unsigned int e_src, e_dst, m_src;
   while (--iterations > 0) {
     
     // Get source mention
@@ -429,22 +430,32 @@ void ER::mcmc (unsigned int iterations) {
       e_dst = RandInt() % entities->size();
     } while (e_dst != e_src);
 
-  
-    //double score1 = entities->operatir[](e_src).score();
-    //double score2 = entities->operatir[](e_src).score();
-  
-    // percentage I will accept and do the merge anayways
+    // Score the two options
+    auto srcscore = entities->operator[](e_src).score(m_src, false);
+    auto dstscore = entities->operator[](e_dst).score(m_src, true);
 
-    // TODO do the merge
-    
-
+    double doMove = srcscore.second + dstscore.first;
+    double dontMove = srcscore.first + dstscore.second; 
+  
+    // percentage I will accept and do the merge anyways
+    if (dontMove < doMove) {
+      entities->operator[](e_src).remove(m_src);
+      entities->operator[](e_dst).add(m_src);
+    }
+    else { 
+      // Still do the merge with a small probability
+      if (RandDouble() < (1.0 / (1.0 + std::exp(dontMove - doMove)))) {
+        entities->operator[](e_src).remove(m_src);
+        entities->operator[](e_dst).add(m_src);
+      }
+    }
 
   }
  
 }
 
 
-int main (int argc, char **argv) {
+int mainOld (int argc, char **argv) {
   //selectMentions("/data/wikilinks/context-only/063.db");
   //vectorizeMentions("/data/wikilinks/context-only/063.db");
   //buildEntityStructures("/data/wikilinks/context-only/wikilinks.db");

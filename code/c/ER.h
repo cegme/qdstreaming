@@ -37,7 +37,7 @@ namespace dsr {
   public:
     ER(std::vector<Entity>* e): entities(e) {}
 
-    void mcmc (unsigned int iterations);
+    void mcmc (long unsigned int iterations);
 
   private:
     std::hash<std::string> hash_fn;

@@ -218,7 +218,7 @@ struct MyStats {
     //if (total_true_pairs == 0 || total_true_pairs != MyStats::total_true_pairs) {
       init();
     //}
-    log_info("total_true_pairs: %u", MyStats::total_true_pairs);
+    log_info("total_true_pairs: %lu", MyStats::total_true_pairs);
   }
 
   // Thank you Menestrina, Whang, Garcia-Molina 2009
@@ -297,86 +297,77 @@ struct MyStats {
     fclose (pFile); 
 
     total_true_pairs = temp_true_pairs;
-    log_info("Initialized! total_true_pairs value now %u", total_true_pairs);
+    log_info("Initialized! total_true_pairs value now %lu", total_true_pairs);
   }
+
+  void  ComputeStats (const std::vector<dsr::Entity>& entities, const std::string& trueFile) {
+    reset();
+
+
+    // Compute the total number of pairs
+    unsigned long int total_pairs = 0;
+    for(unsigned long int i = 0; i < entities.size(); ++i) {
+      total_pairs +=  nChoosek(entities[i].size(), 2);
+    }
+    this->total_pairs = total_pairs;
+    log_info("total_pairs: %lu", total_pairs);
+
+    // Open the database file
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    std::string sql;
+    rc = sqlite3_open_v2("wikilinks.db", &db, SQLITE_OPEN_READONLY, NULL); 
+    if (rc != SQLITE_OK) {
+      log_err("Cannot open the base: %s", sqlite3_errmsg(db));
+    }
+    else {
+      log_info("Database opened at wikilinks.db");
+    }
+
+    sql = "SELECT wikiurl from wikilink_urlmap2 where rowid2 = ?;";
+    sqlite3_stmt* stmt;
+    sqlite3_prepare_v2(db, sql.c_str(), sql.size(), &stmt, NULL);
+
+    for (unsigned long int e = 0; e < entities.size(); ++e) {
+      std::vector<std::string> truths;
+
+      for (unsigned long int m: entities[e].mentions) {
+        sqlite3_bind_int(stmt, 1, m);
+
+        rc = sqlite3_step(stmt);
+        if (rc == SQLITE_ROW) {
+          auto men = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+          truths.push_back(men);
+        }
+        sqlite3_reset(stmt);
+      }
+
+      // Check each pairwise combination to see if they will be 
+      auto sz = entities[e].mentions.size();
+
+      for (auto i = 0; i < sz - 1; ++i) {
+        for (auto j = i+1; j < sz; ++j) {
+          if (truths[i] == truths[j]) {
+            this->tp += 1;
+          }
+          else {
+            this->fp += 1;
+          }
+        }
+      }
+
+    }
+
+    sqlite3_close_v2(db);
+    log_info("tp = %f, fp = %f", this->tp, this->fp);
+
+  }
+
 
 };
 //unsigned long int MyStats::total_true_pairs = 0;
 //const long unsigned long int MyStats::total_true_pairs = 2616530327; 
-
-
-MyStats ComputeStats (const std::vector<dsr::Entity>& entities, const std::string& trueFile) {
-  MyStats s; 
-  //s.init();
-  //log_info(">>> %s", s.tostring().c_str());
-
-  // Compute the total number of pairs
-  unsigned long int total_pairs = 0;
-  for(unsigned long int i = 0; i < entities.size(); ++i) {
-    total_pairs +=  MyStats::nChoosek(entities[i].size(), 2);
-  }
-  s.total_pairs = total_pairs;
-  log_info("total_pairs: %u", total_pairs);
-
-  // Open the database file
-  sqlite3 *db;
-  char *zErrMsg = 0;
-  int rc;
-  std::string sql;
-  //rc = sqlite3_open("/data/wikilinks/context-only/wikilinks.db", &db); 
-  rc = sqlite3_open_v2("wikilinks.db", &db, SQLITE_OPEN_READONLY, NULL); 
-  //rc = sqlite3_open_v2("/data/wikilinks/context-only/wikilinks.db", &db, SQLITE_OPEN_READONLY, NULL); 
-  //rc = sqlite3_open_v2("/data/wikilinks/context-only/wikilinks.db", &db, SQLITE_OPEN_READWRITE, NULL); 
-  if (rc != SQLITE_OK) {
-    log_err("Cannot open the database: %s", sqlite3_errmsg(db));
-  }
-  else {
-    log_info("Database opened at wikilinks.db");
-    //log_info("Database opened at /data/wikilinks/context-only/wikilinks.db");
-  }
-
-  sql = "SELECT wikiurl from wikilink_urlmap2 where rowid2 = ?;";
-  sqlite3_stmt* stmt;
-  sqlite3_prepare_v2(db, sql.c_str(), sql.size(), &stmt, NULL);
-
-  for (unsigned long int e = 0; e < entities.size(); ++e) {
-    std::vector<std::string> truths;
-
-    for (unsigned long int m: entities[e].mentions) {
-      sqlite3_bind_int(stmt, 1, m);
-
-      rc = sqlite3_step(stmt);
-      if (rc == SQLITE_ROW) {
-        auto men = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
-        truths.push_back(men);
-      }
-      sqlite3_reset(stmt);
-    }
-
-    // Check each pairwise combination to see if they will be 
-    auto sz = entities[e].mentions.size();
-
-    for (auto i = 0; i < sz - 1; ++i) {
-      for (auto j = i+1; j < sz; ++j) {
-        if (truths[i] == truths[j]) {
-          s.tp += 1;
-        }
-        else {
-           s.fp += 1;
-        }
-      }
-    }
-
-  }
-
-  sqlite3_close_v2(db);
-  log_info("tp = %u, fp = %u", s.tp, s.fp);
-
-  return s;
-
-}
-
-
 
 
 

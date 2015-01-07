@@ -23,8 +23,8 @@ EXTRAS = -lX11 -lfl -lssl -lcrypto -lrt -lpthread -DHAVE_NETINET_IN_H -DHAVE_INT
 all: wikilinkstats
 
 
-experiment_bsa2015: wikilink experiment_bsa2015.o Util.o Entity.o Random.o WikiLinkUtil.o wikilinkstats
-	$(CPP) -o experiment_bsa2015 experiment_bsa2015.cpp Util.o Entity.o Random.o $(EXTRAS)
+experiment_bsa2015: wikilink experiment_bsa2015.o Util.o Entity.o Random.o ER.o WikiLinkUtil.o wikilinkstats
+	$(CPP) -o experiment_bsa2015 experiment_bsa2015.cpp Util.o Entity.o Random.o ER.o $(EXTRAS)
 
 
 experiment_bsa2015.o: experiment_bsa2015.cpp
