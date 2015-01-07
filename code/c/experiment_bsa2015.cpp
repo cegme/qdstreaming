@@ -40,11 +40,9 @@ bool experiment1 () {
   er.mcmc(100);
   log_info("Start mcmc 1000 iterations");
   er.mcmc(1000);
-  log_info("Start mcmc 10000 iterations");
+  /*log_info("Start mcmc 10000 iterations");
   er.mcmc(10000);
-  log_info("Start mcmc 10000 iterations");
-  er.mcmc(10000);
-  /*log_info("Start mcmc 100000 iterations");
+  log_info("Start mcmc 100000 iterations");
   er.mcmc(100000);
   log_info("Start mcmc 1000000 iterations");
   er.mcmc(1000000);

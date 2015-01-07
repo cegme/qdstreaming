@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <sqlite3.h> 
+#include <zlib.h>
 
 /**
   * Writes a file with the ground truth for the 
@@ -74,22 +75,22 @@ void CreateGroundTruthFile (std::string fileName) {
 
   // Write the results to a file
   log_info("Writing the results to a binary file. %s.bin", fileName.c_str());
-  FILE* pFile;
+  gzFile pFile;
   std::ofstream o;
   //o.open(fileName, ios::out | ios::binary);
-  pFile = fopen("WikiLinkTruth.data.bin", "wb");
+  pFile = gzopen("WikiLinkTruth.data.bin", "wb");
   unsigned long int total_count = hist.size();
-  fwrite(&total_count, sizeof(total_count), 1, pFile); // Number of Total entries
+  gzwrite(pFile, &total_count, sizeof(total_count)); // Number of Total entries
   for (auto& h: hist) {
     //o << h.first << ":";
     unsigned long int mcount = h.second.size();
-    fwrite(&mcount, sizeof(mcount), 1, pFile); // Number of entries
+    gzwrite(pFile, &mcount, sizeof(mcount)); // Number of entries
     
     for (auto& m: h.second) {
-      fwrite(&m, sizeof(m), 1, pFile);
+      gzwrite(pFile, &m, sizeof(m));
     }
   }
-  fclose (pFile);
+  gzclose (pFile);
 
   log_info("Done!");
 }
@@ -144,23 +145,23 @@ void CreateStartFile (std::string fileName) {
 
   // Write the results to a file
   log_info("Writing the results to a file. %s", fileName.c_str());
-  FILE* pFile;
+  gzFile pFile;
   std::ofstream o;
   //o.open(fileName);
-  pFile = fopen("WikiLinkStart.data.bin", "wb");  
+  pFile = gzopen("WikiLinkStart.data.bin", "wb");  
 
   unsigned long int total_count = hist.size();
-  fwrite(&total_count, sizeof(total_count), 1, pFile); // Number of Total entries
+  gzwrite(pFile, &total_count, sizeof(total_count)); // Number of Total entries
   for (auto& h: hist) {
     //o << h.first << ":";
     unsigned long int mcount = h.second.size();
-    fwrite(&mcount, sizeof(mcount), 1, pFile); // Number of entries
+    gzwrite(pFile, &mcount, sizeof(mcount)); // Number of entries
 
     for (auto& m: h.second) {
-      fwrite(&m, sizeof(m), 1, pFile);
+      gzwrite(pFile, &m, sizeof(m));
     }
   }
-  fclose (pFile);
+  gzclose (pFile);
 
   log_info("Done!");
 }
@@ -169,25 +170,25 @@ std::vector<dsr::Entity> ReadEntityFile (std::string fileName, bool limit = fals
 
   std::vector<dsr::Entity> entities;
 
-  FILE* pFile;
-  pFile = fopen(fileName.c_str(), "rb");
+  gzFile pFile;
+  pFile = gzopen(fileName.c_str(), "rb");
   if (pFile==NULL) {  
     log_err("Could not open the file %s", "WikiLinkTruth.data.bin");
   }
   unsigned long int total_count = 0;
 
-  fread(&total_count, sizeof(unsigned long int), 1, pFile);
+  gzread(pFile, &total_count, sizeof(unsigned long int));
 
   log_info("Loading %u entities into an entity vector.", total_count);
   for (unsigned long int i = 0; i < total_count && (!limit || i < 1000)  ; ++i) {
 
     unsigned long int mention_size;
-    fread(&mention_size, sizeof(unsigned long int), 1, pFile);
+    gzread(pFile, &mention_size, sizeof(unsigned long int));
 
     dsr::Entity e;
     for (unsigned long int j = 0; j < mention_size; ++j) {
       unsigned long int mention;
-      fread(&mention, sizeof(unsigned long int), 1, pFile);
+      gzread(pFile, &mention, sizeof(unsigned long int));
       e.add(mention);
     }
     entities.push_back(e); 
@@ -196,7 +197,7 @@ std::vector<dsr::Entity> ReadEntityFile (std::string fileName, bool limit = fals
       log_info("Read %u entities", i);
     }
   }
-  fclose (pFile);
+  gzclose (pFile);
 
   log_info("Read all %u", total_count);
   return entities;
@@ -274,27 +275,27 @@ struct MyStats {
     log_info("Initializing the total_true_pairs value from %u", total_true_pairs);
     unsigned long int temp_true_pairs = 0;
 
-    FILE* pFile;
-    pFile = fopen("WikiLinkTruth.data.bin", "rb");
+    gzFile pFile;
+    pFile = gzopen("WikiLinkTruth.data.bin", "rb");
     if (pFile==NULL) {
       log_err("Could not open the file %s", "WikiLinkTruth.data.bin");
     }
     unsigned long int total_count = 0;
 
-    fread(&total_count, sizeof(unsigned long int), 1, pFile);
+    gzread(pFile, &total_count, sizeof(unsigned long int));
 
     for (unsigned long int i = 0; i < total_count; ++i) {
 
       unsigned long int mention_size;
-      fread(&mention_size, sizeof(unsigned long int), 1, pFile);
+      gzread(pFile, &mention_size, sizeof(unsigned long int));
 
       temp_true_pairs += MyStats::nChoosek(mention_size, 2);
       unsigned long int mention_throwaway;
       for (unsigned long int j = 0; j < mention_size; ++j) {
-        fread(&mention_throwaway, sizeof(unsigned long int), 1, pFile);
+        gzread(pFile, &mention_throwaway, sizeof(unsigned long int));
       }
     }
-    fclose (pFile); 
+    gzclose (pFile); 
 
     total_true_pairs = temp_true_pairs;
     log_info("Initialized! total_true_pairs value now %lu", total_true_pairs);
@@ -302,7 +303,6 @@ struct MyStats {
 
   void  ComputeStats (const std::vector<dsr::Entity>& entities, const std::string& trueFile) {
     reset();
-
 
     // Compute the total number of pairs
     unsigned long int total_pairs = 0;
@@ -322,7 +322,10 @@ struct MyStats {
       log_err("Cannot open the base: %s", sqlite3_errmsg(db));
     }
     else {
-      log_info("Database opened at wikilinks.db");
+      log_info("Database opened at wikilinks.db. Computing...");
+      // Default page size is 1024
+      // Increase increase number of pages in cache
+      sqlite3_exec(db, "PRAGMA cache_size = 1000000;", NULL, NULL, &zErrMsg); 
     }
 
     sql = "SELECT wikiurl from wikilink_urlmap2 where rowid2 = ?;";
@@ -360,7 +363,7 @@ struct MyStats {
     }
 
     sqlite3_close_v2(db);
-    log_info("tp = %f, fp = %f", this->tp, this->fp);
+    log_info("tp = %lu, fp = %lu", this->tp, this->fp);
 
   }
 

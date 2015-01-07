@@ -69,7 +69,7 @@ double dsr::Entity::doCompare(unsigned long int m1, unsigned long int m2) {
   sqlite3_bind_int(stmt, 1, m1);
 
   rc = sqlite3_step(stmt);
-  if (rc != SQLITE_ROW) log_err("Error geting mention: %s", sqlite3_errmsg(db));
+  if (rc != SQLITE_ROW) log_err("Error geting mention: %lu, %s", m1, sqlite3_errmsg(db));
   std::string mention1 = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
 
   // Get Mention 2
@@ -77,7 +77,7 @@ double dsr::Entity::doCompare(unsigned long int m1, unsigned long int m2) {
   sqlite3_bind_int(stmt, 1, m2);
 
   rc = sqlite3_step(stmt);
-  if (rc != SQLITE_ROW) log_err("Error geting mention: %s", sqlite3_errmsg(db));
+  if (rc != SQLITE_ROW) log_err("Error geting mention: %lu, %s", m2, sqlite3_errmsg(db));
   std::string mention2 = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
 
   sqlite3_reset(stmt);
@@ -91,7 +91,6 @@ double dsr::Entity::doCompare(unsigned long int m1, unsigned long int m2) {
   // Same size
   if (mention1.size() == mention2.size())
     score += 5.0;
-
 
   // Overlapping tokens separated by spaces
   for (unsigned i = 0; i < mention1.size(); i = mention1.find(' ', i)) {
@@ -123,8 +122,6 @@ void dsr::Entity::remove (unsigned long int mentionid) {
   if (state == EntityState::NORMAL) {
     // Find where this mention is 
     auto ele = std::find(mentions.begin(), mentions.begin()+count, mentionid);
-    //mentions[mention_idx] = mentions[count]; // Put the last one in this ones place
-    //*ele = mentions[count];
     mentions[ele-mentions.begin()] = mentions[count];
     mentions.pop_back();
     init();
@@ -150,10 +147,10 @@ void dsr::Entity::remove (unsigned long int mentionid) {
 void dsr::Entity::init() {
 
   // Initialize the random number generator for selecting mention chains
-  std::default_random_engine generator(42L);
+  /*std::default_random_engine generator(42L);
   std::uniform_int_distribution<size_t> chain_distribution(0, size()-1);
   random_mention = std::bind(chain_distribution, generator);
-
+  */
   // TODO check the current size, if it is larger than X switch to LARGE
 
 }
