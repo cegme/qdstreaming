@@ -12,10 +12,67 @@
 
 //#include "hyperloglog.hpp" //https://github.com/hideo55/cpp-HyperLogLog/blob/master/include/hyperloglog.hpp
 
+static const char * doCompareQuery = "SELECT mention FROM wikilink WHERE rowid = ?";
 std::pair<double,double> dsr::Entity::score (unsigned long int mention, bool isAdd) {
   // This is the baseline_triangle method
 
+  sqlite3 *db;
+  char *zErrMsg;
+  int rc = sqlite3_open_v2("wikilinks.db", &db, SQLITE_OPEN_READONLY, NULL); 
+  if (rc) log_err("Cannot open the database: %s", sqlite3_errmsg(db));
+  sqlite3_exec(db, "PRAGMA cache_size = 1000000;", NULL, NULL, &zErrMsg); 
+  sqlite3_stmt* stmt;
+  sqlite3_prepare_v2(db, doCompareQuery, -1, &stmt, NULL);
 
+    auto doCompare = [&db,&stmt] (unsigned long int m1, unsigned long int m2) -> double {
+
+      int rc;
+
+      sqlite3_bind_int(stmt, 1, m1);
+
+      rc = sqlite3_step(stmt);
+      if (rc != SQLITE_ROW) log_err("Error geting mention: %lu, %s", m1, sqlite3_errmsg(db));
+      std::string mention1 = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+
+      // Get Mention 2
+      sqlite3_reset(stmt);
+      sqlite3_bind_int(stmt, 1, m2);
+
+      rc = sqlite3_step(stmt);
+      if (rc != SQLITE_ROW) log_err("Error geting mention: %lu, %s", m2, sqlite3_errmsg(db));
+      std::string mention2 = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+
+      sqlite3_reset(stmt);
+
+      double score = 0.0;
+
+      // Same string
+      if (mention1 == mention2)
+        score += 50.0;
+
+      // Same size
+      if (mention1.size() == mention2.size())
+        score += 5.0;
+
+      // Overlapping tokens separated by spaces
+      for (unsigned i = 0; i < mention1.size(); i = mention1.find(' ', i)) {
+        if (i !=0) ++i; // skip the space
+
+        // Find next space, stop at the boundary
+        unsigned int end = MIN(mention1.size(), mention1.find(' ', i+1)); 
+
+        for (unsigned j = 0; j < mention2.size(); j = mention2.find(' ', j)) {
+          if (j !=0) ++j; 
+
+          // Find matching tokens
+          if (std::equal(mention1.begin()+i,mention1.begin()+end, mention2.begin()+j)) {
+            score += (end - i) * 10;
+          }
+        }
+      }
+
+      return score;
+    };
 
   // ----------------------------------------------------------
   double score_with = 0.0, score_without = 0.0;
@@ -33,7 +90,7 @@ std::pair<double,double> dsr::Entity::score (unsigned long int mention, bool isA
         score_with += temp_score;
       }
       if (i != mention) score_with += doCompare(mentions[i], mention);
-      
+
     }
     return {score_with/(sz+1), score_without/(sz)};
   }
@@ -52,72 +109,11 @@ std::pair<double,double> dsr::Entity::score (unsigned long int mention, bool isA
   }
   // ----------------------------------------------------------
 
-}
-
-
-
-// This is static
-static const char * doCompareQuery = "SELECT mention FROM wikilink WHERE rowid = ?";
-double dsr::Entity::doCompare(unsigned long int m1, unsigned long int m2) {
-
-  sqlite3 *db;
-  char *zErrMsg = 0;
-  int rc;
-
-  rc = sqlite3_open_v2("wikilinks.db", &db, SQLITE_OPEN_READONLY, NULL); 
-  if (rc) log_err("Cannot open the database: %s", sqlite3_errmsg(db));
-
-  sqlite3_stmt* stmt;
-  sqlite3_prepare_v2(db, doCompareQuery, -1, &stmt, NULL);
-
-  sqlite3_bind_int(stmt, 1, m1);
-
-  rc = sqlite3_step(stmt);
-  if (rc != SQLITE_ROW) log_err("Error geting mention: %lu, %s", m1, sqlite3_errmsg(db));
-  std::string mention1 = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
-
-  // Get Mention 2
-  sqlite3_reset(stmt);
-  sqlite3_bind_int(stmt, 1, m2);
-
-  rc = sqlite3_step(stmt);
-  if (rc != SQLITE_ROW) log_err("Error geting mention: %lu, %s", m2, sqlite3_errmsg(db));
-  std::string mention2 = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
-
-  sqlite3_reset(stmt);
-
-  double score = 0.0;
-  
-  // Same string
-  if (mention1 == mention2)
-    score += 50.0;
-  
-  // Same size
-  if (mention1.size() == mention2.size())
-    score += 5.0;
-
-  // Overlapping tokens separated by spaces
-  for (unsigned i = 0; i < mention1.size(); i = mention1.find(' ', i)) {
-    if (i !=0) ++i; // skip the space
-
-    // Find next space, stop at the boundary
-    unsigned int end = MIN(mention1.size(), mention1.find(' ', i+1)); 
-
-    for (unsigned j = 0; j < mention2.size(); j = mention2.find(' ', j)) {
-      if (j !=0) ++j; 
-
-      // Find matching tokens
-      if (std::equal(mention1.begin()+i,mention1.begin()+end, mention2.begin()+j)) {
-        score += (end - i) * 10;
-      }
-    }
-  }
-
   sqlite3_finalize(stmt);
   sqlite3_close_v2(db);
 
-  return score;
 }
+
 
 
 
