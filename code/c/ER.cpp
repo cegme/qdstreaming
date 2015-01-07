@@ -414,7 +414,7 @@ void selectMentions (const std::string& dbfile) {
 void ER::mcmc (long unsigned int iterations) {
  
   long unsigned int e_src, e_dst, m_src;
-  while (--iterations > 0) {
+  while (iterations-- > 0) {
     
     // Get source mention
     e_src = RandInt() % entities->size();
@@ -428,7 +428,7 @@ void ER::mcmc (long unsigned int iterations) {
     // destination 
     do {
       e_dst = RandInt() % entities->size();
-    } while (e_dst != e_src);
+    } while (e_dst == e_src);
 
     // Score the two options
     auto srcscore = entities->operator[](e_src).score(m_src, false);

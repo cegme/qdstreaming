@@ -15,6 +15,9 @@
 std::pair<double,double> dsr::Entity::score (unsigned long int mention, bool isAdd) {
   // This is the baseline_triangle method
 
+
+
+  // ----------------------------------------------------------
   double score_with = 0.0, score_without = 0.0;
 
   auto sz = size();
@@ -32,6 +35,7 @@ std::pair<double,double> dsr::Entity::score (unsigned long int mention, bool isA
       if (i != mention) score_with += doCompare(mentions[i], mention);
       
     }
+    return {score_with/(sz+1), score_without/(sz)};
   }
   else {
     // New mention is currently in this entity
@@ -44,10 +48,10 @@ std::pair<double,double> dsr::Entity::score (unsigned long int mention, bool isA
         if (i != mention && j != mention) score_without += temp_score;
       }
     }
+    return {score_with/(sz), score_without/MAX(sz-1,1.0)};
   }
+  // ----------------------------------------------------------
 
-  //return std::make_pair(score_with, score_without);
-  return {score_with, score_without};
 }
 
 
@@ -159,29 +163,20 @@ void dsr::Entity::add(unsigned long int mentionid) {
   update_velocity(true);
 
   if (state == EntityState::NORMAL) {
-    //if (count < mentions.size()) {
-    //  mentions[count] = mentionid;
-    //}
-    //else {
-      mentions.push_back(mentionid);
-    //}
-
-    //bf.insert(mentionid);
-    //add_to_hll(mentionid);
-
+    mentions.push_back(mentionid);
     ++count;
     ++total_insertions;
     init();
   }
   else if (state == EntityState::COMPRESSED) {
-    if (stringmap.find(mentionid) != stringmap.end()) {
+  /*  if (stringmap.find(mentionid) != stringmap.end()) {
       stringmap[mentionid] += 1;
     }
     else {
       stringmap[mentionid] = 1;
     }
     add_to_hll(mentionid);
-  
+  */
   }
   else if (state == EntityState::SORTED) {
     // Can I do an insertion sort of something?

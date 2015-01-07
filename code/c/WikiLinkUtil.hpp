@@ -337,6 +337,7 @@ struct MyStats {
 
     for (unsigned long int e = 0; e < entities.size(); ++e) {
       std::vector<std::string> truths;
+      truths.reserve(entities[e].mentions.size()); 
 
       for (unsigned long int m: entities[e].mentions) {
         sqlite3_bind_int(stmt, 1, m);
@@ -345,15 +346,18 @@ struct MyStats {
         if (rc == SQLITE_ROW) {
           auto men = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
           truths.push_back(men);
+          if (men[0] == '\0') {
+            log_err("This string returned empty. %lu", m);
+          }
         }
         sqlite3_reset(stmt);
       }
 
       // Check each pairwise combination to see if they will be 
-      auto sz = entities[e].mentions.size();
+      unsigned long int sz = entities[e].mentions.size();
 
-      for (auto i = 0; i < sz; ++i) {
-        for (auto j = i+1; j < sz; ++j) {
+      for (unsigned long int i = 0; i < sz; ++i) {
+        for (unsigned long int j = i+1; j < sz; ++j) {
           if (truths[i].compare(truths[j]) == 0) {
             this->tp += 1;
           }
@@ -369,7 +373,6 @@ struct MyStats {
     log_info("tp = %lu, fp = %lu", this->tp, this->fp);
 
   }
-
 
 };
 //unsigned long int MyStats::total_true_pairs = 0;

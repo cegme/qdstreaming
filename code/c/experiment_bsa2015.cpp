@@ -25,22 +25,16 @@ bool experiment1 () {
   log_info("ReadEntityFile");
   auto entities = ReadEntityFile("WikiLinkStart.data.bin");
   //auto entities2 = ReadEntityFile("WikiLinkStart.data.bin", true);
-  log_info("ComputeStats");
-  MyStats startStats;
-  startStats.ComputeStats(entities, "WikiLinkStart.data.bin");
-  log_info("[Start] %s", startStats.tostring().c_str());
-  log_info("[Start] Precision: %f, Recall: %f, F1: %f", startStats.pairPrecision(), startStats.pairRecall(), startStats.pairF1());
-  log_info("[Start] %s", startStats.tostring().c_str());
 
   auto er = dsr::ER(&entities);
 
   log_info("Start mcmc 10 iterations");
   er.mcmc(10);
-  log_info("Start mcmc 100 iterations");
+  /*log_info("Start mcmc 100 iterations");
   er.mcmc(100);
   log_info("Start mcmc 1000 iterations");
   er.mcmc(1000);
-  /*log_info("Start mcmc 10000 iterations");
+  log_info("Start mcmc 10000 iterations");
   er.mcmc(10000);
   log_info("Start mcmc 100000 iterations");
   er.mcmc(100000);
@@ -54,6 +48,7 @@ bool experiment1 () {
   er.mcmc(10000000000);*/
 
   log_info("ComputeStats");
+  MyStats startStats;
   startStats.ComputeStats(entities, "WikiLinkStart.data.bin");
   log_info("[Start] %s", startStats.tostring().c_str());
   log_info("[Start] Precision: %f, Recall: %f, F1: %f", startStats.pairPrecision(), startStats.pairRecall(), startStats.pairF1());
