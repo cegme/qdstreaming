@@ -14,6 +14,8 @@
 #include "gen-cpp/wikilink_constants.h"
 #include "gen-cpp/wikilink_types.h"
 
+#include <sqlite3.h>
+
 
 enum EntityState { NORMAL = 0, COMPRESSED = 1, SORTED = 2 }; 
 
@@ -45,7 +47,7 @@ namespace dsr {
       }
 
       /* If isAdd this is a proposal to insert. */ 
-      std::pair<double,double> score (unsigned long int mention, bool isAdd) ;
+      std::pair<double,double> score (unsigned long int mention, bool isAdd, sqlite3_stmt*& stmt, sqlite3 *&db ) ;
       
 
       // Compare two mentions with the given ids

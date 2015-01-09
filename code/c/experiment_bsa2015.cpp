@@ -28,14 +28,49 @@ bool experiment1 () {
 
   auto er = dsr::ER(&entities);
 
+  double sampletime = 0;
+  clock_t toc, tic;
+
+  tic = clock();
   log_info("Start mcmc 10 iterations");
   er.mcmc(10);
+  toc = clock();
+  sampletime = (toc - tic)/10;
+  log_info(">>> Time: %f ", sampletime);
+
+
+  log_info("Start mcmc 100 iterations (10x10)");
+  sampletime = 0;
+  for (int z = 0; z < 10; ++z) {
+    tic = clock();
+    er.mcmc(10);
+    toc = clock();
+    sampletime += (toc - tic);
+  }
+  sampletime /= 100;
+  log_info(">>> Time: %f ", sampletime);
+
+
+  tic = clock();
   log_info("Start mcmc 100 iterations");
   er.mcmc(100);
+  toc = clock();
+  sampletime = (toc - tic)/100;
+  log_info(">>> Time: %f ", sampletime);
+
+  tic = clock();
   log_info("Start mcmc 1000 iterations");
   er.mcmc(1000);
+  toc = clock();
+  sampletime = (toc - tic)/1000;
+  log_info(">>> Time: %f ", sampletime);
+
+  tic = clock();
   log_info("Start mcmc 10000 iterations");
   er.mcmc(10000);
+  toc = clock();
+  sampletime = (toc - tic)/10000;
+  log_info(">>> Time: %f ", sampletime);
   /*log_info("Start mcmc 100000 iterations");
   er.mcmc(100000);
   log_info("Start mcmc 1000000 iterations");

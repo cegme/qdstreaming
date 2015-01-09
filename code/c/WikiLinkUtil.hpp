@@ -4,6 +4,7 @@
 #define WIKILINKUTIL_H
 
 #include <fstream>
+#include <functional>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -191,6 +192,11 @@ std::vector<dsr::Entity> ReadEntityFile (std::string fileName, bool limit = fals
       unsigned long int mention;
       gzread(pFile, &mention, sizeof(unsigned long int));
       e.add(mention);
+      if (mention == 0) {
+        log_err("Bad error!: mention = 0, entity# %lu", i);
+        gzclose (pFile);
+        exit(1); 
+      }
     }
     entities.push_back(e); 
     //entities[i] = e;
@@ -275,7 +281,7 @@ struct MyStats {
   
   // Initialize true count
   void init () {
-    log_info("Initializing the total_true_pairs value from %u", total_true_pairs);
+    log_info("Initializing the total_true_pairs value from %lu", total_true_pairs);
     unsigned long int temp_true_pairs = 0;
 
     gzFile pFile;
@@ -319,46 +325,65 @@ struct MyStats {
     sqlite3 *db;
     char *zErrMsg = 0;
     int rc;
-    std::string sql;
+    const char * sql = "SELECT wikiurl from wikilink_urlmap2 where rowid2 = ? ;"; 
     rc = sqlite3_open_v2("wikilinks.db", &db, SQLITE_OPEN_READONLY, NULL); 
     if (rc != SQLITE_OK) {
-      log_err("Cannot open the base: %s", sqlite3_errmsg(db));
+      log_err("Cannot open the db: %s", sqlite3_errmsg(db));
     }
     else {
       log_info("Database opened at wikilinks.db. Computing...");
       // Default page size is 1024
       // Increase increase number of pages in cache
-      sqlite3_exec(db, "PRAGMA cache_size = 1000000;", NULL, NULL, &zErrMsg); 
+      sqlite3_exec(db, "PRAGMA cache_size = 20000;", NULL, NULL, &zErrMsg); 
     }
 
-    sql = "SELECT wikiurl from wikilink_urlmap2 where rowid2 = ?;";
     sqlite3_stmt* stmt;
-    sqlite3_prepare_v2(db, sql.c_str(), sql.size(), &stmt, NULL);
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    std::hash<std::string> hash_fn; 
 
     for (unsigned long int e = 0; e < entities.size(); ++e) {
-      std::vector<std::string> truths;
+      std::vector<unsigned long int> truths;
       truths.reserve(entities[e].mentions.size()); 
 
+      unsigned int long mention_count_check = 0;
       for (unsigned long int m: entities[e].mentions) {
+        assert(m != 0);
         sqlite3_bind_int(stmt, 1, m);
 
         rc = sqlite3_step(stmt);
         if (rc == SQLITE_ROW) {
-          auto men = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+          auto men = hash_fn(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));
+          //log_info("|||%s", men);
           truths.push_back(men);
-          if (men[0] == '\0') {
-            log_err("This string returned empty. %lu", m);
-          }
+          mention_count_check += 1;
+        }
+        else {
+          log_err("Mention not found! %lu, size: %lu, count %lu", m, entities[e].size(), entities[e].count);
         }
         sqlite3_reset(stmt);
       }
 
+      //log_info("e: %lu[%lu], %lu", e, entities[e].mentions.size(), mention_count_check);
+      if(entities[e].mentions.size() != mention_count_check) {
+        /*for (auto x: entities[e].mentions) {
+          log_err(">> %lu", x);
+        }
+        for (unsigned long int x = 0; x < entities[e].mentions.size(); ++x) {
+          log_err(">> %lu", entities[e].mentions[x]);
+        }*/
+        log_err("%lu != %lu", entities[e].mentions.size(), mention_count_check);
+      }
+      
+
       // Check each pairwise combination to see if they will be 
-      unsigned long int sz = entities[e].mentions.size();
+      //unsigned long int sz = entities[e].mentions.size();
+      unsigned long int sz = mention_count_check;
 
       for (unsigned long int i = 0; i < sz; ++i) {
         for (unsigned long int j = i+1; j < sz; ++j) {
-          if (truths[i].compare(truths[j]) == 0) {
+          if (truths[i] == truths[j]) {
+          //if (truths[i].compare(truths[j]) == 0) {
             this->tp += 1;
           }
           else {

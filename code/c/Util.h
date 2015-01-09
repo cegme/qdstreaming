@@ -9,6 +9,8 @@
 #define MAX(a,b) ( ((a) > (b)) ? (a) : (b) )
 #define MIN(a,b) ( ((a) < (b)) ? (a) : (b) )
 
+#define DOT fprintf(stderr, ".");
+
 // This only works for C
 static const char *  currentTime () {
   time_t rawtime;

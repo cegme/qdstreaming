@@ -12,17 +12,8 @@
 
 //#include "hyperloglog.hpp" //https://github.com/hideo55/cpp-HyperLogLog/blob/master/include/hyperloglog.hpp
 
-static const char * doCompareQuery = "SELECT mention FROM wikilink WHERE rowid = ?";
-std::pair<double,double> dsr::Entity::score (unsigned long int mention, bool isAdd) {
+std::pair<double,double> dsr::Entity::score (unsigned long int mention, bool isAdd, sqlite3_stmt*& stmt, sqlite3 *&db ) {
   // This is the baseline_triangle method
-
-  sqlite3 *db;
-  char *zErrMsg;
-  int rc = sqlite3_open_v2("wikilinks.db", &db, SQLITE_OPEN_READONLY, NULL); 
-  if (rc) log_err("Cannot open the database: %s", sqlite3_errmsg(db));
-  sqlite3_exec(db, "PRAGMA cache_size = 1000000;", NULL, NULL, &zErrMsg); 
-  sqlite3_stmt* stmt;
-  sqlite3_prepare_v2(db, doCompareQuery, -1, &stmt, NULL);
 
     auto doCompare = [&db,&stmt] (unsigned long int m1, unsigned long int m2) -> double {
 
@@ -49,33 +40,49 @@ std::pair<double,double> dsr::Entity::score (unsigned long int mention, bool isA
       // Same string
       if (mention1 == mention2)
         score += 50.0;
+      else
+        score -= 10.0;
 
       // Same size
       if (mention1.size() == mention2.size())
         score += 5.0;
+      else
+        score -= 5.0;
 
+      bool overlap = false;
       // Overlapping tokens separated by spaces
-      for (unsigned i = 0; i < mention1.size(); i = mention1.find(' ', i)) {
+      for (unsigned int long i = 0; i < mention1.size(); i = mention1.find(' ', i)) {
         if (i !=0) ++i; // skip the space
 
         // Find next space, stop at the boundary
         unsigned int end = MIN(mention1.size(), mention1.find(' ', i+1)); 
+        if (end - i <= 4) continue;
 
-        for (unsigned j = 0; j < mention2.size(); j = mention2.find(' ', j)) {
+        for (unsigned int long j = 0; j < mention2.size(); j = mention2.find(' ', j)) {
           if (j !=0) ++j; 
 
           // Find matching tokens
           if (std::equal(mention1.begin()+i,mention1.begin()+end, mention2.begin()+j)) {
-            score += (end - i) * 10;
+            score += (end - i) * 2;
+            overlap = true;
+            //if (mention1 != mention2)
+              //log_info("The overlap: <%s|%s> --> %s|", mention1.c_str(), mention2.c_str(), mention1.substr(i, end-i).c_str()); 
           }
         }
       }
+
+      if (! overlap)
+        score -= 10;
+      //else 
+        //if (mention1 != mention2)
+          //log_info("overlap! %s, %s", mention1.c_str(), mention2.c_str());
 
       return score;
     };
 
   // ----------------------------------------------------------
   double score_with = 0.0, score_without = 0.0;
+  double pairs_with = 0.0, pairs_without = 0.0;
 
   auto sz = size();
 
@@ -88,11 +95,16 @@ std::pair<double,double> dsr::Entity::score (unsigned long int mention, bool isA
         temp_score += doCompare(mentions[i], mentions[j]);
         score_without += temp_score;
         score_with += temp_score;
+        pairs_with += 1;
+        pairs_without += 1;
       }
-      if (i != mention) score_with += doCompare(mentions[i], mention);
+      if (i != mention) {
+        pairs_with += 1;
+        score_with += doCompare(mentions[i], mention);
+      }
 
     }
-    return {score_with/(sz+1), score_without/(sz)};
+    return {score_with/(pairs_with), score_without/(pairs_without)};
   }
   else {
     // New mention is currently in this entity
@@ -102,15 +114,17 @@ std::pair<double,double> dsr::Entity::score (unsigned long int mention, bool isA
       for (int j = i+1; j < sz; ++j) {
         temp_score += doCompare(mentions[i], mentions[j]);
         score_with += temp_score;
-        if (i != mention && j != mention) score_without += temp_score;
+        pairs_with += 1.0;
+        if (i != mention && j != mention) {
+          score_without += temp_score;
+          pairs_without += 1.0;
+        }
       }
     }
-    return {score_with/(sz), score_without/MAX(sz-1,1.0)};
+    
+    return {score_with/(pairs_with), score_without/(pairs_without)};
   }
   // ----------------------------------------------------------
-
-  sqlite3_finalize(stmt);
-  sqlite3_close_v2(db);
 
 }
 
@@ -120,11 +134,21 @@ std::pair<double,double> dsr::Entity::score (unsigned long int mention, bool isA
 void dsr::Entity::remove (unsigned long int mentionid) {
   update_velocity(false);
   if (state == EntityState::NORMAL) {
-    // Find where this mention is 
-    auto ele = std::find(mentions.begin(), mentions.begin()+count, mentionid);
-    mentions[ele-mentions.begin()] = mentions[count];
-    mentions.pop_back();
-    init();
+    if (mentions.size() == 1) {
+      assert(mentionid == mentions[0]);
+      mentions.pop_back();
+      ++total_deletions;
+      --count;
+    }
+    else {
+      // Find where this mention is 
+      auto ele = std::find(mentions.begin(), mentions.begin()+count, mentionid);
+      mentions[ele-mentions.begin()] = mentions.back();
+      mentions.pop_back();
+      init();
+      ++total_deletions;
+      --count;
+    }
   }
   else if (state == EntityState::COMPRESSED) {
     if (stringmap.find(mentionid) != stringmap.end()) {
@@ -139,8 +163,7 @@ void dsr::Entity::remove (unsigned long int mentionid) {
   else if (state == EntityState::SORTED) {
     // TODO 
   }
-  ++total_deletions;
-  --count;
+  assert(count == mentions.size());
 }
 
 
@@ -158,11 +181,15 @@ void dsr::Entity::init() {
 void dsr::Entity::add(unsigned long int mentionid) {
   update_velocity(true);
 
+  if (mentionid == 0) {
+    log_err("Bad error!: mentionid = 0, entity# %lu, %lu ", mentions.size(), count);
+  }
   if (state == EntityState::NORMAL) {
     mentions.push_back(mentionid);
     ++count;
     ++total_insertions;
     init();
+    assert(mentions.back() != 0);
   }
   else if (state == EntityState::COMPRESSED) {
   /*  if (stringmap.find(mentionid) != stringmap.end()) {
@@ -178,6 +205,7 @@ void dsr::Entity::add(unsigned long int mentionid) {
     // Can I do an insertion sort of something?
   }
 
+  assert(count == mentions.size());
 }
 
 
@@ -185,7 +213,8 @@ void dsr::Entity::add(unsigned long int mentionid) {
 unsigned long int dsr::Entity::rand() {
   // TODO need a new method if it is in the large state
   if (state == EntityState::NORMAL) {
-    return mentions[RandInt() % count];
+    auto r = mentions[RandInt() % mentions.size()];
+    return r;
   }
   else if (state == EntityState::COMPRESSED) {
     unsigned long int b = RandInt() % stringmap.bucket_count();

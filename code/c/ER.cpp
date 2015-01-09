@@ -411,11 +411,28 @@ void selectMentions (const std::string& dbfile) {
   sqlite3_shutdown();
 }
 
+
+
+// NOTE rowid's are 1 indexed not zero indexed
+static const char * doCompareQuery = "SELECT mention FROM wikilink WHERE rowid = ?;";
+
+
 void ER::mcmc (long unsigned int iterations) {
- 
+
+  sqlite3 *db;
+  char *zErrMsg;
+  int rc = sqlite3_open_v2("wikilinks.db", &db, SQLITE_OPEN_READONLY, NULL); 
+  if (rc) log_err("Cannot open the database: %s", sqlite3_errmsg(db));
+  //sqlite3_exec(db, "PRAGMA cache_size = 1000000;", NULL, NULL, &zErrMsg); 
+  sqlite3_exec(db, "PRAGMA cache_size = 0;", NULL, NULL, &zErrMsg); 
+  sqlite3_stmt* stmt;
+  sqlite3_prepare_v2(db, doCompareQuery, -1, &stmt, NULL);
+
+
+
   long unsigned int e_src, e_dst, m_src;
   while (iterations-- > 0) {
-    
+
     // Get source mention
     e_src = RandInt() % entities->size();
     if (entities->operator[](e_src).size() == 0) {
@@ -423,7 +440,7 @@ void ER::mcmc (long unsigned int iterations) {
       continue;
     }
     m_src = entities->operator[](e_src).rand();
-    
+
 
     // destination 
     do {
@@ -431,30 +448,31 @@ void ER::mcmc (long unsigned int iterations) {
     } while (e_dst == e_src);
 
     // Score the two options
-    auto srcscore = entities->operator[](e_src).score(m_src, false);
-    auto dstscore = entities->operator[](e_dst).score(m_src, true);
+    auto srcscore = entities->operator[](e_src).score(m_src, false, stmt, db);
+    auto dstscore = entities->operator[](e_dst).score(m_src, true, stmt, db);
 
     double doMove = srcscore.second + dstscore.first;
     double dontMove = srcscore.first + dstscore.second; 
-  
+
     // percentage I will accept and do the merge anyways
     if (dontMove < doMove) {
       entities->operator[](e_src).remove(m_src);
       entities->operator[](e_dst).add(m_src);
 
-      log_info("|%lu:%lu --> %lu", e_src, m_src, e_dst);
+      //log_info("+%lu:%lu --> %lu", e_src, m_src, e_dst);
     }
     else { 
       // Still do the merge with a small probability
       if (RandDouble() < (1.0 / (1.0 + std::exp(dontMove - doMove)))) {
         entities->operator[](e_src).remove(m_src);
         entities->operator[](e_dst).add(m_src);
-        log_info(">%lu:%lu --> %lu", e_src, m_src, e_dst);
       }
     }
-
+    assert(m_src != 0);
   }
- 
+
+  sqlite3_finalize(stmt);
+  sqlite3_close_v2(db);
 }
 
 
