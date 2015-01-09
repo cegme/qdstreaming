@@ -442,7 +442,6 @@ void ER::mcmc (long unsigned int iterations) {
     }
     m_src = entities->operator[](e_src).rand();
 
-
     // destination 
     do {
       e_dst = RandInt() % entities->size();
@@ -460,13 +459,14 @@ void ER::mcmc (long unsigned int iterations) {
       entities->operator[](e_src).remove(m_src);
       entities->operator[](e_dst).add(m_src);
 
-      //log_info("+%lu:%lu --> %lu", e_src, m_src, e_dst);
+      log_info("+ %lu:%lu --> %lu", e_src, m_src, e_dst);
     }
     else { 
       // Still do the merge with a small probability
       if (RandDouble() < (1.0 / (1.0 + std::exp(dontMove - doMove)))) {
         entities->operator[](e_src).remove(m_src);
         entities->operator[](e_dst).add(m_src);
+        log_info("-+%lu:%lu --> %lu", e_src, m_src, e_dst);
       }
     }
     assert(m_src != 0);

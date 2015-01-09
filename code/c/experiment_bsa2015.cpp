@@ -46,6 +46,7 @@ bool experiment1 () {
   log_info("Start mcmc 10000 iterations (parallel 100x100)");
   auto f = [&er](unsigned int i, unsigned int num) {
     std::this_thread::sleep_for (std::chrono::milliseconds(RandInt() % 1000));
+    DOT
     auto littletic = clock();
     er.mcmc(i);
     auto littletoc = clock();
@@ -54,8 +55,8 @@ bool experiment1 () {
   };
 
   std::vector<std::future<void>> pool;
-  for (unsigned int t = 0; t < 100; ++t) {
-    pool.push_back(std::async(std::launch::async, f, 100, t));
+  for (unsigned int t = 0; t < 10; ++t) {
+    pool.push_back(std::async(std::launch::async, f, 10, t));
   }
   for (auto &t: pool){
     t.wait();
@@ -64,7 +65,7 @@ bool experiment1 () {
   sampletime = (toc - tic)/10000;
   log_info(">>> Time: %f ", sampletime);
 
-  tic = clock();
+  /*tic = clock();
   log_info("Start mcmc 1000 iterations");
   er.mcmc(1000);
   toc = clock();
@@ -77,7 +78,7 @@ bool experiment1 () {
   toc = clock();
   sampletime = (toc - tic)/10000;
   log_info(">>> Time: %f ", sampletime);
-  /*log_info("Start mcmc 100000 iterations");
+  log_info("Start mcmc 100000 iterations");
   er.mcmc(100000);
   log_info("Start mcmc 1000000 iterations");
   er.mcmc(1000000);
@@ -90,7 +91,8 @@ bool experiment1 () {
 
   log_info("ComputeStats");
   MyStats startStats;
-  startStats.ComputeStats(entities, "WikiLinkStart.data.bin");
+  //startStats.ComputeStats(entities, "WikiLinkStart.data.bin");
+  startStats.ComputeStatsParallel(entities, "WikiLinkStart.data.bin", 50);
   log_info("[Start] %s", startStats.tostring().c_str());
   log_info("[Start] Precision: %f, Recall: %f, F1: %f", startStats.pairPrecision(), startStats.pairRecall(), startStats.pairF1());
   log_info("[Start] %s", startStats.tostring().c_str());
@@ -114,7 +116,7 @@ int main (int argc, char** argv) {
   // Create the Ground Truth
   //CreateGroundTruthFile ("WikiLinkTruth.data.bin"); // From WikiLinkUtil.hpp
   //CreateStartFile ("WikiLinkStart.data.bin"); // From WikiLinkUtil.hpp
-  CreateSingltonInitFile("WikiLinkSingleton.data.bin");
+  //CreateSingltonInitFile("WikiLinkSingleton.data.bin");
 
 
   if(false){

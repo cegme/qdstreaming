@@ -4,9 +4,11 @@
 #define WIKILINKUTIL_H
 
 #include <fstream>
+#include <future>
 #include <functional>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -422,18 +424,6 @@ struct MyStats {
         sqlite3_reset(stmt);
       }
 
-      //log_info("e: %lu[%lu], %lu", e, entities[e].mentions.size(), mention_count_check);
-      if(entities[e].mentions.size() != mention_count_check) {
-        /*for (auto x: entities[e].mentions) {
-          log_err(">> %lu", x);
-        }
-        for (unsigned long int x = 0; x < entities[e].mentions.size(); ++x) {
-          log_err(">> %lu", entities[e].mentions[x]);
-        }*/
-        log_err("%lu != %lu", entities[e].mentions.size(), mention_count_check);
-      }
-      
-
       // Check each pairwise combination to see if they will be 
       //unsigned long int sz = entities[e].mentions.size();
       unsigned long int sz = mention_count_check;
@@ -441,7 +431,6 @@ struct MyStats {
       for (unsigned long int i = 0; i < sz; ++i) {
         for (unsigned long int j = i+1; j < sz; ++j) {
           if (truths[i] == truths[j]) {
-          //if (truths[i].compare(truths[j]) == 0) {
             this->tp += 1;
           }
           else {
@@ -456,6 +445,108 @@ struct MyStats {
     log_info("tp = %lu, fp = %lu", this->tp, this->fp);
 
   }
+
+
+
+  void ComputeStatsParallel (const std::vector<dsr::Entity>& entities, const std::string& trueFile, unsigned long int parallelism) {
+    reset();
+
+    // Compute the total number of pairs
+    unsigned long int total_pairs = 0;
+    for(unsigned long int i = 0; i < entities.size(); ++i) {
+      total_pairs +=  nChoosek(entities[i].size(), 2);
+    }
+    this->total_pairs = total_pairs;
+    log_info("total_pairs: %lu", total_pairs);
+
+
+    auto f = [&entities, total_pairs] (unsigned long int start, unsigned long int end) -> std::pair<unsigned long int, unsigned long int> {
+
+      unsigned long int tp = 0, fp = 0;
+
+      // Open the database file
+      sqlite3 *db;
+      char *zErrMsg = 0;
+      int rc;
+      const char * sql = "SELECT wikiurl from wikilink_urlmap2 where rowid2 = ? ;"; 
+      rc = sqlite3_open_v2("wikilinks.db", &db, SQLITE_OPEN_READONLY, NULL); 
+      if (rc != SQLITE_OK) {
+        log_err("Cannot open the db: %s", sqlite3_errmsg(db));
+      }
+      else {
+        log_info("Database opened at wikilinks.db. Computing...");
+        // Default page size is 1024
+        // Increase increase number of pages in cache
+        sqlite3_exec(db, "PRAGMA cache_size = 20000;", NULL, NULL, &zErrMsg); 
+      }
+
+      sqlite3_stmt* stmt;
+      sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+      std::hash<std::string> hash_fn; 
+
+      for (unsigned long int e = start; e < end; ++e) {
+        //for (unsigned long int e = 0; e < entities.size(); ++e) 
+        std::vector<unsigned long int> truths;
+        truths.reserve(entities[e].mentions.size()); 
+
+        unsigned int long mention_count_check = 0;
+        for (unsigned long int m: entities[e].mentions) {
+          assert(m != 0);
+          sqlite3_bind_int(stmt, 1, m);
+
+          rc = sqlite3_step(stmt);
+          if (rc == SQLITE_ROW) {
+            auto men = hash_fn(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));
+            //log_info("|||%s", men);
+            truths.push_back(men);
+            mention_count_check += 1;
+          }
+          else {
+            log_err("Mention not found! %lu, size: %lu, count %lu", m, entities[e].size(), entities[e].count);
+          }
+          sqlite3_reset(stmt);
+        }
+
+        // Check each pairwise combination to see if they will be 
+        //unsigned long int sz = entities[e].mentions.size();
+        unsigned long int sz = mention_count_check;
+
+        for (unsigned long int i = 0; i < sz; ++i) {
+          for (unsigned long int j = i+1; j < sz; ++j) {
+            if (truths[i] == truths[j]) {
+              tp += 1;
+            }
+            else {
+              fp += 1;
+            }
+          }
+        }
+
+      }
+
+      sqlite3_close_v2(db);
+
+      //log_info("tp = %lu, fp = %lu", this->tp, this->fp);
+      return std::make_pair(tp, fp);
+    };
+    
+    std::vector<std::future<std::pair<unsigned long int,unsigned long int>>> pool;
+    unsigned long int block = entities.size() / parallelism;
+    for (unsigned long int start = 0; start < entities.size(); start += block) {
+      unsigned long int end = MIN(start+block, entities.size()); 
+      pool.push_back(std::async(std::launch::async, f, start, end));
+    }
+    for (auto &t: pool) {
+      auto z = t.get();
+      this->tp += z.first;
+      this->fp += z.second;
+    }
+
+    log_info("tp = %lu, fp = %lu", this->tp, this->fp);
+
+  }
+
 
 };
 //unsigned long int MyStats::total_true_pairs = 0;
