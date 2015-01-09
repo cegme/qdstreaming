@@ -421,10 +421,11 @@ void ER::mcmc (long unsigned int iterations) {
 
   sqlite3 *db;
   char *zErrMsg;
-  int rc = sqlite3_open_v2("wikilinks.db", &db, SQLITE_OPEN_READONLY, NULL); 
+  int rc = sqlite3_open_v2("wikilinks.db", &db, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX | SQLITE_OPEN_SHAREDCACHE , NULL); 
+  //int rc = sqlite3_open_v2("wikilinks.db", &db, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX | SQLITE_OPEN_PRIVATECACHE, NULL); 
   if (rc) log_err("Cannot open the database: %s", sqlite3_errmsg(db));
   //sqlite3_exec(db, "PRAGMA cache_size = 1000000;", NULL, NULL, &zErrMsg); 
-  sqlite3_exec(db, "PRAGMA cache_size = 0;", NULL, NULL, &zErrMsg); 
+  sqlite3_exec(db, "PRAGMA cache_size = 1000000;", NULL, NULL, &zErrMsg); 
   sqlite3_stmt* stmt;
   sqlite3_prepare_v2(db, doCompareQuery, -1, &stmt, NULL);
 

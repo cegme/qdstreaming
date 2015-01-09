@@ -97,6 +97,64 @@ void CreateGroundTruthFile (std::string fileName) {
 }
 
 
+void CreateSingltonInitFile (std::string fileName) {
+
+  std::unordered_map<std::string, std::vector<unsigned long int>> hist;
+
+  // Open the database file
+  sqlite3 *db;
+  char *zErrMsg = 0;
+  int rc;
+  std::string sql;
+  rc = sqlite3_open_v2("wikilinks.db", &db, SQLITE_OPEN_READONLY, NULL); 
+    if (rc) {
+    log_err("Cannot open the database: %s", sqlite3_errmsg(db));
+  }
+  else {
+    log_info("Database opened at wikilinks.db");
+  }
+
+  sql = "SELECT rowid from wikilink;";
+  sqlite3_stmt* stmt;
+  sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
+
+  log_info("Reading the file.");
+  sqlite3_exec(db, "PRAGMA synchronous = OFF", NULL, NULL, &zErrMsg); // Improve speed #YOLO
+  sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &zErrMsg);
+
+  rc = sqlite3_step(stmt);
+  
+  // Write the results to a file
+  log_info("Writing the results to a binary file. %s.bin", fileName.c_str());
+  gzFile pFile;
+  std::ofstream o;
+  //o.open(fileName, ios::out | ios::binary);
+  pFile = gzopen("WikiLinkSingleton.data.bin", "wb");
+  unsigned long int total_count = 39920360; // Hard Coded max
+  gzwrite(pFile, &total_count, sizeof(total_count)); // Number of Total entries
+
+
+
+
+  unsigned long int rowid;
+
+  for (int i = 0; i < total_count; ++i) {
+    unsigned long int mcount = 1;
+    gzwrite(pFile, &mcount, sizeof(mcount)); // Number of entries
+
+    unsigned long int rowid =  sqlite3_column_int(stmt, 0);
+    gzwrite(pFile, &rowid, sizeof(rowid));
+    rc = sqlite3_step(stmt);
+  }
+  gzclose (pFile);
+  sqlite3_finalize(stmt);
+  sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &zErrMsg);
+  sqlite3_close_v2(db);
+
+
+  log_info("Done!");
+}
+
 void CreateStartFile (std::string fileName) {
 
   std::unordered_map<std::string, std::vector<unsigned long int>> hist;

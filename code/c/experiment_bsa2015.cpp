@@ -7,6 +7,9 @@
 #include "WikiLinkUtil.hpp"
 
 #include <boost/program_options.hpp>
+#include <functional>
+#include <future>
+#include <thread>
 
 void InitializeEntity() {
   // TODO pass in parameters to initialize 
@@ -23,7 +26,8 @@ void InitializeEntity() {
 bool experiment1 () {
 
   log_info("ReadEntityFile");
-  auto entities = ReadEntityFile("WikiLinkStart.data.bin");
+  //auto entities = ReadEntityFile("WikiLinkStart.data.bin");
+  auto entities = ReadEntityFile("WikiLinkSingleton.data.bin");
   //auto entities2 = ReadEntityFile("WikiLinkStart.data.bin", true);
 
   auto er = dsr::ER(&entities);
@@ -38,24 +42,26 @@ bool experiment1 () {
   sampletime = (toc - tic)/10;
   log_info(">>> Time: %f ", sampletime);
 
-
-  log_info("Start mcmc 100 iterations (10x10)");
-  sampletime = 0;
-  for (int z = 0; z < 10; ++z) {
-    tic = clock();
-    er.mcmc(10);
-    toc = clock();
-    sampletime += (toc - tic);
-  }
-  sampletime /= 100;
-  log_info(">>> Time: %f ", sampletime);
-
-
   tic = clock();
-  log_info("Start mcmc 100 iterations");
-  er.mcmc(100);
+  log_info("Start mcmc 10000 iterations (parallel 100x100)");
+  auto f = [&er](unsigned int i, unsigned int num) {
+    std::this_thread::sleep_for (std::chrono::milliseconds(RandInt() % 1000));
+    auto littletic = clock();
+    er.mcmc(i);
+    auto littletoc = clock();
+    log_info("\t{%u, %u, %lu}", i, num, (littletoc-littletic)/i);
+    //std::cerr << "Thread: " << std::this_thread::get_id() << std::endl;
+  };
+
+  std::vector<std::future<void>> pool;
+  for (unsigned int t = 0; t < 100; ++t) {
+    pool.push_back(std::async(std::launch::async, f, 100, t));
+  }
+  for (auto &t: pool){
+    t.wait();
+  }
   toc = clock();
-  sampletime = (toc - tic)/100;
+  sampletime = (toc - tic)/10000;
   log_info(">>> Time: %f ", sampletime);
 
   tic = clock();
@@ -108,7 +114,9 @@ int main (int argc, char** argv) {
   // Create the Ground Truth
   //CreateGroundTruthFile ("WikiLinkTruth.data.bin"); // From WikiLinkUtil.hpp
   //CreateStartFile ("WikiLinkStart.data.bin"); // From WikiLinkUtil.hpp
- 
+  CreateSingltonInitFile("WikiLinkSingleton.data.bin");
+
+
   if(false){
     log_info("ReadEntityFile");
     auto entities1 = ReadEntityFile("WikiLinkTruth.data.bin");
