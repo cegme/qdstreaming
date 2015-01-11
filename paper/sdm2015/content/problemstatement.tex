@@ -1,5 +1,5 @@
 
-\section{Example}
+\section{Accelerating Entity Resolution}
 \label{sec:optimizer:example}
 
 In this section, we discuss the acceleration in MCMC-MH sampling for entity resolution.
@@ -32,7 +32,7 @@ This compressed total entity size size is:
   \text{sizeof}(\mathcal{E_\text{compressed}}) = \sum_i c + (\text{sizeof}(int) * \#(e_i) ),
 \end{equation}
 where $\#(e_i)$ is the cardinality of the mention tokens in entity $e_i$.
-We note that when the $\#(e_i) \ll |e_i|$ it may be worth compressing this entity.
+We note that when the $\#(e_i) \ll |e_i|$, it may be worth compressing the entity $e_i$.
 
 
 In Figure~\ref{fig:entity-distribution}, we note that
@@ -40,7 +40,7 @@ In Figure~\ref{fig:entity-distribution}, we note that
 Additionally, 82\% percent of entities contain less than 1000 mentions.
 These number suggest that at times we we can take advantage of the redundancy within
 large entities and compress the entities.
-We investigate the Wiki links corpus further in Section~\ref{sec:microbenchmark}. 
+We investigate the Wiki links corpus further in Section~\ref{sec:optimizer:wikilinkcorpus}. 
 
 
 In addition, Figure~\ref{fig:entity-distribution} shows that there is an

@@ -1,18 +1,18 @@
 
 \begin{abstract}
 \small\baselineskip=9pt
-Sampling-based entity resolution is used to identify mentions in
-large text corpora.
-Sampling with MCMC techniques guarantees converges and can jump out of any
-local optimum.
-When performing sampling-based entity resolution over streams of data, two main issues arise.
-First, because the sampling process is random, many samples are waisted trying to resolve
-unambiguous entities.
-Second, the quadratic runtime for scoring entities makes sampling the largest
-entities prohibitive.
-In this paper, we discuss the creation a proposal optimizer, in the spirit of a
-database optimizers.
-We motivate the use of compression techniques to reduce the amount of processing when scoring large entities. We also discuss statistical early-stopping techniques for scoring entities.
+Increasingly, entities and large organizations have employed methods to understand unstructured text across the web.
+Collective entity resolution is used to identify mentions in large, streaming text corpora.
+%Sampling with Markov Chain Monte Carlo (MCMC) techniques guarantees convergence to a stationary distribution and can jump out of any local optimum.
+When performing entity resolution over streams of incoming data, the growing quantity of data amplifies two main issues.
+First, because the sampling process is random, many iterations are waisted attempting to resolve unambiguous entities.
+Second, the quadratic runtime for scoring entities makes sampling the largest entities prohibitive.
+%When new documents are continuously updated the above issues are exacerbated.
+Frequent streaming updated of the web exacerbate these difficulties.
+In this paper, we discuss the creation a proposal optimizer, in the spirit of database optimizers.
+This optimizers observes the updates to the entity resolution model and make recommendations to improves the processing of the model.
+We motivate the use of compression techniques to reduce the amount of processing when scoring MCMC updates proposal.
+We also discuss statistical early-stopping techniques for scoring entities.
 We describe our initial progress over a large entity resolution data set and
 how an optimizer can improve performance when processing entity resolution
 streams.

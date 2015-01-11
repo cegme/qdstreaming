@@ -22,11 +22,11 @@ $\psi_{i}(\cdot)$ and $Z$ is the normalizing constant.
 
 %Markov Chain Monte Carlo Metropolis Hastings is a techniques for performing
 Exact inference over complex factors graphs is computationally expensive
-becouse it involves computing the normalizing constant.
+because it involves computing the normalizing constant.
 Therefore, it is popular for researchers to use Markov Chain Monte Carlo (MCMC) 
 approximation techniques to estimate the probability of settings.
-In particular, for large and dense factor graphs MCMC Metropolis Hastings has
-been shown to be a scalable and efficive technique for 
+In particular, for large and dense factor graphs MCMC Metropolis Hastings (MH) has
+been shown to be a scalable and effusive technique for 
 inference calculation~\cite{singh2011large}.
 
 Cross-Document entity resolution, resolving entities across document borders,
@@ -44,13 +44,15 @@ This means each mention is its own individual entity.
 In the other extreme, all the mentions may be a part of the same entity.
 For streaming entity resolution, mentions within documents (mention chains)
 must be matched to the existing set of entities~\cite{rao2010streaming}.
-In this paper, we assume the initial assignment problem is performed by searching for the most similar mentions and assigning the new mention to the same entity.
+In this paper, we assume the entity set is initialized by grouping the most
+similar mentions; new mentions are assigned to the closed match.
 
-Doing pairwise comparison over clusters is $O(n^2)$.
-For clusters larger than 1000 mentions calculating scores of the model
-becomes extremely expensive.
-Performing sophisticated techniques over smaller clusters could also 
-add extra over head.
+Comparisons of the mentions in clusters is a factor of the number of pairwise links between mentions.
+The pairwise factors include weighted functions such as approximate string matches, token overlap, ngram matches.
+Additionally, cluster wide features are also computed and weighted.
+Such features include functions to check whether all mentions in a cluster share the same token.
+For clusters larger than 1000 mentions calculating scores of the model becomes extremely expensive.
+Performing sophisticated techniques over smaller clusters also adds extra over head.
 In this paper, we examine the trade-off of selecting techniques to
 accelerate the feature computation process.
 
@@ -67,11 +69,14 @@ accelerate the feature computation process.
 \section{Related Work}
 \label{sec:optimizer:relatedwork}
 
-In this paper, we focus on sampling based ER over factor graphs.
-To compress and accelerate this data we observe two seminal methods for
-increasing sampling speed.
-First, is a method for approximating the score of factor counts and second is
-a compression method.
+In this paper, we focus on the creation of optimizers for sampling based ER over factor graphs.
+We observe two seminal methods for increasing sampling speed.
+First, is a method for approximating the score of factor counts and second is a compression method.
+To this end, we look at three works that state-of-art techniques, respectively, for
+ (1) early stopping methods,
+ (2) entity resolution compression,
+ (3) streaming entity resolution.
+We use these works as a backdrop to development of the optimizer.
 
 Singh et al.\ describe a method of approximating the factor computation during MCMC
 inference over factor graphs~\cite{singh2011large}.
@@ -98,7 +103,7 @@ The use the doubling algorithm~\cite{charikar1997incremental} to grow sets of cl
 and a clever disk arrangement strategy~\cite{omiecinski1984global} to retrieve
 growing entities on demand.
 However, this paper outlines no long-term strategy for managing growing entities.
-The same painpoints discussed early exist in this work.
+The same pain points we identified with streaming entity resolution exist in this work.
 
 %As we see, in Section~\ref{sec:microbenchmark} the entity sizes have a
 %large effect on the factor computation size.

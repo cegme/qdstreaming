@@ -1,18 +1,22 @@
 
 \section{Implementation}
+\label{sec:optimizer:implementation}
 
-In this section, we first describe the Wiki Link Data set we use for experiments.
+In this section, we first describe the Wiki link data set we use for experiments.
 Next, we present a micro benchmark to validate our investigation of entity approximation and compression.
 We then discuss the implementation of the compression and approximation techniques over a large real-world
-cross-document coreference corpus.
+cross-document entity resolution corpus.
 
 \subsection{Wiki Link Corpus}
+\label{sec:optimizer:wikilinkcorpus}
 
-The Wiki link corpus is the largest fully labeled cross-document coreference resolution data set to date~\cite{singh12:wiki-links}.
+The Wiki link corpus is the largest fully labeled cross-document entity resolution data set to date~\cite{singh12:wiki-links}.
 When downloaded, the data set contains 40 million mentions and almost three million entities --- it is a compressed 180 GBs of data.
-The wiki link corpus was created by crawling pages across the web and extracting anchor tags that referenced Wikipedia articles.
+The Wiki link corpus was created by crawling pages across the web and extracting anchor tags that referenced Wikipedia articles.
 Each page contains multiple multiple mentions of different types.
 The Wikipedia articles act as the truth for each mention.
+Although manually constructed and not without its biases, this is the largest,
+fully-labeled entity resolution data set over web data.
 
 
 \subsection{Micro benchmark}
