@@ -6,7 +6,7 @@ social media and the web.
 To this end, the National Institute of Standards hosted a three-year
 introduced a track to extract information and build knowledge from streaming web
 resources~\cite{frank2013evaluating}.
-This national contest highlighted the many difficulties of dealing with collecting 
+This international contest highlighted the many difficulties of dealing with collecting 
 unstructured data across the web.
 Across these efforts in this contest, we identify entity resolution as a major barrier to progress. 
 
@@ -62,7 +62,8 @@ Applying each technique at appropriate times can remove pain points and accelera
 % How we differ
 In this paper, we discuss our initial work towards the design an optimizer that modifies the
 sampling-based collective entity resolution process to improve sampling performance.
-The optimizer, in the spirit of a database query optimizer, examines the
+Static parameters for evaluating entity resolution rarely hold for the lifetime of streaming processing task.
+The optimizer, in the spirit of the \textit{eddy} database query optimizer~\cite{avnur2000eddies}, dynamically examines the
 current state of each proposal and suggests methods for evaluating proposals and structuring entities.
 We train a classifier to decide when the sampling process should use early stopping.
 Additionally, we use training data to decide when is the best time for a particular entity to be compressed.

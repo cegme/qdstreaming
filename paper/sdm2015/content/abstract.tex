@@ -1,9 +1,9 @@
 
 \begin{abstract}
-\small\baselineskip=9pt
+%\small\baselineskip=9pt
 Increasingly, entities and large organizations have employed methods to understand unstructured text across the web.
-Collective entity resolution is used to identify mentions in large, streaming text corpora.
-%Sampling with Markov Chain Monte Carlo (MCMC) techniques guarantees convergence to a stationary distribution and can jump out of any local optimum.
+Entity resolution is used to identify mentions in large, streaming text corpora.
+Sampling-based entity resolution using Markov Chain Monte Carlo (MCMC) techniques guarantees convergence to a stationary distribution and can jump out of local optimum.
 When performing entity resolution over streams of incoming data, the growing quantity of data amplifies two main issues.
 First, because the sampling process is random, many iterations are waisted attempting to resolve unambiguous entities.
 Second, the quadratic runtime for scoring entities makes sampling the largest entities prohibitive.
@@ -14,8 +14,7 @@ This optimizers observes the updates to the entity resolution model and make rec
 We motivate the use of compression techniques to reduce the amount of processing when scoring MCMC updates proposal.
 We also discuss statistical early-stopping techniques for scoring entities.
 We describe our initial progress over a large entity resolution data set and
-how an optimizer can improve performance when processing entity resolution
-streams.
+how an optimizer can improve performance when processing entity resolution streams.
 
 
 \end{abstract}
