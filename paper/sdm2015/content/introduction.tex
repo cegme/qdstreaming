@@ -4,7 +4,7 @@
 Recently, an increasing number of organizations are tracking information across
 social media and the web.
 To this end, the National Institute of Standards hosted a three-year
-introduced a track to extract information and build knowledge from streaming web
+introduced a track to accelerate the extraction of information and construction of knowledge bases from streaming web
 resources~\cite{frank2013evaluating}.
 This international contest highlighted the many difficulties of dealing with collecting 
 unstructured data across the web.
@@ -16,22 +16,22 @@ Entity resolution across text corpora is the task of identifying mentions
 within the documents that correspond to the same real-world entities.
 To construct knowledge bases or extract accurate information, entity resolution (ER) is a required step.
 This task is a notoriously computationally difficult problem.
-Sampling-based ER, most using Markov Chain Monte Carlo techniques, trade some raw performance for a flexible representation 
+In sampling-based ER, using Markov Chain Monte Carlo (MCMC) techniques, trades some raw performance for a flexible representation 
 and guaranteed convergence~\cite{mccallum03towardconditional,singh2011large,wick2013discriminative}.
 %Several efforts in different domains have made outstanding progress.
 
 Processing streaming textual documents exacerbates two of the core difficulties of ER.\@
 First, the computation of large entities and second, excessive
 computation spent resolving unambiguous entities.
-Overtime, the growing size of large entities makes keeping up with the incoming documents untenable.
+Over time, the growing size of large entities makes keeping up with the incoming documents untenable.
 Optimization that touches these critical portions is wholly understudied.
 In this paper, we argue that compression and approximation 
 techniques can efficiently decrease the runtime of traditional ER systems thus
 making them usable for streaming environment.
 
 In sampling-based entity resolution, entities are represented as clusters of mentions.
-A proposal randomly is made to move a mention from a source entity of a destination entity.
-The state of the proposed state is score and if it improves the global state, the new state is accepted.
+A proposal is made to move a random mention from a source entity to a random destination entity.
+The proposed state is scored and if it improves the global state, the new state is accepted.
 If the proposal does not improve the global state, the proposal may still be accepted with some small probability.
 This process is repeated until the state converges.
 Scoring the state of an entity cluster, through pairwise feature computation of the cluster mentions, is $O(n^2)$.
@@ -60,15 +60,15 @@ Early stopping is not always precise and adding an extra conditions in the sampl
 Applying each technique at appropriate times can remove pain points and accelerate the entity resolution process.
 
 % How we differ
-In this paper, we discuss our initial work towards the design an optimizer that modifies the
+In this paper, we discuss our initial work towards the design of an optimizer that modifies the
 sampling-based collective entity resolution process to improve sampling performance.
 Static parameters for evaluating entity resolution rarely hold for the lifetime of streaming processing task.
 The optimizer, in the spirit of the \textit{eddy} database query optimizer~\cite{avnur2000eddies}, dynamically examines the
 current state of each proposal and suggests methods for evaluating proposals and structuring entities.
 We train a classifier to decide when the sampling process should use early stopping.
 Additionally, we use training data to decide when is the best time for a particular entity to be compressed.
-This is done with negligible book keeping and a small over head.
-We make the following contributions
+This is done with negligible book keeping and a small book keeping over head.
+We make the following contributions:
 \begin{itemize}
 \item We identify several techniques to speed up sampling past a natural baseline.
 \item We create rules and techniques for an optimizer to choose parameters and methods at run time.
@@ -90,11 +90,11 @@ As future work, we plan to create a full optimizer to study performance improvem
 
 The outline of the paper is as follows.
 In Section~\ref{sec:optimizer:background}, we give a introduction to factor graph models and entity resolution.
-In Section~\ref{sec:optimizer:relatedwork}, we discuss three papers that can be improved that benefit from an optimizer.
-In Section~\ref{sec:optimizer:example}, we further discuss the statistics an optimizer for entity resolution can use.
+In Section~\ref{sec:optimizer:relatedwork}, we discuss three papers that can possibly benefit from an optimizer.
+In Section~\ref{sec:optimizer:example}, we further discuss the statistics that an optimizer for entity resolution can use.
 In Sections~\ref{sec:optimizer:algorithms} and~\ref{sec:optimizer:optimizer}, we discuss the implementation of the optimizer.
-Finally, in Section~\ref{sec:optimizer:implementation}, we example 
-the benefits by testing early stopping and compression over synthetic and a popular real world entity resolution data set.
+Finally, in Section~\ref{sec:optimizer:implementation}, we examine
+the benefits by testing early stopping and compression over a synthetic and a popular real world entity resolution data set.
 
 
 % Links to people who used vectorization
