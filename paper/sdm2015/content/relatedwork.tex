@@ -14,9 +14,9 @@ Factors represent a mapping of the relationship to a real valued number.
 The probability of a setting $\mathbf{\omega}$ among the set of all possible
 settings $\Omega$ occurring in the factor graph is given by a probability measure:
 \begin{align*}
-\pi(\mathbf{\omega}) = \frac{1}{Z} \sum_{v \in \omega} \prod_{i=1}^{m} \psi_i(v^i) &,&  Z = \sum_{\omega \in \Omega} \sum_{v \in \omega}  \prod_{i=1}^{m} \psi_i(v^i) 
+\pi(\mathbf{\omega}) = \frac{1}{Z} \sum_{x \in \omega} \prod_{i=1}^{m} \psi_i(x^i) &,&  Z = \sum_{\omega \in \Omega} \sum_{x \in \omega}  \prod_{i=1}^{m} \psi_i(x^i) 
 \end{align*}
-where $v^i$ is the set of random variables that neighbor the factor
+where $x^i$ is the set of random variables that neighbor the factor
 $\psi_{i}(\cdot)$ and $Z$ is the normalizing constant.
 
 

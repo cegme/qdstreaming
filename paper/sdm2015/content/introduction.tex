@@ -16,13 +16,12 @@ Entity resolution across text corpora is the task of identifying mentions
 within the documents that correspond to the same real-world entities.
 To construct knowledge bases or extract accurate information, entity resolution (ER) is a required step.
 This task is a notoriously computationally difficult problem.
-In sampling-based ER, using Markov Chain Monte Carlo (MCMC) techniques exchanges raw performance for a flexible representation 
+Using Markov Chain Monte Carlo (MCMC) techniques exchanges raw performance for a flexible representation 
 and guaranteed convergence~\cite{mccallum03towardconditional,singh2011large,wick2013discriminative}.
 %Several efforts in different domains have made outstanding progress.
 
 Processing streaming textual documents exacerbates two of the core difficulties of ER.\@
-First, the computation of large entities and second, excessive
-computation spent resolving unambiguous entities.
+The first  difficulty is the computation of large entities, and the second is the  excessive computation spent resolving unambiguous entities.
 Over time, the growing size of large entities makes keeping up with the incoming documents untenable.
 Optimization that touches these critical portions is wholly understudied.
 In this paper, we argue that compression and approximation 

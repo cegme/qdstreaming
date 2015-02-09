@@ -5,11 +5,11 @@ Increasingly, organizations have employed methods to understand unstructured tex
 Entity resolution is used to identify mentions in large, streaming text corpora.
 Sampling-based entity resolution using Markov Chain Monte Carlo (MCMC) techniques guarantees convergence to a stationary distribution and can jump out of local optimum.
 When performing entity resolution over streams of incoming data, the growing quantity of data amplifies two main issues.
-First, because the sampling process is random, many iterations are waisted attempting to resolve unambiguous entities.
+First, because the sampling process is random, many iterations are wasted attempting to resolve unambiguous entities.
 Second, the quadratic runtime for scoring entities becomes prohibitive for largest entities.
 %When new documents are continuously updated the above issues are exacerbated.
 Frequent streaming updates from the web exacerbate these difficulties.
-In this paper, we discuss the creation a proposal optimizer, in the spirit of database optimizers.
+In this paper, we discuss the creation of a proposal optimizer, in the spirit of database optimizers.
 This optimizer observes the proposal updates to the entity resolution model
 then makes recommendations to improve the processing and storage of the model.
 We motivate the use of compression techniques to reduce the amount of processing when scoring MCMC updates proposal.
