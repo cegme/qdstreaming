@@ -8,7 +8,7 @@ When performing entity resolution over streams of incoming data, the growing qua
 First, because the sampling process is random, many iterations are waisted attempting to resolve unambiguous entities.
 Second, the quadratic runtime for scoring entities becomes prohibitive for largest entities.
 %When new documents are continuously updated the above issues are exacerbated.
-Frequent streaming updates of the web exacerbate these difficulties.
+Frequent streaming updates from the web exacerbate these difficulties.
 In this paper, we discuss the creation a proposal optimizer, in the spirit of database optimizers.
 This optimizer observes the proposal updates to the entity resolution model
 then makes recommendations to improve the processing and storage of the model.
