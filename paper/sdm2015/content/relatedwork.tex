@@ -47,13 +47,13 @@ must be matched to the existing set of entities~\cite{rao2010streaming}.
 In this paper, we assume the entity set is initialized by grouping the most
 similar mentions; new mentions are assigned to the closed match.
 
-Comparisons of the mentions in clusters is a factor of the number of pairwise links between mentions.
-The pairwise factors include weighted functions such as approximate string matches, token overlap, ngram matches.
-Additionally, cluster wide features are also computed and weighted.
+To compute the score at each step, the number of comparisons is proportional to the number of pairwise factors between mentions.
+The pairwise factors are weighted functions such as approximate string matches, token overlap, n-gram matches.
+There are additional cluster-wide features calculated at each step.
 Such features include functions to check whether all mentions in a cluster share the same token.
-For clusters larger than 1000 mentions calculating scores of the model becomes extremely expensive.
-Performing sophisticated techniques over smaller clusters also adds extra over head.
-In this paper, we examine the trade-off of selecting techniques to
+For clusters larger than 1000 mentions, calculating scores of the model becomes extremely expensive.
+Performing sophisticated techniques over smaller clusters also adds extra overhead.
+In this paper, we examine the trade-off of selecting methods to
 accelerate the feature computation process.
 
 
@@ -69,22 +69,22 @@ accelerate the feature computation process.
 \section{Related Work}
 \label{sec:optimizer:relatedwork}
 
-In this paper, we focus on the creation of optimizers for sampling based ER over factor graphs.
-We observe two seminal methods for increasing sampling speed.
-First, is a method for approximating the score of factor counts and second is a compression method.
-To this end, we look at three works that state-of-art techniques, respectively, for
+In this paper, we focus on the creation of optimizers for sampling-based ER over factor graphs.
+We observe two primary methods for increasing sampling speed.
+The first is a method for approximating the score of factor counts, and second is a compression method.
+We investigate three papers with that state-of-the-art techniques, respectively, for
  (1) early stopping methods,
  (2) entity resolution compression,
  (3) streaming entity resolution.
-We use these works as a backdrop to development of the optimizer.
+We use these works as a backdrop for the development of the optimizer.
 
 Singh et al.\ describe a method of approximating the factor computation during MCMC
 inference over factor graphs~\cite{singh2011large}.
-In this work, they note that sampling is usually inexpensive except in the case
-of many variable, or if scoring a sample is low. To this end they introduce Monte
-Carlo MCMC, this is a method of performing uniform and confident-based sampling
+In this work, the authors note that obtaining a sample is usually inexpensive
+except in the case of many variables. To this end, they introduce Monte Carlo
+MCMC; this is a method of performing uniform and confidence-based sampling
 over the computation of factors to avoid the full computation of features.
-This work shows significant speed up in a large-scale experiments.
+This work shows significant speedup in large-scale experiments.
 
 % Slides: http://people.cs.umass.edu/~sameer/files/largescale-acl11-ppt.pdf
 % Slides: http://people.cs.umass.edu/~sameer/files/mcmcmc-emnlp12-ppt.pdf
@@ -94,12 +94,12 @@ entity resolution~\cite{wick2013discriminative}.
 This work defines a recursive data structure that allows succinct representations
 of millions of mentions. 
 The hierarchical structure adds some book keeping to the sampling process but because
-large entity clusters are compress there are less comparison for each sampling iteration. 
-This works displays orders of magnitude speedup
+large entity clusters are compressed there are less comparison for each sampling iteration. 
+This method obtains orders of magnitude speedup
 when compared to a pairwise method.
 
 Rao et al.\ create a system for streaming entity resolution~\cite{rao2010streaming}.
-The use the doubling algorithm~\cite{charikar1997incremental} to grow sets of clusters
+They use the doubling algorithm~\cite{charikar1997incremental} to grow sets of clusters
 and a clever disk arrangement strategy~\cite{omiecinski1984global} to retrieve
 growing entities on demand.
 However, this paper outlines no long-term strategy for managing growing entities.

@@ -15,8 +15,8 @@ This is the traditional method of computing the pairwise similarity of two clust
 This method results in simple code so modern compilers are able to perform extreme
 optimizations such as loop unrolling.
 
-The confidence-base scoring method performs uniform samples of the
-mentions from the source and destination entities clusters. This method
+The confidence-based scoring method performs uniform samples of the
+mentions from the source and destination entities clusters during scoring. This method
 measures the confidence of the calculated pairwise samples and stops when the
 confidence of a score exceeds a threshold of 0.95.
 This is a simplified version of the sampling uniform sampling method described by Singh et al.~\cite{singh2012monte}.

@@ -5,14 +5,14 @@
 In this section, we discuss the acceleration in MCMC-MH sampling for entity resolution.
 We then motivate how we believe gains can be achieved given using compression,
 sampling acceleration methods and optimizers.
-We use a large real-world corpus to a motivating example.
+We use a large real-world corpus for a motivating example.
 
 The two issues we are investigating are as follows:
 %First, given an entity \(e_i\) how can we create a structure with \textit{minimal total size}.
 %Second, How can we incrementally add and remove items 
 %from the compressed structure.
-First, given a source and 
-destination entity \((e_s, e_d)\) and the mention, how can we score the proposal in the \textit{least amount of time}.
+First, given a source entity, 
+destination entity and the mention \((e_s, e_d, m)\), which method can score the proposal in the \textit{least amount of time}?
 Secondly, after the proposal is calculated, should we compress the entity structure?
 The optimizer will \textit{decide} when to use each technique.
 
@@ -23,7 +23,7 @@ The total size of all entities in the traditional representation is:
 where $sizeof$ is an abstract function to compute the size of the containing object,
 $c$ is a class constant and $|e_i|$ is number of mentions in the entity.
 
-There are many compression techniques, one being we only keep the mentions an entity
+There are many compression techniques, one being to only keep  mentions and entities
 that have a unique representation.
 That is, if any mention token is a duplicate, we remove it.
 This compressed total entity size size is:
@@ -38,8 +38,8 @@ We note that when the $\#(e_i) \ll |e_i|$, it may be worth compressing the entit
 In Figure~\ref{fig:entity-distribution}, we note that
 45\% percent of mentions are smaller that 100 mentions in size.
 Additionally, 82\% percent of entities contain less than 1000 mentions.
-These number suggest that at times we we can take advantage of the redundancy within
-large entities and compress the entities.
+These numbers suggest that at times we we can take advantage of the redundancy within
+large entities by compressing them.
 We investigate the Wiki links corpus further in Section~\ref{sec:optimizer:wikilinkcorpus}. 
 
 
@@ -49,8 +49,8 @@ true entity sizes.
 This difference gives us some intuition of the trends of the entity resolution process.
 The entities were initialized by exact string match, a common initialization scheme.
 This suggest that there are several unique representations
-of entities that during entity resolution entities sizes can expect to grow 
-by an order of magnitude in size and the number of smaller entities will decrease.
+of entities and during entity resolution the sizes of entities can expect to grow 
+by an order of magnitude in size while the total number of smaller entities will decrease.
 This is to be expected but we can use this property to track the growth and
 change of entity sizes over time to understand which camp a particular entity
 cluster belongs. 
