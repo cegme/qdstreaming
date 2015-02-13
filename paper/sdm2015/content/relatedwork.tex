@@ -9,10 +9,10 @@ A factor graph $\mathcal{F} = \langle \textbf{x}, \psi \rangle$, contains a set 
 variables $ \textbf{x} = {\{x_i \}}^n_1$ and
 factors ${\textbf{\boldmath$\psi$\unboldmath}} = { \{\psi_i\} }^m_1 $.
 Random variables are connected to each other through factors.
-Factors represent a mapping of the relationship to a real valued number.
+Factors are a mapping between one or more variables and a real-valued score.
 
 The probability of a setting $\mathbf{\omega}$ among the set of all possible
-settings $\Omega$ occurring in the factor graph is given by a probability measure:
+settings $\Omega$ occurring in a factor graph is given by a probability measure:
 \begin{align*}
 \pi(\mathbf{\omega}) = \frac{1}{Z} \sum_{x \in \omega} \prod_{i=1}^{m} \psi_i(x^i) &,&  Z = \sum_{\omega \in \Omega} \sum_{x \in \omega}  \prod_{i=1}^{m} \psi_i(x^i) 
 \end{align*}
@@ -26,23 +26,22 @@ because it involves computing the normalizing constant.
 Therefore, it is popular for researchers to use Markov Chain Monte Carlo (MCMC) 
 approximation techniques to estimate the probability of settings.
 In particular, for large and dense factor graphs MCMC Metropolis Hastings (MH) has
-been shown to be a scalable and effusive technique for 
-inference calculation~\cite{singh2011large}.
+been shown to be a scalable technique for inference calculation~\cite{singh2011large}.
 
 Cross-Document entity resolution, resolving entities across document borders,
 is usually several orders of magnitude smaller when compared to within document entity resolution.
-In large text corpora, the sizes of entities follows the power law~\cite{singh12:wiki-links}.
+In large text corpora, the size of entities follows the power law~\cite{singh12:wiki-links}.
 For example, Figure~\ref{fig:entity-distribution} is a generated data set containing
 40 million mentions and 3 million entities over 11 million web pages.
 As documents and mentions are incrementally streamed through,
-the scale problem must becomes a critical issue.
+the scale problem becomes a critical issue.
 
 The mentions on disk can be represented as a large array of identifiers.
 Entities are a collection of mentions and can be represented as such.
 In the worst case there is an equal number of entities and mentions.
 This means each mention is its own individual entity.
 In the other extreme, all the mentions may be a part of the same entity.
-For streaming entity resolution, mentions within documents (mention chains)
+For streaming entity resolution, mentions within documents
 must be matched to the existing set of entities~\cite{rao2010streaming}.
 In this paper, we assume the entity set is initialized by grouping the most
 similar mentions; new mentions are assigned to the closed match.
@@ -65,7 +64,7 @@ accelerate the feature computation process.
 \end{figure}
 
 
-
+\eat{%
 \section{Related Work}
 \label{sec:optimizer:relatedwork}
 
@@ -107,5 +106,5 @@ The same pain points we identified with streaming entity resolution exist in thi
 
 %As we see, in Section~\ref{sec:microbenchmark} the entity sizes have a
 %large effect on the factor computation size.
-
+}
 

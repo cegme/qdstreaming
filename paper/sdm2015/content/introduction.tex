@@ -39,7 +39,7 @@ For entity clusters larger than 1000 mentions, calculating the score for each pr
 %add extra overhead.
 
 % What are the technical challenges and validation
-Wick et al.\ present an entity resolution system that uses a tree structure
+Wick et al.\ present an entity resolution technique that uses a tree structure
 to organize related entities to reduce the amount of work performed in each step~\cite{wick2013discriminative}.
 During each proposal, this approach avoids the pairwise comparison by restricting model calculation to the top nodes of the hierarchy.
 This approach can avoid massive amounts of computation by performing organizing the known sets of mentions.
@@ -55,7 +55,7 @@ This approach can be categorized as \textit{early stopping} for feature computat
 There is no one size fits all sampling algorithm~\cite{sculley2006compression};
 each of these methods, compression and early stopping, has drawbacks.
 Compression may slow down insertion speed and requires extra book keeping to keep to organize the data structure.
-Early stopping is not always precise and adding an extra conditions in the metropolis hastings loop structure may slow down computation.
+Early stopping is not always precise and adding extra conditionals in the metropolis hastings loop structure slows computation.
 Applying each technique at appropriate times can remove pain points and accelerate the entity resolution process.
 
 % How we differ
@@ -66,7 +66,7 @@ The optimizer, in the spirit of the \textit{eddy} database query optimizer~\cite
 current state of each proposal and suggests methods for evaluating proposals and structuring entities.
 We train a classifier to decide when the sampling process should use early stopping.
 Additionally, we use training data to decide when is the best time for a particular entity to be compressed.
-This is done with negligible book keeping and a small book keeping over head.
+This is done with negligible book keeping.
 We make the following contributions:
 \begin{itemize}
 \item We identify several techniques to speed up sampling past a natural baseline.
@@ -89,7 +89,7 @@ As future work, we plan to create a full optimizer to study performance improvem
 
 The outline of the paper is as follows.
 In Section~\ref{sec:optimizer:background}, we give a introduction to factor graph models and entity resolution.
-In Section~\ref{sec:optimizer:relatedwork}, we discuss three papers that can possibly benefit from an optimizer.
+%In Section~\ref{sec:optimizer:relatedwork}, we discuss three papers that can possibly benefit from an optimizer.
 In Section~\ref{sec:optimizer:example}, we further discuss the statistics that an optimizer for entity resolution can use.
 In Sections~\ref{sec:optimizer:algorithms} and~\ref{sec:optimizer:optimizer}, we discuss the implementation of the optimizer.
 Finally, in Section~\ref{sec:optimizer:implementation}, we examine
