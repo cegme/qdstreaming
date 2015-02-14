@@ -2,37 +2,37 @@
 \section{Implementation}
 \label{sec:optimizer:implementation}
 
-In this section, we first describe the Wiki link data set we use for experiments.
-Next, we present a micro benchmark to validate our investigation of entity approximation and compression.
+In this section, we first describe the wiki link data set we use for experiments.
+Following, we present a micro benchmark to validate our investigation of entity approximation and compression.
 We then discuss the implementation of the compression and approximation techniques over a large real-world
 cross-document entity resolution corpus.
 
 \subsection{Wiki Link Corpus}
 \label{sec:optimizer:wikilinkcorpus}
 
-The Wiki link corpus is the largest fully labeled cross-document entity resolution data set to date~\cite{singh12:wiki-links}.
+The wiki link corpus is the largest fully labeled cross-document entity resolution data set to date~\cite{singh12:wiki-links}.
 When downloaded, the data set contains 40 million mentions and almost three million entities --- it is a compressed 180 GBs of data.
-The Wiki link corpus was created by crawling pages across the web and extracting anchor tags that referenced Wikipedia articles.
+The wiki link corpus was created by crawling pages across the web and extracting anchor tags that referenced Wikipedia articles.
 Each page contains multiple multiple mentions of different types.
 The Wikipedia articles act as the truth for each mention.
 Although manually constructed and not without its biases, this is the largest,
-fully-labeled entity resolution data set over web data.
+fully-labeled entity resolution data set over web data that we could find (at the time of preparation).
 
 
 \subsection{Micro benchmark}
 \label{sec:microbenchmark}
 To increase our intuition of early stopping techniques we simulated the MCMC proposal processes. 
-We hypothesis that there is a clear range values where performing the
-baseline cluster sampling would be faster when compared to early stopping methods.
-We arrange entity clusters of increasing time and we compute the time (in clock ticks)
+We hypothesise that a range of values exist, where performing the
+baseline cluster sampling would be faster than early stopping methods.
+We arrange entity clusters of increasing size and we compute the time (in clock ticks)
 each proposal takes to compute the arrangement of the clusters.
-The data in the clusters are distributed uniformly and for this experiment each cluster point
+The data in the clusters are distributed uniformly for this experiment and each cluster point
 was 5 dimensional.
 For the baseline cluster score computation we used a pairwise calculated of the average cosine distance
 with and without the mention.
 To compute early stopping we set a confidence threshold to $0.8$ and the early
-stopping code stopped computation when the error predation was under $20\%$.
-There was no difference in the proposal choices between the baseline and the early sorting method. 
+stopping code stopped computation when the predicted error was under $20\%$.
+There was no difference in the proposal choices of the baseline method or the early sorting method. 
 
 The simulations were developed in \texttt{GNU C++11} and compiled with \texttt{g++ -O3}. 
 The CPU was an 8 core Intel i7 with 3.2 GHz and 12 GBs of Memory.
@@ -44,8 +44,8 @@ Each arrangement was run 5 times and results averages.
 We first determine when early stopping approaches from proposal scoring is beneficial.
 For this result we compare the base like proposal evaluator with a confidence-based scorer for varying entity sizes.
 The result of this experiment is summarized in Figure~\ref{fig:clustering-v-early-stopping}.
-On the x-axis is the number of mentions in the source and destination cluster is for each proposal. 
-The y-axsis is the number of clock ticks on a log scale.
+The x-axis is the number of mentions in the source and destination cluster for each proposal. 
+The y-axsis is the number of clock ticks on a log-scale.
 
 \begin{figure}
 \centering
@@ -66,7 +66,7 @@ performed over an order of magnitude better than the early stopping method.
 
 The optimization found in predictable code paths make simple implementations
 like the baseline method attractive for small cluster sizes and very large clusters sizes.
-In addition, $82\%$ of the entities in the truthed Wiki links data sets are less
+In addition, $82\%$ of the entities in the truthed wiki links data sets are less
 that 1000 mentions in size and $45\%$ of the entities contain less than 100
 mentions.
 
@@ -77,7 +77,7 @@ Note that for these techniques a small constant amount of book keeping space is 
 
 \paragraph{Insertion vs Compressions Time.}
 Compressing an entity is an expensive operation.
-When compression and entity, this entity must be locked to prevent any concurrent access.
+When compression and entity, it must be locked to prevent any concurrent access.
 In order to choose the best times to compress an entity cluster in this 
 micro benchmark we look at the time to compression entity of different cardinalities
 and compare them to the time it takes to insert entities. 
@@ -100,10 +100,10 @@ We can conclude from these result that compressing large entities is expensive
 should only be done if the cluster is prohibitively large and not popular.
 
 Cardinality estimation for millions of entities is a significant overhead.
-Tracking cardinalities, in each entity, even using small probabilistic sketches such as Hyperloglog~\cite{flajolet2008hyperloglog}
-become prohibitive at large sizes.
-By the time an entities cardinality needs to be monitored for possible compression, that entity might as well be compressed.
-We are continuing to look for lighter weight, cardinality estimators for millions of mentions.
+Tracking cardinalities simultaneously for each entity, even using small probabilistic sketches such as Hyperloglog~\cite{flajolet2008hyperloglog}
+become prohibitive for large amounts of entities.
+By the time the cardinality of an entity needs to be monitored for possible compression, that entity might as well be compressed.
+We are continuing to look for lighter weight cardinality estimators for millions of mentions so decisions can quickly be made.
 
 
 

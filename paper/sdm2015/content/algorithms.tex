@@ -3,8 +3,8 @@
 \section{Algorithms}
 \label{sec:optimizer:algorithms}
 
-In this section, we will describe a simple algorithm for entity sampling and
-another simple compression technique.
+In this section, we will describe simple algorithms for entity sampling and
+entity simple compression.
 After introducing the compression and approximation techniques we discuss how
 an optimizer can be designed to improve the overall sampling time.
 
@@ -15,7 +15,7 @@ This is the traditional method of computing the pairwise similarity of two clust
 This method results in simple code so modern compilers are able to perform extreme
 optimizations such as loop unrolling.
 
-The confidence-based scoring method performs uniform samples of the
+Confidence-based scoring method performs uniform samples of the
 mentions from the source and destination entities clusters during scoring. This method
 measures the confidence of the calculated pairwise samples and stops when the
 confidence of a score exceeds a threshold of 0.95.
@@ -27,7 +27,7 @@ Notice \texttt{themax} and \texttt{themin} are variables in the Stats class that
 store the current maximum and minimum.
 The current sum, running mean are also updated with each new value added.
 The current implementation assumes the values from the pairwise factors follow a Gaussian distribution;
-the model in Singh et al.\ make the same assumption.
+the model in Singh et al.\ make the same assumption~\cite{singh2012monte}.
 
 \begin{figure}
 \centering
@@ -62,7 +62,7 @@ Run-length encoding is the simplest method for compressing entities.
 This method compresses the near duplicate mentions.
 %The mentions in the compressed entity using a counter map and recording the number of exact duplicate values.
 A canonical mention is chosen along each exact duplicate and a counter map records the number of duplicates that are represented.
-For mention clusters with many duplicate the compression rates become large.
+The compression rates become large for mention clusters with many duplicate.
 
 
 \eat{%
@@ -138,7 +138,8 @@ additional entities that do not have to be fetched from disk and can now fit in 
 Third, we need to know how active an entity has been ($C_\text{activity}$).
 That is, how many additions or subtractions this entity has seen over a long period of time.
 This information is helpful in understanding the likelihood this entity will be requested
-for another addition or subtractions.
+for another addition or subtraction.
+(Modifying entities clusters causes them to block.)
 Last, we retain the activity of an entity over a recent, short period of time
 ($C_\text{velocity}$). This information lets us know whether it is smart for
 this entity to take the time out to for compression while other mentions may be
